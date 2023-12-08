@@ -18,13 +18,6 @@
 
   networking.hostName = "lorien";
 
-  users.users.agindin = {
-    isNormalUser = true;
-    description = "agindin";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [];
-  };
-
   boot.kernel.sysctl = {
     "vm.max_map_count" = 262144; 
   };

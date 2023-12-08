@@ -6,6 +6,13 @@
 
   config.nixpkgs.config.allowUnfree = true;
 
+  users.users.agindin = {
+    isNormalUser = true;
+    description = "agindin";
+    extraGroups = [ "networkmanager" "wheel" ];
+    packages = with pkgs; [];
+  };
+
   config.time.timeZone = "America/New_York";
 
   # Select internationalisation properties.
