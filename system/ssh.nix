@@ -16,6 +16,7 @@ in
       enable = true;
       settings.PasswordAuthentication = false;
       settings.KbdInteractiveAuthentication = false;
+      settings.PermitRootLogin = "no";
     };
     users.users.agindin.openssh.authorizedKeys.keys = cfg.allowedKeys;
   };
