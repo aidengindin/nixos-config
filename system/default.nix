@@ -6,7 +6,7 @@
 
   config.nixpkgs.config.allowUnfree = true;
 
-  users.users.agindin = {
+  config.users.users.agindin = {
     isNormalUser = true;
     description = "agindin";
     extraGroups = [ "networkmanager" "wheel" ];
@@ -52,3 +52,4 @@
     neovim
   ];
 }
+
