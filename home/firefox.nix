@@ -9,7 +9,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    programs.firefox = {
+    home-manager.users.agindin.programs.firefox = {
       enable = true;
     };
   };
