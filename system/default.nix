@@ -49,7 +49,6 @@
   config.services.tailscale.enable = true;
 
   config.environment.systemPackages = with pkgs; [
-    git
     htop
     neovim
   ];

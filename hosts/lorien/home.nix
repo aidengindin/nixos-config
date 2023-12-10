@@ -3,6 +3,5 @@
   imports = [
     ../../home
   ];
-
-  agindin.firefox.enable = true;
 }
+

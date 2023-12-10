@@ -13,6 +13,7 @@
           system = "x86_64-linux";
           modules = [
             ./hosts/lorien
+            home-manager.nixosModules.home-manager
           ];
         };
         weathertop = nixpkgs.lib.nixosSystem {
