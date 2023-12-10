@@ -36,7 +36,6 @@
   agindin.gamingOptimizations.enable = true;
 
   users.users.agindin.packages = with pkgs; [
-    firefox
     yuzu-mainline
   ];
 

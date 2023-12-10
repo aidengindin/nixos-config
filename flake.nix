@@ -1,8 +1,10 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     jovian.url = "github:Jovian-Experiments/Jovian-NixOS/";
-  };
+    home-manager.url = "github:nix-community/home-manager/release-23.11";
+ };
 
   outputs = { self, nixpkgs, jovian }:
     {
@@ -18,6 +20,14 @@
           modules = [
             ./hosts/weathertop
             jovian.nixosModules.default
+            home-manager.nixosModules.home-manager {
+              home-manager.useGlobalPackages = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.agindin = { ... }: {
+                _module.args.unstable = unstable;
+                imports = [ ./hosts/weathertop/home.nix ];
+              };
+            }
           ];
         };
       };
