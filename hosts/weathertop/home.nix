@@ -6,5 +6,5 @@
 
   agindin = {
     firefox.enable = true;
-  }
+  };
 }
