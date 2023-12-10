@@ -1,4 +1,4 @@
-{ config, lib, pkgs ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.agindin.firefox;
   inherit (lib) mkIf mkEnableOption;
