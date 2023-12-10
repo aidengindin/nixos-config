@@ -20,14 +20,7 @@
           modules = [
             ./hosts/weathertop
             jovian.nixosModules.default
-            home-manager.nixosModules.home-manager {
-              home-manager.useGlobalPackages = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.agindin = { ... }: {
-                _module.args.unstable = unstable;
-                imports = [ ./hosts/weathertop/home.nix ];
-              };
-            }
+            home-manager.nixosModules.home-manager
           ];
         };
       };
