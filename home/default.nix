@@ -4,5 +4,7 @@
     ./firefox.nix
   ];
 
-  config.home.stateVersion = "23.11";
+  config.home-manager.users.agindin = {
+    home.stateVersion = "23.11";
+  };
 }
