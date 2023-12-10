@@ -6,7 +6,7 @@
     home-manager.url = "github:nix-community/home-manager/release-23.11";
  };
 
-  outputs = { self, nixpkgs, jovian }:
+  outputs = { self, nixpkgs, unstable, jovian, home-manager }:
     {
       nixosConfigurations = {
         lorien = nixpkgs.lib.nixosSystem {
