@@ -14,9 +14,9 @@
   boot.kernel.sysctl = {
     "vm.max_map_count" = 262144; 
   };
-  
-  services.xserver.desktopManager.gnome.enable = true;
 
+  agindin.desktop.enable = true;
+  
   jovian = {
     devices.steamdeck = {
       enable = true;
@@ -29,11 +29,11 @@
       autoStart = true;
       desktopSession = "gnome";
     };
-    decky-loader = {
-      enable = true;
-      user = "agindin";
-    };
   };
+
+  programs.steam.enable = true;
+
+  agindin.gamingOptimizations.enable = true;
 
   users.users.agindin.packages = with pkgs; [
     firefox
