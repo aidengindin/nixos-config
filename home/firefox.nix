@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs ... }:
 let
   cfg = config.agindin.firefox;
   inherit (lib) mkIf mkEnableOption;
@@ -9,15 +9,12 @@ in
   };
 
   config = mkIf cfg.enable {
-    home-manager.users.agindin.programs.firefox = {
+    programs.firefox = {
       enable = true;
-      profiles.agindin = {
-        isDefault = true;
-        search = {
-          default = "DuckDuckGo";
-          privateDefault = "DuckDuckGo";
-        };
+      nativeMessagingHosts = {
+        gsconnect = true;
       };
+      # enableGnomeExtensions = true;
       preferences = {
         "widget.use-xdg-desktop-portal.file-picker" = 1;
         "browser.aboutConfig.showWarning" = false;
@@ -136,11 +133,90 @@ in
         "privacy.trackingprotection.enabled" = true;
         "dom.event.clipboardevents.enabled" = false;
       };
+      policies = {
+        SearchEngines = {
+          Default = "DuckDuckGo";
+        };
+
+        # Find extension IDs in about:debugging
+        ExtensionSettings = {
+
+          # uBlock Origin:
+          "uBlock0@raymondhill.net" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # Wayback Machine
+          "wayback_machine@mozilla.org" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4047136/wayback_machine_new-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # ClearURLS
+          "{74145f27-f039-47ce-a470-a662b129930a}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4064884/clearurls-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # News Feed Eradicator
+          "@news-feed-eradicator" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4108116/news_feed_eradicator-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # Augmented Steam
+          "{1be309c5-3e4f-4b99-927d-bb500eb4fa88}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4167723/augmented_steam-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # Consent-O-Matic
+          "gdpr@cavi.au.dk" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4074847/consent_o_matic-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # Bitwarden
+          "{446900e4-71c2-419f-a6a7-df9c091e268b}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4191732/bitwarden_password_manager-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # ProtonDB for Steam
+          "{30280527-c46c-4e03-bb16-2e3ed94fa57c}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4195217/protondb_for_steam-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # Omnivore
+          "save-extension@omnivore.app" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4198103/omnivore-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # SponsorBlock
+          "sponsorBlocker@ajay.app" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4202411/sponsorblock-latest.xpi";
+            installation_mode = "force_installed";
+          };
+
+          # Dark Reader
+          "addon@darkreader.org" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4205543/darkreader-latest.xpi";
+            installation_mode = "force_installed";
+          };
+        };
+      };
     };
+
+    # services.gnome.gnome-browser-connector.enable = true;
+    
     environment.sessionVariables = {
       MOZ_USE_XINPUT2 = "1";
       XDG_CURRENT_DESKTOP = "gnome";
     };
+
     xdg = {
       portal = {
         enable = true;

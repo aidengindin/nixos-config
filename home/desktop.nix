@@ -9,7 +9,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    # Desktop environment
     services.xserver.desktopManager.gnome.enable = true;
+
+    # Enable sound
     sound.enable = true;
     hardware.pulseaudio.enable = false;
     security.rtkit.enable = true;
@@ -19,6 +22,18 @@ in
       alsa.support32Bit = true;
       pulse.enable = true;
     };
+
+    # Packages that should be installed on all desktop systems
+    environment.systemPackages = with pkgs; [
+      bitwarden
+      discord
+      element-desktop
+      spotify
+      thunderbird
+      ungoogled-chromium
+      vscodium
+      whatsapp-for-linux
+      zoom-us
+    ]
   };
 }
-
