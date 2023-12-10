@@ -9,6 +9,7 @@ in
     enable = mkEnableOption "gamingOptimizations";
   };
 
+  services.power-profiles-daemon.enable = false;
   config = mkIf cfg.enable {
     services.tlp = {
       enable = true;
