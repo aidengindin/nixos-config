@@ -8,6 +8,8 @@
     home.stateVersion = "23.11";
   };
 
+  config.programs.home-manager.enable = true;
+
   config.programs.git = {
     enable = true;
     userName = "Aiden Gindin";
