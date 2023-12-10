@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs ... }:
 let
   cfg = config.agindin.firefox;
   inherit (lib) mkIf mkEnableOption;
@@ -11,9 +11,9 @@ in
   config = mkIf cfg.enable {
     programs.firefox = {
       enable = true;
-      nativeMessagingHosts = {
-        gsconnect = true;
-      };
+      # nativeMessagingHosts = {
+      #   gsconnect = true;
+      # };
       # enableGnomeExtensions = true;
       preferences = {
         "widget.use-xdg-desktop-portal.file-picker" = 1;
@@ -217,14 +217,14 @@ in
       XDG_CURRENT_DESKTOP = "gnome";
     };
 
-    xdg = {
-      portal = {
-        enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-wlr
-          xdg-desktop-portal-gtk
-        ];
-      };
-    };
+    # xdg = {
+    #   portal = {
+    #     enable = true;
+    #     extraPortals = with pkgs; [
+    #       xdg-desktop-portal-wlr
+    #       xdg-desktop-portal-gtk
+    #     ];
+    #   };
+    # };
   };
 }
