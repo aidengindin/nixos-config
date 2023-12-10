@@ -3,9 +3,9 @@
 {
   imports = [
     ../../system
+    ./hardware.nix
   ];
 
-  # need to check if this is correct
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -14,6 +14,8 @@
   boot.kernel.sysctl = {
     "vm.max_map_count" = 262144; 
   };
+  
+  services.xserver.desktopManager.gnome.enable = true;
 
   jovian = {
     devices.steamdeck = {
@@ -33,9 +35,10 @@
     };
   };
 
-  environment.systemPackages = [
-    pkgs.yuzu-mainline
-  ]
+  users.users.agindin.packages = with pkgs; [
+    firefox
+    yuzu-mainline
+  ];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
