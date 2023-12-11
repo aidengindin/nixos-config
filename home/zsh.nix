@@ -15,11 +15,22 @@
       ps = "ps aux | grep -v grep --color=auto | grep -i";
     };
 
+    plugins = [
+      {
+        name = "powerlevel10k";
+        src = pkgs.fetchFromGitHub {
+          owner = "romkatv";
+          repo = "powerlevel10k";
+          rev = "v1.19.0";
+          sha256 = "1e063f8c29f8c9914c3c6ec6b4ceb6e27fdb42d172ed54d4bda5aeec9df926de";
+        };
+      }
+    ];
+
     oh-my-zsh = {
       enable = true;
       plugins = [
         "cabal"
-        "cargo"
         "command-not-found"
         "docker"
         "docker-compose"
@@ -27,7 +38,7 @@
         "git"
         "pip"
       ];
-      theme = "powerlevel10k/powerlevel10k";
+      theme = "powerlevel10k";
     };
 
     syntaxHighlighting.enable = true;
