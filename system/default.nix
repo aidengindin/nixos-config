@@ -2,6 +2,7 @@
 {
   imports = [
     ./desktop.nix
+    ./firefox.nix
     ./gamingOptimizations.nix
     ./ssh.nix
   ];
