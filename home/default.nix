@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
-    zsh.nix
+    ./zsh.nix
   ];
 
   config.users.users.agindin = {
