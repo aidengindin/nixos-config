@@ -2,21 +2,29 @@
 let
   cfg = config.agindin.emacs;
   inherit (lib) mkIf mkEnableOption;
+  package =
+    if pkgs.system == "aarch64-darwin"
+    then pkgs.emacs29-macport
+    else pkgs.emacs29;
 in
 {
   options.agindin.emacs = {
     enable = mkEnableOption "emacs";
-    package =
-      if pkgs.system == "aarch64-darwin"
-      then pkgs.emacs29-macport
-      else pkgs.emacs29;
   };
 
   config = mkIf cfg.enable {
+    environment.systemPackages = [
+      (pkgs.emacsWithPackagesFromUsePackage {
+        config = ./emacs.el;
+        defaultInitFile = true;
+        package = package;
+      })
+    ];
+
     home-manager.users.agindin.programs.emacs = {
       enable = true;
-      package = cfg.package;
-      extraConfig = builtins.readFile ./emacs-init.el;
+      package = package;
+      # extraConfig = builtins.readFile ./emacs-init.el;
     };
     
     services.emacs =
@@ -24,7 +32,7 @@ in
       then {}
       else {
         enable = true;
-        package = cfg.package;
+        package = package;
       };
   };
 }

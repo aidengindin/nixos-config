@@ -12,17 +12,22 @@
   (setq use-package-always-ensure t
         use-package-expand-minimally t))
 
+(server-start)
+(setq server-socket-dir "~/.emacs.d/server")
+
 ;; ====
 ;; EVIL
 ;; ====
 
 (use-package evil
+  :ensure t
   :init
   (setq evil-want-keybinding nil)
   :config
   (evil-mode 1))
 
 (use-package evil-collection
+  :ensure t
   :config
   (evil-collection-init))
 
@@ -31,6 +36,7 @@
 ;; =============
 
 (use-package doom-modeline
+  :ensure t
   :config
   (doom-modeline-mode 1)
   (setq doom-modeline-enable-word-count t)
@@ -48,6 +54,7 @@
 ;; ====
 
 (use-package helm
+  :ensure t
   :config
   (helm-mode 1)
   (global-set-key (kbd "M-x") 'helm-M-x)
@@ -61,12 +68,14 @@
 ;; set frame title format
 (setq frame-title-format "%b [%m] - Emacs")
 
-(use-package nerd-icons)
+(use-package nerd-icons
+  :ensure t)
 
 (add-to-list 'default-frame-alist '(font . "Hasklug Nerd Font-14"))
 (set-frame-font "Hasklug Nerd Font-14" nil t)
 
 (use-package doom-themes
+  :ensure t
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t
@@ -83,6 +92,7 @@
 
 ;; Show keybinding hints
 (use-package which-key
+  :ensure t
   :config
   (which-key-mode))
 
@@ -92,6 +102,7 @@
 
 ;; flash the modeline instead of sounding the bell
 (use-package mode-line-bell
+  :ensure t
   :config
   (mode-line-bell-mode))
 
@@ -113,22 +124,28 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 (global-display-line-numbers-mode)
 
 (use-package undo-tree
+  :ensure t
   :config
   (global-undo-tree-mode))
 
 (use-package flycheck
+  :ensure t
   :config
   (global-flycheck-mode))
 
 (use-package company
+  :ensure t
   :config
   (global-company-mode))
 
-(use-package helm-lsp)
+(use-package helm-lsp
+  :ensure t)
 
-(use-package magit)
+(use-package magit
+  :ensure t)
 
-;; (use-package treemacs)
+;; (use-package treemacs
+;;   :ensure t)
 
 ;; (use-package treemacs-evil
 ;;   :after (treemacs evil)
@@ -147,6 +164,7 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; ==================
 
 (use-package general
+  :ensure t
   :config
   (general-auto-unbind-keys)
   (general-define-key
@@ -213,6 +231,7 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; ===
 
 (use-package lsp-mode
+  :ensure t
   :hook ((haskell-mode . #'lsp)
          (python-mode . #'lsp)))
 
@@ -221,6 +240,8 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; ========
 
 (use-package markdown-mode
+  :ensure t
+  :after (general)
   :hook ((markdown-mode . flyspell-mode)
          (markdown-mode . pandoc-mode)
          (markdown-mode . texfrag-mode))
@@ -295,7 +316,8 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; RACKET
 ;; ======
 
-(use-package racket-mode)
+(use-package racket-mode
+  :ensure t)
 
 ; (general-define-key
 ;  :keymaps 'racket-mode-map
@@ -319,6 +341,7 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; =======
 
 (use-package haskell-mode
+  :ensure t
   :hook ((haskell-mode . interactive-haskell-mode)
          (haskell-mode . #'lsp)))
 
@@ -361,6 +384,7 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
   (rename-uniquely))
 
 (use-package eshell-syntax-highlighting
+  :ensure t
   :after esh-mode
   :config
   (eshell-syntax-highlighting-global-mode 1))
@@ -369,7 +393,8 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; GOLANG
 ;; ======
 
-(use-package go-mode)
+(use-package go-mode
+  :ensure t)
 
 ;; ===============
 ;; EMACS CUSTOMIZE
