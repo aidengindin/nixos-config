@@ -6,7 +6,6 @@
     home-manager.url = "github:nix-community/home-manager/release-23.11";
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
-
  };
 
   outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin }:
@@ -19,6 +18,7 @@
             home-manager.nixosModules.home-manager
           ];
         };
+
         weathertop = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
@@ -34,7 +34,7 @@
           system = "aarch64-darwin";
           modules = [
             ./hosts/shadowfax
-            home-manager.nixosModules.home-manager
+            home-manager.darwinModules.home-manager
           ];
         };
       };

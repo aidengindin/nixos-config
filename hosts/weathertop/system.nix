@@ -33,6 +33,7 @@
 
   programs.steam.enable = true;
 
+  agindin.firefox.enable = true;
   agindin.gamingOptimizations.enable = true;
 
   users.users.agindin.packages = with pkgs; [

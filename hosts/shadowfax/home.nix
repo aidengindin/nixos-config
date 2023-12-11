@@ -4,7 +4,11 @@
     ../../home
   ];
 
-  environment.systemPackage = with pkgs; [
-    thefuck
-  ];
+  users.users.agindin.home = "/Users/agindin";
+
+  home-manager.users.agindin = { pkgs, ... }: {
+    home.packages = with pkgs; [
+      thefuck
+    ];
+  };
 }

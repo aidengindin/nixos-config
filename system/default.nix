@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
+    ./desktop.nix
     ./gamingOptimizations.nix
     ./ssh.nix
   ];

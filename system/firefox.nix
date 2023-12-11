@@ -212,7 +212,7 @@ in
 
     # services.gnome.gnome-browser-connector.enable = true;
     
-    environment.sessionVariables = {
+    environment.variables = {
       MOZ_USE_XINPUT2 = "1";
       XDG_CURRENT_DESKTOP = "gnome";
     };
