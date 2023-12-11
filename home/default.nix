@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
+    ./emacs.nix
     ./zsh.nix
   ];
 
