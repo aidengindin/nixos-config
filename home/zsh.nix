@@ -33,13 +33,15 @@
       # bindkey "''${key[Up]}" up-line-or-search
 
       # Powerlevel10k setup
-      POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs virtualenv)
+      POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv)
       POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status background_jobs)
       POWERLEVEL9K_PROMPT_ON_NEWLINE=false
 
       # Status segment customization
       POWERLEVEL9K_STATUS_OK=false
       POWERLEVEL9K_STATUS_HIDE_SIGNAME=true
+      POWERLEVEL9K_CONTEXT_FOREGROUND=232
+      POWERLEVEL9K_CONTEXT_BACKGROUND=248
 
       # Dir customization
       POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
