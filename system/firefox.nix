@@ -21,6 +21,10 @@ in
         "browser.startup.page" = 1;
         "browser.startup.homepage" = "about:home";
 
+        # Search engine
+        "browser.urlbar.placeholderName" = "DuckDuckGo";
+        "browser.urlbar.placeholderName.private" = "DuckDuckGo";
+
         # Disable Activity Stream
         "browser.newtabpage.enabled" = false;
         "browser.newtab.preload" = false;
@@ -134,9 +138,9 @@ in
         "dom.event.clipboardevents.enabled" = false;
       };
       policies = {
-        SearchEngines = {
-          Default = "DuckDuckGo";
-        };
+        # SearchEngines = {
+        #   Default = "DuckDuckGo";
+        # };
 
         # Find extension IDs in about:debugging
         ExtensionSettings = {
