@@ -8,7 +8,11 @@ in
   
   options.agindin.services.watchyourlan = {
     enable = mkEnableOption "watchyourlan";
-    interface = mkOption types.str;
+    interface = mkOption {
+      type = types.str;
+      example = "enp1s0";
+      description = "Interface to watch on";
+    };
   };
 
   config = mkIf cfg.enable {
