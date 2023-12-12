@@ -22,6 +22,7 @@
           modules = [
             ./hosts/lorien
             home-manager.nixosModules.home-manager
+            nixpkgs.arion.nixosModules.arion
           ];
         };
 

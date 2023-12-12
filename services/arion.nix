@@ -2,7 +2,7 @@
 
 {
   config = {
-    environment.systemPackages = with pkgs; [ arion ]; 
+    # environment.systemPackages = with pkgs; [ arion ];
     virtualisation.docker.enable = true;
     virtualisation.arion.backend = "docker";
   };
