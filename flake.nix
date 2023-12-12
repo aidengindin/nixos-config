@@ -4,10 +4,14 @@
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     jovian.url = "github:Jovian-Experiments/Jovian-NixOS/";
     home-manager.url = "github:nix-community/home-manager/release-23.11";
-    darwin.url = "github:lnl7/nix-darwin";
-    darwin.inputs.nixpkgs.follows = "nixpkgs";
-    emacs-overlay.url = "github:nix-community/emacs-overlay/";
-    emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
+    darwin = {
+      url = "github:lnl7/nix-darwin";
+      input.nixpkgs.follows = "nixpkgs";
+    };
+    emacs-overlay = {
+      url = "github:nix-community/emacs-overlay/"; 
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
  };
 
   outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay }:
