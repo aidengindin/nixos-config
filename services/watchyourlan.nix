@@ -16,7 +16,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    virtualisation.arion.projects.watchyourlan.services = {
+    virtualisation.arion.projects.watchyourlan.settings.services = {
       node-bootstrap.service = {
         image = "aceberg/node-bootstrap";
         restart = "unless-stopped";
