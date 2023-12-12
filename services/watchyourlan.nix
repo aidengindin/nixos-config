@@ -28,13 +28,14 @@ in
         restart = "unless-stopped";
         command = "-n http://100.99.184.63:8850"; # TODO: fix this
         depends_on = [ "node-bootstrap" ];
-        volumes = [ "~/docker-volumes/watchyourlan:/data" ];
+        volumes = [ "/docker-volumes/watchyourlan:/data" ];
         environment = {
           TZ = "America/New_York";
-          IFACE = "enp1s0";  # TODO: parameterize this
+          IFACE = cfg.interface;
           THEME = "darkly";
         };
       };
     };
   };
 }
+

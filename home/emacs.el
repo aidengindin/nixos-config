@@ -80,6 +80,7 @@
 
 (menu-bar-mode -1)                   ;; hide menubar
 (tool-bar-mode -1)                   ;; hide toolbar
+(scroll-bar-mode -1)                 ;; hide scrollbar
 (global-display-line-numbers-mode)   ;; show line numbers
 (show-paren-mode 1)                  ;; highlight matching parentheses
 (blink-cursor-mode 0)                ;; disable blinking cursor
