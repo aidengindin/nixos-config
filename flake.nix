@@ -12,9 +12,10 @@
       url = "github:nix-community/emacs-overlay/"; 
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    arion.url = "github:hercules-ci/arion";
  };
 
-  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay }:
+  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, arion }:
     {
       nixosConfigurations = {
         lorien = nixpkgs.lib.nixosSystem {
@@ -22,6 +23,7 @@
           modules = [
             ./hosts/lorien
             home-manager.nixosModules.home-manager
+            arion.nixosModules.arion
           ];
         };
 
