@@ -4,7 +4,7 @@ let
   inherit (lib) mkIf mkEnableOption mkOption types;
 in
 {
-  imports = [ ./arion.nix ];
+  # imports = [ ./arion.nix ];
   
   options.agindin.services.watchyourlan = {
     enable = mkEnableOption "watchyourlan";

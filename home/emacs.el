@@ -120,6 +120,9 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 (global-display-line-numbers-mode)
 (setq display-line-numbers 'relative)
 
+;; attempt to work around a bug in lsp-mode
+; (setq max-lisp-eval-depth 10000)
+
 (use-package undo-tree
   :ensure t
   :config
@@ -251,7 +254,7 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 
 (use-package lsp-mode
   :ensure t
-  :hook ((haskell-mode . #'lsp)
+  :hook (;(haskell-mode . #'lsp)
          (python-mode . #'lsp)))
 
 ;; ========
@@ -362,7 +365,11 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 (use-package haskell-mode
   :ensure t
   :hook ((haskell-mode . interactive-haskell-mode)
-         (haskell-mode . #'lsp)))
+         (haskell-mode . #'lsp))
+  )
+  ;; :config
+  ;; ; for some reason this isn't picked up automatically
+  ;; (add-to-list 'auto-mode-alist '("\\.hs\\'" . haskell-mode)))
 
 ;; =====
 ;; DIRED

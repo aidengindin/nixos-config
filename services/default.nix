@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./arion.nix
     ./watchyourlan.nix
   ];
 }

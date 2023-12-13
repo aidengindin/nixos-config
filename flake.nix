@@ -16,6 +16,13 @@
  };
 
   outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, arion }:
+    let
+      emacsModule = ({ config, ... }: {
+        nixpkgs.overlays = [
+          emacs-overlay.overlay
+        ];
+      });
+    in
     {
       nixosConfigurations = {
         lorien = nixpkgs.lib.nixosSystem {
@@ -43,11 +50,7 @@
           modules = [
             ./hosts/shadowfax
             home-manager.darwinModules.home-manager
-            ({ config, ... }: {
-              nixpkgs.overlays = [
-                emacs-overlay.overlay
-              ];
-            })
+            emacsModule
           ];
         };
       };
