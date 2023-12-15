@@ -365,7 +365,7 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 (use-package haskell-mode
   :ensure t
   :hook ((haskell-mode . interactive-haskell-mode)
-         (haskell-mode . #'lsp))
+         (haskell-mode . #'lsp-deferred))
   )
   ;; :config
   ;; ; for some reason this isn't picked up automatically
@@ -420,7 +420,9 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; ======
 
 (use-package go-mode
-  :ensure t)
+  :ensure t
+  :config
+  (add-hook 'go-mode-hook (lambda () (setq tab-width 2))))
 
 ;; ===============
 ;; EMACS CUSTOMIZE
