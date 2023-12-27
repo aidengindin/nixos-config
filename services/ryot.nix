@@ -30,6 +30,7 @@ in
           source = cfg.mountPath;
           target = "/var/lib/postgresql/data";
         }];
+        networks = [ "reverse-proxy" ];
       };
       ryot.service = {
         image = "ghcr.io/ignisda/ryot:latest";
@@ -39,6 +40,7 @@ in
           TZ = "America/New_York";
           DATABASE_URL = "postgres://postgres:postgres@postgres:5432/postgres";
         };
+        networks = [ "reverse-proxy" ];
       };
     };
   };
