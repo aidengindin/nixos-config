@@ -47,6 +47,7 @@ in
           environment = {
             TZ = "America/New_York";
             DATABASE_URL = "postgres://postgres:postgres@ryot-postgres:5432/postgres";
+            SERVER_INSECURE_COOKIE = "true";
           };
           networks = [ "reverse-proxy" ];
         };
