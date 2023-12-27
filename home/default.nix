@@ -3,6 +3,7 @@
   imports = [
     ./alacritty.nix
     ./emacs.nix
+    ./kitty.nix
     ./latex.nix
     ./zsh.nix
   ];

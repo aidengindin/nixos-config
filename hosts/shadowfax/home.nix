@@ -6,7 +6,8 @@
 
   users.users.agindin.home = "/Users/agindin";
 
-  agindin.alacritty.enable = true;
+  # agindin.alacritty.enable = true;
   agindin.emacs.enable = true;
+  agindin.kitty.enable = true;
   agindin.latex.enable = true;
 }
