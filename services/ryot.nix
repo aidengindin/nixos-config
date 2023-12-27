@@ -15,32 +15,40 @@ in
   };
 
   config = mkIf cfg.enable {
-    virtualisation.arion.projects.ryot.settings.services = {
-      postgres.service = {
-        image = "postgres:16-alpine";
-        container_name = "ryot-postgres";
-        restart = "unless-stopped";
-        environment = {
-          POSTGRES_PASSWORD = "postgres";
-          POSTGRES_USER = "postgres";
-          POSTGRES_DB = "postgres";
+    virtualisation.arion.projects.ryot.settings = {
+      networks = {
+        reverse-proxy = {
+          external = true;
+          name = "reverse-proxy";
         };
-        volumes = [{
-          type = "bind";
-          source = cfg.mountPath;
-          target = "/var/lib/postgresql/data";
-        }];
-        networks = [ "reverse-proxy" ];
       };
-      ryot.service = {
-        image = "ghcr.io/ignisda/ryot:latest";
-        container_name = "ryot";
-        restart = "unless-stopped";
-        environment = {
-          TZ = "America/New_York";
-          DATABASE_URL = "postgres://postgres:postgres@postgres:5432/postgres";
+      services = {
+        postgres.service = {
+          image = "postgres:16-alpine";
+          container_name = "ryot-postgres";
+          restart = "unless-stopped";
+          environment = {
+            POSTGRES_PASSWORD = "postgres";
+            POSTGRES_USER = "postgres";
+            POSTGRES_DB = "postgres";
+          };
+          volumes = [{
+            type = "bind";
+            source = cfg.mountPath;
+            target = "/var/lib/postgresql/data";
+          }];
+          networks = [ "reverse-proxy" ];
         };
-        networks = [ "reverse-proxy" ];
+        ryot.service = {
+          image = "ghcr.io/ignisda/ryot:latest";
+          container_name = "ryot";
+          restart = "unless-stopped";
+          environment = {
+            TZ = "America/New_York";
+            DATABASE_URL = "postgres://postgres:postgres@postgres:5432/postgres";
+          };
+          networks = [ "reverse-proxy" ];
+        };
       };
     };
   };
