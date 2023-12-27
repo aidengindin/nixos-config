@@ -1,16 +1,7 @@
 { config, lib, pkgs, ... }:
-let
-  cfg = config.agindin.eza;
-  inherit (lib) mkIf mkEnableOption;
-in
 {
-  options.agindin.eza = {
-    enable = mkEnableOption "eza";
-  };
-
-  config.home-manager.users.agindin.programs.eza = mkIf cfg.enable {
+  config.home-manager.users.agindin.programs.eza = {
     enable = true;
-    enableAliases = true;
     git = true;
     icons = true;
   };

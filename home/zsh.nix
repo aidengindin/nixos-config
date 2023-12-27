@@ -10,7 +10,8 @@
 
     shellAliases = {
       grep = "grep --color=auto";
-      # ll = "ls -lah";
+      ls = "eza";
+      ll = "eza -lah";
       mkdir = "mkdir -p";
       ps = "ps aux | grep -v grep --color=auto | grep -i";
     };
