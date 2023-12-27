@@ -13,6 +13,7 @@
         grep = "grep --color=auto";
         mkdir = "mkdir -p";
         ps = "ps aux | grep -v grep --color=auto | grep -i";
+        s = "kitten ssh";
 
         ls = "eza";
         ll = "eza -lah";
@@ -63,7 +64,7 @@
       enable = true;
       settings = {
         hostname = {
-          ssh_only = false;
+          ssh_symbol = "⎈";
         };
       };
     };
