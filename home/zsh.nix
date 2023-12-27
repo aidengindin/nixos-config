@@ -24,6 +24,8 @@
         gp = "git push";
         gpl = "git pull";
         ga = "git add .";
+
+        cat = "bat";
       };
 
       prezto = {
