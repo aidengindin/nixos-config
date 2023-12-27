@@ -23,7 +23,7 @@ in
         };
       };
       services = {
-        postgres.service = {
+        ryot-postgres.service = {
           image = "postgres:16-alpine";
           container_name = "ryot-postgres";
           restart = "unless-stopped";
