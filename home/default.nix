@@ -1,9 +1,8 @@
 { config, pkgs, ... }:
 {
   imports = [
-    ./bat.nix
+    ./cli.nix
     ./emacs.nix
-    ./eza.nix
     ./kitty.nix
     ./latex.nix
     ./zsh.nix
