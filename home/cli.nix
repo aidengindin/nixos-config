@@ -11,8 +11,6 @@
       bottom = {
         enable = true;
       };
-
-      # bat.enable = true;
     };
 
     environment.systemPackages = with pkgs; [
