@@ -14,5 +14,11 @@ in
       name = "Hasklug Nerd Font";
       size = 12;
     };
+    theme = "Doom Vibrant";
+    settings = {
+      cursor_blink_interval = 0;
+      enable_audio_bell = "no";
+      tab_bar_style = "powerline";
+    };
   };
 }
