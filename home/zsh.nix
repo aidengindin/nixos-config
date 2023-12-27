@@ -10,7 +10,7 @@
 
     shellAliases = {
       grep = "grep --color=auto";
-      ll = "ls -lah";
+      # ll = "ls -lah";
       mkdir = "mkdir -p";
       ps = "ps aux | grep -v grep --color=auto | grep -i";
     };
