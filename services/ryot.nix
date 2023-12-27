@@ -43,9 +43,10 @@ in
           image = "ghcr.io/ignisda/ryot:latest";
           container_name = "ryot";
           restart = "unless-stopped";
+          depends_on = [ "ryot-postgres" ];
           environment = {
             TZ = "America/New_York";
-            DATABASE_URL = "postgres://postgres:postgres@postgres:5432/postgres";
+            DATABASE_URL = "postgres://postgres:postgres@ryot-postgres:5432/postgres";
           };
           networks = [ "reverse-proxy" ];
         };
