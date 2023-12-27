@@ -26,6 +26,7 @@ in
           POSTGRES_DB = "postgres";
         };
         volumes = [{
+          type = "bind";
           source = cfg.mountPath;
           target = "/var/lib/postgresql/data";
         }];
