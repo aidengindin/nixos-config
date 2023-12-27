@@ -11,12 +11,19 @@
       bottom = {
         enable = true;
       };
+
+      zoxide = {
+        enable = true;
+      };
     };
 
     environment.systemPackages = with pkgs; [
       bat
+      duf
       du-dust
       fd
+      fzf
+      ldns
       procs
       ripgrep
       sd
