@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
-    ./alacritty.nix
+    ./bat.nix
     ./emacs.nix
     ./eza.nix
     ./kitty.nix
