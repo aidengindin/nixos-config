@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
+    ./alacritty.nix
     ./emacs.nix
     ./latex.nix
     ./zsh.nix
