@@ -61,6 +61,11 @@
 
     starship = {
       enable = true;
+      settings = {
+        hostname = {
+          ssh_only = false;
+        };
+      };
     };
   };
 }
