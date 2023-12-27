@@ -3,8 +3,10 @@
 {
   imports = [ ../../services ];
 
-  agindin.services.watchyourlan = {
-    enable = true;
-    interface = "enp1s0";
+  agindin.services = {
+    ryot = {
+      enable = true;
+      mountPath = "/docker-volumes/ryot/db";
+    };
   };
 }

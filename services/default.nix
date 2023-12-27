@@ -3,6 +3,7 @@
 {
   imports = [
     ./arion.nix
+    ./ryot.nix
     ./watchyourlan.nix
   ];
 }

@@ -2,6 +2,7 @@
 {
   imports = [
     ./emacs.nix
+    ./latex.nix
     ./zsh.nix
   ];
 
