@@ -8,7 +8,7 @@ in
     enable = mkEnableOption "kitty";
   };
 
-  config.programs.kitty = mkIf cfg.enable {
+  config.home-manager.users.agindin.programs.kitty = mkIf cfg.enable {
     enable = true;
     font = {
       name = "Hasklug Nerd Font";
