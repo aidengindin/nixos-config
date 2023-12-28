@@ -15,8 +15,8 @@
         ps = "ps aux | grep -v grep --color=auto | grep -i";
         s = "kitten ssh";
 
-        ls = "eza";
-        ll = "eza -lah";
+        ls = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
+        ll = "eza -lah --group-directories-first";
 
         gg = "git status";
         gc = "git commit -m";
@@ -45,18 +45,14 @@
         # Fix zsh-autocomplete on NixOS
         # bindkey "''${key[Up]}" up-line-or-search
 
-        # Powerlevel10k setup
+        # Powerlevel10k setup, preserved for posterity
         POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv)
         POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status background_jobs)
         POWERLEVEL9K_PROMPT_ON_NEWLINE=false
-
-        # Status segment customization
         POWERLEVEL9K_STATUS_OK=false
         POWERLEVEL9K_STATUS_HIDE_SIGNAME=true
         POWERLEVEL9K_CONTEXT_FOREGROUND=232
         POWERLEVEL9K_CONTEXT_BACKGROUND=248
-
-        # Dir customization
         POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
         POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
       '';
@@ -65,8 +61,10 @@
     starship = {
       enable = true;
       settings = {
+        battery.disabled = true;
+        git_metrics.disabled = false;
         hostname = {
-          ssh_symbol = "⎈";
+          ssh_symbol = "⎈ ";
         };
       };
     };

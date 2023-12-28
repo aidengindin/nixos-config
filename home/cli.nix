@@ -11,10 +11,6 @@
       bottom = {
         enable = true;
       };
-
-      zoxide = {
-        enable = true;
-      };
     };
 
     environment.systemPackages = with pkgs; [
