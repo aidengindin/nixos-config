@@ -37,6 +37,21 @@ in
             interval = "1m";
             timeout = "3s";
           };
+          environment = {
+            MYSQL_ROOT_PASSWORD = "wallaroot";
+            SYMFONY__ENV__DATABASE_DRIVER = "pdo_mysql";
+            SYMFONY__ENV__DATABASE_HOST = "db";
+            SYMFONY__ENV__DATABASE_PORT = 3306;
+            SYMFONY__ENV__DATABASE_NAME = "wallabag";
+            SYMFONY__ENV__DATABASE_USER = "wallabag";
+            SYMFONY__ENV__DATABASE_PASSWORD = "wallapass";
+            SYMFONY__ENV__DATABASE_CHARSET = "utf8mb4";
+            SYMFONY__ENV__DATABASE_TABLE_PREFIX = "wallabag_";
+            SYMFONY__ENV__MAILER_DSN = "smtp://127.0.0.1";
+            SYMFONY__ENV__FROM_EMAIL = "wallabag@wallabag.box";
+            SYMFONY__ENV__DOMAIN_NAME = "http://wallabag.box";
+            SYMFONY__ENV__SERVER_NAME = "Your wallabag instance:";
+          };
           depends_on = [ "wallabag-db" "wallabag-redis" ];
         };
 
