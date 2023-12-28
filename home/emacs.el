@@ -426,6 +426,16 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
                             ((setq tab-width 2)
                              (setq indent-tabs-mode nil)))))
 
+;; ====
+;; RUST
+;; ====
+
+(use-package rust-mode
+  :ensure t
+  :config
+  (add-hook 'rust-mode-hook
+            (lambda () (setq indent-tabs-mode nil))))
+
 ;; ===============
 ;; EMACS CUSTOMIZE
 ;; ===============
