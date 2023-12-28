@@ -40,7 +40,7 @@ in
           environment = {
             MYSQL_ROOT_PASSWORD = "wallaroot";
             SYMFONY__ENV__DATABASE_DRIVER = "pdo_mysql";
-            SYMFONY__ENV__DATABASE_HOST = "db";
+            SYMFONY__ENV__DATABASE_HOST = "wallabag-db";
             SYMFONY__ENV__DATABASE_PORT = 3306;
             SYMFONY__ENV__DATABASE_NAME = "wallabag";
             SYMFONY__ENV__DATABASE_USER = "wallabag";
