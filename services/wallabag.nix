@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  cfg = config.agindin.services.ryot;
+  cfg = config.agindin.services.wallabag;
   inherit (lib) mkIf mkEnableOption mkOption types;
 in
 {

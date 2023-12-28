@@ -5,6 +5,7 @@
     ./arion.nix
     ./blocky.nix
     ./ryot.nix
+    ./wallabag.nix
   ];
 }
 
