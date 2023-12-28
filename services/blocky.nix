@@ -166,10 +166,10 @@ in
           };
         };
 
-        prometheus = mkIf (cfg.httpPort != null) {
-          enable = true;
-          path = "/prometheus";
-        };
+        # prometheus = mkIf (cfg.httpPort != null) {
+        #   enable = true;
+        #   path = "/prometheus";
+        # };
 
         ede.enable = true;
 
