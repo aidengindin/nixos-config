@@ -30,8 +30,8 @@
 
       prezto = {
         enable = true;
-        # prompt.theme = "powerlevel10k";
         terminal.autoTitle = true;
+        caseSensitive = false;
       };
 
       syntaxHighlighting.enable = true;
