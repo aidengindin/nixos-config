@@ -166,7 +166,7 @@ in
           };
         };
 
-        prometheus = mkIf cfg.httpPath != null {
+        prometheus = mkIf (cfg.httpPath != null) {
           enable = true;
           path = "/prometheus";
         };
