@@ -51,6 +51,7 @@ in
             SYMFONY__ENV__FROM_EMAIL = "wallabag@wallabag.box";
             SYMFONY__ENV__DOMAIN_NAME = "http://wallabag.box";
             SYMFONY__ENV__SERVER_NAME = "Your wallabag instance:";
+            SYMFONY__ENV__REDIS_HOST = "wallabag-redis";
           };
           depends_on = [ "wallabag-db" "wallabag-redis" ];
         };
@@ -60,6 +61,9 @@ in
           container_name = "wallabag-db";
           environment = {
             MYSQL_ROOT_PASSWORD = "wallaroot";
+            MYSQL_DATABASE = "wallabag";
+            MYSQL_USER = "wallabag";
+            MYSQL_PASSWORD = "wallapass";
           };
           volumes = [{
             type = "bind";
