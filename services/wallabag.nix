@@ -50,7 +50,7 @@ in
             SYMFONY__ENV__DATABASE_TABLE_PREFIX = "wallabag_";
             SYMFONY__ENV__MAILER_DSN = "smtp://127.0.0.1";
             SYMFONY__ENV__FROM_EMAIL = "wallabag@wallabag.box";
-            SYMFONY__ENV__DOMAIN_NAME = "http://wallabag.box";
+            SYMFONY__ENV__DOMAIN_NAME = "http://100.99.184.63:45000";
             SYMFONY__ENV__SERVER_NAME = "Your wallabag instance:";
             SYMFONY__ENV__REDIS_HOST = "wallabag-redis";
           };
