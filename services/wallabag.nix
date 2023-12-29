@@ -14,6 +14,7 @@ in
   };
 
   config = mkIf cfg.enable {
+    networking.firewall.allowedTCPPorts = [ 45000 ];
     virtualisation.arion.projects.wallabag.settings = {
       networks = {
         reverse-proxy = {
@@ -54,6 +55,7 @@ in
             SYMFONY__ENV__REDIS_HOST = "wallabag-redis";
           };
           depends_on = [ "wallabag-db" "wallabag-redis" ];
+          ports = [ "45000:80" ];
         };
 
         wallabag-db.service = {
