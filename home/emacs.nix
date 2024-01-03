@@ -2,8 +2,9 @@
 let
   cfg = config.agindin.emacs;
   inherit (lib) mkIf mkEnableOption;
+  isDarwin = pkgs.system == "aarch64-darwin";
   package =
-    if pkgs.system == "aarch64-darwin"
+    if isDarwin
     then pkgs.emacs29-macport
     else pkgs.emacs29;
 in
@@ -24,15 +25,11 @@ in
     home-manager.users.agindin.programs.emacs = {
       enable = true;
       package = package;
-      # extraConfig = builtins.readFile ./emacs-init.el;
     };
     
-    services.emacs =
-      if pkgs.system == "aarch64-darwin"
-      then {}
-      else {
-        enable = true;
-        package = package;
-      };
+    services.emacs = mkIf isDarwin {
+      enable = true;
+      package = package;
+    };
   };
 }
