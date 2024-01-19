@@ -66,13 +66,18 @@
 (add-to-list 'default-frame-alist '(font . "Hasklug Nerd Font-14"))
 (set-frame-font "Hasklug Nerd Font-14" nil t)
 
-(use-package doom-themes
+;; (use-package doom-themes
+;;   :ensure t
+;;   :config
+;;   ;; Global settings (defaults)
+;;   (setq doom-themes-enable-bold t
+;;         doom-themes-enable-italic t)
+;;   (load-theme 'doom-one t))
+
+(use-package nord-theme
   :ensure t
   :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (load-theme 'doom-one t))
+  (load-theme 'nord t))
 
 (menu-bar-mode -1)                   ;; hide menubar
 (tool-bar-mode -1)                   ;; hide toolbar
