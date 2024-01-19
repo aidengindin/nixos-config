@@ -26,8 +26,10 @@ in
       enable = true;
       package = package;
     };
+
+    home.file.".emacs.d/init.el".source = ./emacs.el;
     
-    services.emacs = mkIf isDarwin {
+    services.emacs = mkIf (! isDarwin) {
       enable = true;
       package = package;
     };
