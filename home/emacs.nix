@@ -27,7 +27,7 @@ in
       package = package;
     };
 
-    home.file.".emacs.d/init.el".source = ./emacs.el;
+    home-manager.users.agindin.home.file.".emacs.d/init.el".source = ./emacs.el;
     
     services.emacs = mkIf (! isDarwin) {
       enable = true;
