@@ -3,7 +3,7 @@ let
   cfg = config.agindin.emacs;
   inherit (lib) mkIf mkEnableOption;
   isDarwin = pkgs.system == "aarch64-darwin";
-  package = pkgs.emacsGit;
+  package = pkgs.emacs-git;
 in
 {
   options.agindin.emacs = {
