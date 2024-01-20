@@ -15,11 +15,11 @@
     darwin-emacs = {
       url = "github:c4710n/nix-darwin-emacs";
       inputs.nixpkgs.follows = "nixpkgs";
-    }
+    };
     arion.url = "github:hercules-ci/arion";
  };
 
-  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, arion }:
+  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, darwin-emacs, arion }:
     let
       emacsModule = ({ config, ... }: {
         nixpkgs.overlays = [
