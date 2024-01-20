@@ -145,28 +145,6 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 (use-package magit
   :ensure t)
 
-;; =============
-;; CENTATUR TABS
-;; =============
-
-(use-package centaur-tabs
-  :ensure t
-  :demand
-  :after (general)
-  :config
-  (centaur-tabs-mode t)
-  (setq centaur-tabs-style "bar")
-  (setq centaur-tabs-set-icons t)
-  (setq centaur-tabs-set-bar 'over)
-  (setq centaur-tabs-set-modified-marker t)
-  (general-define-key
-   "C-<tab>" 'centaur-tabs-forward
-   "C-S-<tab>" 'centaur-tabs-backward)
-  (general-define-key
-   :states '(normal)
-   "g t" 'centaur-tabs-forward
-   "g T" 'centaur-tabs-backward))
-
 ;; (use-package treemacs
 ;;   :ensure t)
 
