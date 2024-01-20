@@ -12,6 +12,10 @@
       url = "github:nix-community/emacs-overlay/"; 
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    darwin-emacs = {
+      url = "github:c4710n/nix-darwin-emacs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    }
     arion.url = "github:hercules-ci/arion";
  };
 
@@ -19,7 +23,13 @@
     let
       emacsModule = ({ config, ... }: {
         nixpkgs.overlays = [
+	  emacs-overlay.overlay
+	];
+      });
+      emacsDarwinModule = ({ config, ... }: {
+        nixpkgs.overlays = [
           emacs-overlay.overlay
+	  darwin-emacs.overlays.emacs
         ];
       });
     in
@@ -50,7 +60,7 @@
           modules = [
             ./hosts/shadowfax
             home-manager.darwinModules.home-manager
-            emacsModule
+            emacsDarwinModule
           ];
         };
       };

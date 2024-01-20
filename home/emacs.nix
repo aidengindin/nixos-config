@@ -3,10 +3,7 @@ let
   cfg = config.agindin.emacs;
   inherit (lib) mkIf mkEnableOption;
   isDarwin = pkgs.system == "aarch64-darwin";
-  package =
-    if isDarwin
-    then pkgs.emacs29-macport
-    else pkgs.emacs29;
+  package = pkgs.emacsGit;
 in
 {
   options.agindin.emacs = {
@@ -35,3 +32,4 @@ in
     };
   };
 }
+
