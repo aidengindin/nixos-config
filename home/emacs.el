@@ -39,7 +39,9 @@
   (setq doom-modeline-icon t)
   (setq doom-modeline-indent-info nil)
   (setq doom-modeline-minor-modes nil)
-  (setq doom-modeline-modal t))
+  (setq doom-modeline-modal t)
+  (setq doom-modeline-battery nil)
+  (setq doom-modeline-time nil))
 
 ;; ====
 ;; HELM
