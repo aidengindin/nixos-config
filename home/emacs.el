@@ -18,12 +18,16 @@
 (use-package evil
   :ensure t
   :init
-  (setq evil-want-keybinding nil)
+  (setq evil-want-keybinding nil
+        evil-want-integration t)
   :config
-  (evil-mode 1))
+  (evil-mode 1)
+  (setq evil-undo-system 'undo-tree
+        evil-want-Y-yank-to-eol t))
 
 (use-package evil-collection
   :ensure t
+  :after evil
   :config
   (evil-collection-init))
 
@@ -53,7 +57,8 @@
   (helm-mode 1)
   (global-set-key (kbd "M-x") 'helm-M-x)
   (global-set-key (kbd "C-x C-f") 'helm-find-files)
-  (global-set-key (kbd "C-x b") 'helm-mini))
+  (global-set-key (kbd "C-x b") 'helm-mini)
+  (setq helm-minibuffer-history-key "M-p"))
 
 ;; ==============
 ;; GLOBAL SETTINGs
@@ -94,7 +99,9 @@
 (use-package which-key
   :ensure t
   :config
-  (which-key-mode))
+  (which-key-mode)
+  (setq which-key-frame-max-height 40
+        which-key-idle-delay 0.1))
 
 (electric-pair-mode 1)               ;; auto close parentheses
 (setq-default indent-tabs-mode nil)  ;; use spaces instead of tabs
@@ -249,14 +256,14 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
          (markdown-mode . pandoc-mode)
          (markdown-mode . texfrag-mode))
   :config
-  (setq markdown-code-block-braces t)
-  (setq markdown-enable-highlighting-syntax t)
-  (setq markdown-enable-math t)
-  (setq markdown-enable-wiki-links t)
-  (setq markdown-hide-markup t)
-  (setq markdown-hide-urls nil)
-  (setq markdown-list-indent-width 2)
-  (setq markdown-fontify-code-blocks-natively t)
+  (setq markdown-code-block-braces t
+        markdown-enable-highlighting-syntax t
+        markdown-enable-math t
+        markdown-enable-wiki-links t
+        markdown-hide-markup t
+        markdown-hide-urls nil
+        markdown-list-indent-width 2
+        markdown-fontify-code-blocks-natively t)
 
   (general-define-key
    :keymaps 'markdown-mode-map
@@ -303,6 +310,19 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
          (insert "# What didn't go well today\n\n")
          (insert "# Misc thoughts\n\n\n"))))
 
+;; ========
+;; ORG MODE
+;; ========
+
+; I don't use org mode anymore, but leaving this config here in case I make the mistake of picking it up again.
+
+ (setq org-M-RET-may-split-line nil
+       org-babel-python-command "python3"
+       org-hide-leading-stars t
+       org-highlight-latex-and-related '(latex script entities)
+       org-list-allow-alphabetical t
+       org-pretty-entities t)
+
 ;; =====
 ;; LATEX
 ;; =====
@@ -347,10 +367,8 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
   :ensure t
   :hook ((haskell-mode . interactive-haskell-mode)
          (haskell-mode . #'lsp-deferred))
-  )
-  ;; :config
-  ;; ; for some reason this isn't picked up automatically
-  ;; (add-to-list 'auto-mode-alist '("\\.hs\\'" . haskell-mode)))
+  :config
+  (setq haskell-completing-read-function 'helm--completing-read-default))
 
 ;; =====
 ;; DIRED
@@ -403,9 +421,9 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 (use-package go-mode
   :ensure t
   :config
-  (add-hook 'go-mode-hook (lambda ()
-                            ((setq tab-width 2)
-                             (setq indent-tabs-mode nil)))))
+  (add-hook 'go-mode-hook
+            (lambda () (setq tab-width 2
+                             indent-tabs-mode nil))))
 
 ;; ====
 ;; RUST
@@ -421,58 +439,15 @@ Exempt major modes are defined in `display-line-numbers-exempt-modes'."
 ;; EMACS CUSTOMIZE
 ;; ===============
 
-;(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- ;'(markdown-header-face-2 ((t (:inherit markdown-header-face :foreground "deep sky blue" :height 1.0))))
- ;'(markdown-header-face-3 ((t (:inherit markdown-header-face :foreground "green" :height 1.0))))
- ;'(markdown-header-face-4 ((t (:inherit markdown-header-face :foreground "violet" :height 1.0))))
- ;'(markdown-header-face-5 ((t (:inherit markdown-header-face :foreground "dark turquoise" :height 1.0))))
- ;'(markdown-header-face-6 ((t (:inherit markdown-header-face :foreground "green yellow" :height 1.0))))
- ;'(org-latex-and-related ((t (:foreground "lawn green" :weight normal)))))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(column-number-mode t)
- '(custom-safe-themes
-   '("2f1518e906a8b60fac943d02ad415f1d8b3933a5a7f75e307e6e9a26ef5bf570" default))
- '(dashboard-item-generators
-   '((recents . dashboard-insert-recents)
-     (bookmarks . dashboard-insert-bookmarks)
-     (projects . dashboard-insert-projects)
-     (registers . dashboard-insert-registers)))
- '(dashboard-items '((recents . 20) (bookmarks . 5) (agenda . 5)))
- '(evil-undo-system 'undo-tree)
- '(evil-want-Y-yank-to-eol t)
- '(global-undo-tree-mode t)
- '(haskell-completing-read-function 'helm--completing-read-default)
- '(helm-minibuffer-history-key "M-p")
- '(markdown-code-block-braces t)
- '(markdown-enable-highlighting-syntax t)
- '(markdown-enable-math t)
- '(markdown-enable-wiki-links t)
- '(markdown-hide-markup nil)
- '(markdown-hide-urls nil)
- '(markdown-list-indent-width 2)
- '(org-M-RET-may-split-line nil)
- '(org-babel-python-command "python3")
- '(org-hide-leading-stars t)
- '(org-highlight-latex-and-related '(latex script entities))
- '(org-list-allow-alphabetical t)
- '(org-pretty-entities t)
+ ;; '(custom-safe-themes
+ ;;   '("2f1518e906a8b60fac943d02ad415f1d8b3933a5a7f75e307e6e9a26ef5bf570" default))
  '(package-selected-packages
    '(sudo-edit nix-mode go-mode treemacs-magit treemacs-icons-dired treemacs-evil doom eshell-syntax-highlighting mu4easy nerd-icons evil-collection magit company company-mode use-package undo-tree racket-mode ob-async pyvenv org-ref pdf-tools jupyter mode-line-bell lsp-haskell helm-lsp flycheck lsp-ui lsp-mode general which-key vterm yaml-mode dashboard texfrag edit-indirect haskell-mode auctex helm pandoc-mode markdown-mode doom-modeline doom-themes evil))
  '(warning-suppress-types '(((evil-collection))))
- '(which-key-frame-max-height 40)
- '(which-key-idle-delay 0.1))
 (put 'downcase-region 'disabled nil)
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
