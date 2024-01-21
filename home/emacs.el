@@ -18,8 +18,8 @@
 (use-package evil
   :ensure t
   :init
-  (setq evil-want-keybinding nil
-        evil-want-integration t)
+  (setq evil-want-keybinding nil)
+        ;; evil-want-integration t)
   :config
   (evil-mode 1)
   (setq evil-undo-system 'undo-tree
