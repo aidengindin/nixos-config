@@ -34,6 +34,8 @@ in
       vscodium
       whatsapp-for-linux
       zoom-us
+
+      gnomeExtensions.gsconnect
     ];
   };
 }
