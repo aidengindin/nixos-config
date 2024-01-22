@@ -16,6 +16,7 @@ in
         config = ./emacs.el;
         defaultInitFile = true;
         package = package;
+        alwaysEnsure = true;
       })
     ];
 
