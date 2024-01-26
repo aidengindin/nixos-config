@@ -32,25 +32,26 @@
 	        emacs-overlay.overlay
 	      ];
       });
+      standardNixosModules = [
+        home-manager.nixosModules.home-manager
+        agenix.nixosModules.default
+      ];
     in
     {
       nixosConfigurations = {
         lorien = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          modules = [
+          modules = standardNixosModules ++ [
             ./hosts/lorien
-            home-manager.nixosModules.home-manager
             arion.nixosModules.arion
-            agenix.nixosModules.default
           ];
         };
 
         weathertop = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          modules = [
+          modules = standardNixosModules ++ [
             ./hosts/weathertop
             jovian.nixosModules.default
-            home-manager.nixosModules.home-manager
           ];
         };
       };
@@ -67,3 +68,4 @@
       };
     };
 }
+

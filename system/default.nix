@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
+    ./agenix.nix
     ./desktop.nix
     ./firefox.nix
     ./gamingOptimizations.nix
