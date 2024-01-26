@@ -36,11 +36,15 @@
         home-manager.nixosModules.home-manager
         agenix.nixosModules.default
       ];
+      standardSpecialArgs = {
+        inherit agenix;
+      };
     in
     {
       nixosConfigurations = {
         lorien = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
+          specialArgs = standardSpecialArgs;
           modules = standardNixosModules ++ [
             ./hosts/lorien
             arion.nixosModules.arion
@@ -49,6 +53,7 @@
 
         weathertop = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
+          specialArgs = standardSpecialArgs;
           modules = standardNixosModules ++ [
             ./hosts/weathertop
             jovian.nixosModules.default
