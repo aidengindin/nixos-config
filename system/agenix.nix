@@ -1,7 +1,7 @@
-{ config, pkgs, agenix, ... }:
+{ config, pkgs, inputs, ... }:
 {
   config.environment.systemPackages = with pkgs; [
-    agenix.packages."${system}".default
+    inputs.agenix.packages."${system}".default
   ];
 }
 
