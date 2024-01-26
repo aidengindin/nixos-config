@@ -1,7 +1,7 @@
-{ config, pkgs, ... }:
+{ config, pkgs, agenix, ... }:
 {
   imports = [
-    ./agenix.nix
+    # ./agenix.nix
     ./desktop.nix
     ./firefox.nix
     ./gamingOptimizations.nix
@@ -56,6 +56,7 @@
     environment.systemPackages = with pkgs; [
       htop
       neovim
+      agenix.packages.${pkgs.system}.default
     ];
   };
 }
