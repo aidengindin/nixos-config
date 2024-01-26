@@ -26,24 +26,24 @@ in
     home-manager.users.agindin.dconf = {
       enable = true;
       settings = {
-        "/org/gnome/shell".enabled-extensions = [
+        "org/gnome/shell".enabled-extensions = [
 	  "gsconnect@andyholmes.github.io"
 	];
-	"/org/gnome/desktop/interface" = {
+	"org/gnome/desktop/interface" = {
 	  color-scheme = "prefer-dark";
 	  enable-hot-corners = false;
 	  show-battery-percentage = true;
 	};
-	"/org/gnome/desktop/session" = {
+	"org/gnome/desktop/session" = {
 	  idle-delay = "uint32 900";
 	};
-	"/org/gnome/desktop/screensaver" = {
+	"org/gnome/desktop/screensaver" = {
 	  lock-enabled = true;
 	};
-	"/org/gnome/mutter" = {
+	"org/gnome/mutter" = {
 	  edge-tiling = true;
 	};
-	"/org/gnome/settings-daemon/plugins/power" = {
+	"org/gnome/settings-daemon/plugins/power" = {
 	  idle-dim = true;
 	};
       };
