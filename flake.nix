@@ -2,7 +2,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    jovian.url = "github:Jovian-Experiments/Jovian-NixOS/";
+    jovian = {
+      url = "github:Jovian-Experiments/Jovian-NixOS/";
+      inputs.nixpkgs.follows = "unstable";
+    };
     home-manager.url = "github:nix-community/home-manager/release-23.11";
     darwin = {
       url = "github:lnl7/nix-darwin";
