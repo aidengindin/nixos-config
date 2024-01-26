@@ -19,9 +19,13 @@
       url = "github:hercules-ci/arion";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
  };
 
-  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, arion }:
+  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, arion, agenix }:
     let
       emacsModule = ({ config, ... }: {
         nixpkgs.overlays = [
@@ -37,6 +41,7 @@
             ./hosts/lorien
             home-manager.nixosModules.home-manager
             arion.nixosModules.arion
+            agenix.nixosModules.default
           ];
         };
 
