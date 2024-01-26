@@ -23,6 +23,32 @@ in
       pulse.enable = true;
     };
 
+    home-manager.users.agindin.dconf = {
+      enable = true;
+      settings = {
+        "/org/gnome/shell".enabled-extensions = [
+	  "gsconnect@andyholmes.github.io"
+	];
+	"/org/gnome/desktop/interface" = {
+	  color-scheme = "prefer-dark";
+	  enable-hot-corners = false;
+	  show-battery-percentage = true;
+	};
+	"/org/gnome/desktop/session" = {
+	  idle-delay = "uint32 900";
+	};
+	"/org/gnome/desktop/screensaver" = {
+	  lock-enabled = true;
+	};
+	"/org/gnome/mutter" = {
+	  edge-tiling = true;
+	};
+	"/org/gnome/settings-daemon/plugins/power" = {
+	  idle-dim = true;
+	};
+      };
+    };
+
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       bitwarden
