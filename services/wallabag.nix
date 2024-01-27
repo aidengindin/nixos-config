@@ -14,7 +14,9 @@ in
   };
 
   config = mkIf cfg.enable {
-    networking.firewall.allowedTCPPorts = [ 45000 ];
+    age.secrets.wallabag-db-password = {
+      file = ../secrets/wallabag-db-password.age;
+    };
     virtualisation.arion.projects.wallabag.settings = {
       networks = {
         reverse-proxy = {
@@ -39,7 +41,7 @@ in
             timeout = "3s";
           };
           environment = {
-            MYSQL_ROOT_PASSWORD = "wallaroot";
+            MYSQL_ROOT_PASSWORD = config.age.secrets.wallabag-db-password;
             SYMFONY__ENV__DATABASE_DRIVER = "pdo_mysql";
             SYMFONY__ENV__DATABASE_HOST = "wallabag-db";
             SYMFONY__ENV__DATABASE_PORT = 3306;
@@ -62,10 +64,10 @@ in
           image = "mariadb";
           container_name = "wallabag-db";
           environment = {
-            MYSQL_ROOT_PASSWORD = "wallaroot";
+            MYSQL_ROOT_PASSWORD = config.age.secrets.wallabag-db-password;
             MYSQL_DATABASE = "wallabag";
             MYSQL_USER = "wallabag";
-            MYSQL_PASSWORD = "wallapass";
+            MYSQL_PASSWORD = config.age.secrets.wallabag-db-password;
           };
           volumes = [{
             type = "bind";
