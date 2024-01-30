@@ -26,9 +26,11 @@ in
     home-manager.users.agindin.dconf = {
       enable = true;
       settings = {
-        "org/gnome/shell".enabled-extensions = [
-	        "gsconnect@andyholmes.github.io"
-	      ];
+        "org/gnome/shell" = {
+          enabled-extensions = [
+	          "gsconnect@andyholmes.github.io"
+	        ];
+        };
 	      "org/gnome/desktop/interface" = {
 	        color-scheme = "prefer-dark";
 	        enable-hot-corners = false;
