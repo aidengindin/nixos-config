@@ -24,7 +24,10 @@ in
       package = package;
     };
 
-    home-manager.users.agindin.home.file.".emacs.d/init.el".source = ./emacs.el;
+    home-manager.users.agindin.home.file = {
+      ".emacs.d/init.el".source = ./emacs.el; 
+      ".emacs.d/emacs-rose-pine-theme.el".source = ./emacs-rose-pine-theme.el;
+    };
     
     services.emacs = mkIf (! isDarwin) {
       enable = true;
