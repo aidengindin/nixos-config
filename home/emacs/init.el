@@ -83,10 +83,10 @@
 ;;         doom-themes-enable-italic t)
 ;;   (load-theme 'doom-one t))
 
-(use-package rose-pine-theme
+(use-package nord-theme
   :ensure t
   :config
-  (load-theme 'rose-pine t))
+  (load-theme 'nord t))
 
 (menu-bar-mode -1)                   ;; hide menubar
 (tool-bar-mode -1)                   ;; hide toolbar

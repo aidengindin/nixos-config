@@ -14,7 +14,7 @@ in
       name = "Hasklug Nerd Font";
       size = 12;
     };
-    theme = "Rosé Pine";
+    theme = "Nord";
     settings = {
       cursor_blink_interval = 0;
       enable_audio_bell = "no";

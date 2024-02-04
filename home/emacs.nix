@@ -25,8 +25,7 @@ in
     };
 
     home-manager.users.agindin.home.file = {
-      ".emacs.d/init.el".source = ./emacs/emacs.el; 
-      ".emacs.d/rose-pine-theme.el".source = ./emacs/rose-pine-theme.el;
+      ".emacs.d/init.el".source = ./emacs/init.el; 
     };
     
     services.emacs = mkIf (! isDarwin) {
