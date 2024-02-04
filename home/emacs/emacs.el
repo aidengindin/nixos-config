@@ -11,6 +11,8 @@
   (setq use-package-always-ensure t
         use-package-expand-minimally t))
 
+(add-to-list 'load-path "~/.emacs.d")
+
 ;; ====
 ;; EVIL
 ;; ====
