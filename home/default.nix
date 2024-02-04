@@ -5,6 +5,7 @@
     ./emacs.nix
     ./kitty.nix
     ./latex.nix
+    ./nvim.nix
     ./starship.nix
     ./zsh.nix
   ];
