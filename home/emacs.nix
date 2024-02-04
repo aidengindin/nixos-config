@@ -13,7 +13,7 @@ in
   config = mkIf cfg.enable {
     environment.systemPackages = [
       (pkgs.emacsWithPackagesFromUsePackage {
-        config = ./emacs/emacs.el;
+        config = ./emacs/init.el;
         package = package;
         alwaysEnsure = true;
       })
