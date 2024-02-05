@@ -13,6 +13,6 @@ in
       enable = true;
       theme = "Nord";
     };
-    home.file."config/kitty/kitty.conf" = ./kitty/kitty.conf;
+    home.file."config/kitty/kitty.conf".source = ./kitty/kitty.conf;
   };
 }
