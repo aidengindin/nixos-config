@@ -13,7 +13,7 @@ in
     font = {
       family = "Hasklug Nerd Font";
       size = 12;
-    }
+    };
     theme = "Nord";
     settings = {
       cursor_blink_interval = 0;
