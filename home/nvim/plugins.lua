@@ -26,7 +26,9 @@ require("lazy").setup({
   {
     "nvim-lualine/lualine.nvim",
     config = function()
-      require("lualine").setup()
+      require("lualine").setup {
+        theme = "nord"
+      }
     end,
   },
   {
@@ -48,6 +50,63 @@ require("lazy").setup({
       }
     end,
     dependencies = { "nvim-tree/nvim-web-devicons" }
+  },
+  {
+    "akinsho/bufferline.nvim",
+    version = "*",
+    dependencies = { "nvim-tree/nvim-web-devicons" }
+  },
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    opts = {}
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    config = function()
+      require("nvim-treesitter.configs").setup {
+        highlight = {
+          enble = true;
+        },
+        ensure_installed = {  -- just enabling everything I use
+          -- "awk",  -- not supported yet
+          "bash",
+          "bibtex",
+          "c",
+          "cmake",
+          "cpp",
+          "csv",
+          "diff",
+          "dockerfile",
+          "git_rebase",
+          "gitignore",
+          "go",
+          "gomod",
+          "gosum",
+          "haskell",
+          "html",
+          "http",
+          "java",
+          "javascript",
+          "jq",
+          "json",
+          "latex",
+          "lua",
+          "markdown_inline",
+          "nix",
+          "python",
+          "rust",
+          "sql",
+          "todotxt",
+          "toml",
+          "tsv",
+          "tsx",
+          "typescript",
+          "xml",
+          "yaml"
+        }
+      }
+    end
   }
 })
 
