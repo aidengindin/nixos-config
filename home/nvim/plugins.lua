@@ -110,7 +110,7 @@ require("lazy").setup({
   },
   {
     "vim-pandoc/vim-pandoc",
-    dependencies = { "vim-pandoc/vim-pandoc-syntax"
+    dependencies = { "vim-pandoc/vim-pandoc-syntax" }
   }
 })
 
