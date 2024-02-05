@@ -10,8 +10,10 @@ in
 
   config.home-manager.users.agindin.programs.kitty = mkIf cfg.enable {
     enable = true;
-    font_family = "Hasklug Nerd Font";
-    font_size = 12;
+    font = {
+      family = "Hasklug Nerd Font";
+      size = 12;
+    }
     theme = "Nord";
     settings = {
       cursor_blink_interval = 0;
