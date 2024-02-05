@@ -10,10 +10,6 @@ in
 
   config.home-manager.users.agindin.programs.kitty = mkIf cfg.enable {
     enable = true;
-    font = {
-      family = "Hasklug Nerd Font";
-      size = 12;
-    };
     theme = "Nord";
     settings = {
       cursor_blink_interval = 0;
@@ -22,6 +18,9 @@ in
 
       # confirm closing a window/tab only when a command is running
       confirm_os_window_close = -1;
+
+      font_family = "Hasklug Nerd Font";
+      font_size = 12;
     };
   };
 }
