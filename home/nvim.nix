@@ -5,9 +5,9 @@
       enable = true;
       defaultEditor = true;
     };
-    home.file."config/nvim/lua" = {
-      "init.lua".source = ./nvim/init.lua;
-      "plugins.lua".source = ./nvim/plugins.lua;
+    home.file = {
+      "config/nvim/lua/init.lua".source = ./nvim/init.lua;
+      "config/nvim/lua/plugins.lua".source = ./nvim/plugins.lua;
     };
   };
 }
