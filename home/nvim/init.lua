@@ -16,11 +16,11 @@ o.shiftwidth = 2    -- # of characters to indent lines
 o.expandtab = true  -- use spaces instead of tabs
 
 -- use system clipboard
-if has("unnamedplus")
+if has("unnamedplus") then
   o.clipboard = "unnamedplus"
 else
   o.clipboard = "unnamed"
-endif
+end
 
 require("plugins")
 
