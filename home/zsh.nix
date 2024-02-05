@@ -25,6 +25,10 @@
       ga = "git add .";
 
       cat = "bat";
+
+      v = "nvim";
+      vi = "nvim";
+      vim = "nvim";
     };
 
     prezto = {
