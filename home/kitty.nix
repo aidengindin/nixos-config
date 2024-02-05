@@ -19,7 +19,10 @@ in
       # confirm closing a window/tab only when a command is running
       confirm_os_window_close = -1;
 
-      font_family = "Hasklug Nerd Font";
+      font_family = "Hasklug Nerd Font Mono";
+      bold_font = "Hasklug Nerd Font Mono Bold";
+      italic_font = "Hasklug Nerd Font Mono Italic";
+      bold_italic_font = "Hasklug Nerd Font Mono Bold Italic";
       font_size = 12;
     };
   };
