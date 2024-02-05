@@ -1,4 +1,4 @@
-local o = o
+local o = vim.opt
 
 vim.wo.relativenumber = true
 
