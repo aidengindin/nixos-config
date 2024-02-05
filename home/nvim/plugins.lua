@@ -15,7 +15,7 @@ require("lazy").setup({
   "shaunsingh/nord.nvim",
   {
     "nvim-tree/nvim-tree.lua",
-    version = *,
+    version = "*",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("nvim-tree").setup {}
