@@ -4,17 +4,10 @@
 
 {
   config = {
-    # create a new user called deck to get the correct mount path
-    users.users.deck = {
-      isNormalUser = true;
-      home = "/home/deck";
-    };
-    home-manager.users.deck = {
-      home.stateVersion = "23.11";
-      services.udiskie = {
-        enable = true;
-        tray = "never";
-      };
+    fileSystems."/run/media/deck/mmcblk0" = {
+      device = "/dev/disk/by-uuid/2b2a161b-0fef-43a5-8023-9795fd31d5fb";
+      fsTtype = "btrfs";
+      options = [ "compress=zstd" "noatime" ];
     };
   };
 }
