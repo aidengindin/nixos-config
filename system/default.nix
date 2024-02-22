@@ -55,7 +55,6 @@
 
     environment.systemPackages = with pkgs; [
       htop
-      neovim
       agenix.packages.${pkgs.system}.default
     ];
   };

@@ -18,10 +18,13 @@
       duf
       du-dust
       fd
+      fselect
       fzf
       ldns
       procs
+      rargs
       ripgrep
+      ripgrep-all
       sd
     ];
   };
