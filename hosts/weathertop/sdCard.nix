@@ -6,7 +6,7 @@
   config = {
     fileSystems."/run/media/deck/mmcblk0" = {
       device = "/dev/disk/by-uuid/2b2a161b-0fef-43a5-8023-9795fd31d5fb";
-      fsTtype = "btrfs";
+      # fsTtype = "btrfs";
       options = [ "compress=zstd" "noatime" ];
     };
   };
