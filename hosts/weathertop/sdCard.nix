@@ -10,6 +10,7 @@
       home = "/home/deck";
     };
     home-manager.users.deck = {
+      home.stateVersion = "24.05";
       services.udiskie = {
         enable = true;
         tray = "never";
