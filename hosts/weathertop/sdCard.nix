@@ -3,12 +3,13 @@
 { config, lib, pkgs, ... }:
 
 {
-  fileSystems."/run/media/deck/mmcblk0p1" = {
-    device = "/dev/disk/by-uuid/2b2a161b-0fef-43a5-8023-9795fd31d5fb";
-    fsType = "btrfs";
-    options = [ "subvol=@" "compress=zstd" "noatime" ];
-  };
-  # config = {
+  config = {
+    home-manager.users.agindin = {
+      services.udiskie = {
+        enable = true;
+        tray = "never";
+      };
+    };
     # # Allow the SD card to be discovered from the gamespoce UI
     # users.groups.storage = { };
     # services.udisks2.enable = true;
@@ -49,6 +50,6 @@
     #     }
     #   });
     # '';
-  # };
+  };
 }
 
