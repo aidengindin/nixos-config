@@ -3,7 +3,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.agindin.jovian.sdCard;
+  cfg = config.agindin.sdCard;
 in
 {
   options.sdCard = {
