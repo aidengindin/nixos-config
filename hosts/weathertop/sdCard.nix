@@ -6,7 +6,7 @@ let
   cfg = config.agindin.sdCard;
 in
 {
-  options.sdCard = {
+  options.agindin.sdCard = {
     btrfsOptions = lib.mkOption {
       # from https://gitlab.com/popsulfr/steamos-btrfs/
       default = [
