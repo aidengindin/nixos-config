@@ -24,10 +24,10 @@
       fsType = "vfat";
     };
 
-  fileSystems."/run/media/deck/mmcblk0p1" = {
-    device = "/dev/mmcblk0p1";
-    fsType = "btrfs";
-  };
+  # fileSystems."/run/media/deck/mmcblk0p1" = {
+  #   device = "/dev/mmcblk0p1";
+  #   fsType = "btrfs";
+  # };
 
   swapDevices =
     [ { device = "/dev/disk/by-uuid/228537d4-e319-41be-af85-ef2c86b5423f"; }
