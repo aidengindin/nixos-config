@@ -12,7 +12,7 @@
       description = "Udiskie Automount Service";
       wantedBy = [ "paths.target" ];
       serviceConfig = {
-        ExecStart = "${pkgs.udiskie}/bin/udiskie --no-file-manager --no-notify";
+        ExecStart = "${pkgs.udiskie}/bin/udiskie -2 --no-file-manager --no-notify";
         Restart = "always";
       };
     };
