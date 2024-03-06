@@ -17,6 +17,14 @@ in
     age.secrets.wallabag-db-password = {
       file = ../secrets/wallabag-db-password.age;
     };
+
+    system.activationScripts."wallabag-env" = ''
+      secret=$(cat "${config.age.secrets.wallabag-db-password.path}")
+      envFile="${cfg.mountPath}/wallabag.env"
+      envFileTemplate=${builtins.readFile ./wallabag.env}
+      echo $envFileTemplate | ${pkgs.gnused}/bin/sed "s/@secret@/$secret/" > $envFile
+    '';
+
     virtualisation.arion.projects.wallabag.settings = {
       networks = {
         reverse-proxy = {
@@ -40,22 +48,7 @@ in
             interval = "1m";
             timeout = "3s";
           };
-          environment = {
-            MYSQL_ROOT_PASSWORD = config.age.secrets.wallabag-db-password;
-            SYMFONY__ENV__DATABASE_DRIVER = "pdo_mysql";
-            SYMFONY__ENV__DATABASE_HOST = "wallabag-db";
-            SYMFONY__ENV__DATABASE_PORT = 3306;
-            SYMFONY__ENV__DATABASE_NAME = "wallabag";
-            SYMFONY__ENV__DATABASE_USER = "wallabag";
-            SYMFONY__ENV__DATABASE_PASSWORD = "wallapass";
-            SYMFONY__ENV__DATABASE_CHARSET = "utf8mb4";
-            SYMFONY__ENV__DATABASE_TABLE_PREFIX = "wallabag_";
-            SYMFONY__ENV__MAILER_DSN = "smtp://127.0.0.1";
-            SYMFONY__ENV__FROM_EMAIL = "wallabag@wallabag.box";
-            SYMFONY__ENV__DOMAIN_NAME = "http://wallabag.box";
-            SYMFONY__ENV__SERVER_NAME = "Your wallabag instance:";
-            SYMFONY__ENV__REDIS_HOST = "wallabag-redis";
-          };
+          env_file = [ "${cfg.mountPath}/wallabag.env" ];
           depends_on = [ "wallabag-db" "wallabag-redis" ];
           ports = [ "45000:80" ];
         };
@@ -63,12 +56,7 @@ in
         wallabag-db.service = {
           image = "mariadb";
           container_name = "wallabag-db";
-          environment = {
-            MYSQL_ROOT_PASSWORD = config.age.secrets.wallabag-db-password;
-            MYSQL_DATABASE = "wallabag";
-            MYSQL_USER = "wallabag";
-            MYSQL_PASSWORD = config.age.secrets.wallabag-db-password;
-          };
+          env_file = [ "${cfg.mountPath}/wallabag.env" ];
           volumes = [{
             type = "bind";
             source = "${cfg.mountPath}/db";
