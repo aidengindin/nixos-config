@@ -21,8 +21,8 @@ in
     system.activationScripts."wallabag-env" = ''
       secret=$(cat "${config.age.secrets.wallabag-db-password.path}")
       envFile="${cfg.mountPath}/wallabag.env"
-      envFileTemplate=${builtins.readFile ./wallabag.env}
-      echo $envFileTemplate | ${pkgs.gnused}/bin/sed "s/@secret@/$secret/" > $envFile
+      echo '${builtins.readFile ./wallabag.env}' > $envFile
+      ${pkgs.sd}/bin/sd '@secret@' $secret $envFile
     '';
 
     virtualisation.arion.projects.wallabag.settings = {
