@@ -50,7 +50,6 @@ in
           };
           env_file = [ "${cfg.mountPath}/wallabag.env" ];
           depends_on = [ "wallabag-db" "wallabag-redis" ];
-          ports = [ "45000:80" ];
         };
 
         wallabag-db.service = {
