@@ -34,7 +34,7 @@ in
       };
       services = {
         wallabag.service = {
-          image = "wallabag/wallabag";
+          image = "wallabag/wallabag:2.6.8";
           container_name = "wallabag";
           restart = "unless-stopped";
           networks = [ "reverse-proxy" ];
@@ -53,7 +53,7 @@ in
         };
 
         wallabag-db.service = {
-          image = "mariadb";
+          image = "mariadb:11.3.2-jammy";
           container_name = "wallabag-db";
           env_file = [ "${cfg.mountPath}/wallabag.env" ];
           volumes = [{
@@ -64,14 +64,14 @@ in
           restart = "unless-stopped";
           networks = [ "reverse-proxy" ];
           healthcheck = {
-            test = [ "CMD" "mysqladmin" "ping" "-h" ];
+            test = [ "CMD" "healthcheck.sh" "--connect" "--innodb_initialized" ];
             interval = "20s";
             timeout = "3s";
           };
         };
 
         wallabag-redis.service = {
-          image = "redis:alpine";
+          image = "redis:7.2.4-alpine";
           container_name = "wallabag-redis";
           restart = "unless-stopped";
           networks = [ "reverse-proxy" ];
