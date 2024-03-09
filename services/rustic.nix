@@ -10,6 +10,7 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [ rustic-rs ];
+    age.secrets.rustic-password.file = ../secrets/rustic-password.age;
   };
 }
 
