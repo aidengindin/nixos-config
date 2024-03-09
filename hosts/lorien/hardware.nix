@@ -23,6 +23,12 @@
       fsType = "vfat";
     };
 
+  fileSystems."/backup" = {
+    device = "21ad0ead-db3c-46c0-a6aa-20bd470866e2";
+    fsType = "btrfs";
+    options = [ "subvol=@" "compress=zstd" ];
+  };
+
   swapDevices =
     [ { device = "/dev/disk/by-uuid/9f8149d0-1d98-4dcb-a2d7-453b0e0caae0"; }
     ];
