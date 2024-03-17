@@ -1,5 +1,3 @@
-# TODO: I think white/blacklisted domains need some special formatting to set them apart from adlists?
-
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.services.blocky;
@@ -95,11 +93,11 @@ in
       default = 53;
       description = "Port to serve DNS";
     };
-    httpPort = mkOption {
-      type = types.int;
-      default = null;
-      description = "Port to serve HTTP for prometheus";
-    };
+    # httpPort = mkOption {
+    #   type = types.int;
+    #   default = null;
+    #   description = "Port to serve HTTP for prometheus";
+    # };
     adsAllowedClients = mkOption {
       type = types.listOf types.str;
       default = [];
