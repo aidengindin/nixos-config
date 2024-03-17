@@ -147,7 +147,7 @@ in
         #   path = "/prometheus";
         # };
 
-        ede.enable = true;
+        ede.enable = false;
       };
     };
   };
