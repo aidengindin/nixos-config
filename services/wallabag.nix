@@ -43,11 +43,11 @@ in
             source = "${cfg.mountPath}/images";
             target = "/var/www/wallabag/web/assets/images";
           }];
-          healthcheck = {
-            test = [ "CMD" "wget" "--no-verbose" "--tries=1" "--spider" "http://localhost" ];
-            interval = "1m";
-            timeout = "3s";
-          };
+          # healthcheck = {
+          #   test = [ "CMD" "wget" "--no-verbose" "--tries=1" "--spider" "http://localhost" ];
+          #   interval = "1m";
+          #   timeout = "3s";
+          # };
           env_file = [ "${cfg.mountPath}/wallabag.env" ];
           depends_on = [ "wallabag-db" "wallabag-redis" ];
         };
