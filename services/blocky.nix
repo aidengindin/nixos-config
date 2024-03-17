@@ -148,8 +148,6 @@ in
         # };
 
         ede.enable = true;
-
-        loading.concurrency = 10;
       };
     };
   };
