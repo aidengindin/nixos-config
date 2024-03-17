@@ -108,6 +108,11 @@ in
   };
 
   config = mkIf cfg.enable {
+    networking.firewall = {
+      allowedTCPPorts = [ cfg.port ];
+      allowedUDPPorts = [ cfg.port ];
+    };
+
     services.blocky = {
       enable = true;
       settings = {

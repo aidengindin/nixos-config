@@ -15,5 +15,9 @@
       enable = true;
       mountPath = "/docker-volumes/wallabag";
     };
+    blocky = {
+      enable = true;
+      port = 5353;
+    };
   };
 }
