@@ -116,7 +116,7 @@ in
       settings = {
         ports = {
           dns = cfg.port;
-          http = cfg.httpPort;
+          # http = cfg.httpPort;
         };
 
         clientLookup.clients = {
