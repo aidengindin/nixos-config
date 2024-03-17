@@ -18,6 +18,7 @@
     blocky = {
       enable = true;
       port = 5353;
+      adsAllowedClients = [ "100.119.136.129" ];
     };
   };
 }
