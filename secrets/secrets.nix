@@ -10,6 +10,6 @@ let
 in
 {
   "wallabag-db-password.age".publicKeys = [ lorienHost lorienUser ];
-  "rustic-password.age".publicKeys = [ lorienHost lorienUser ];
+  "restic-password.age".publicKeys = [ lorienHost lorienUser ];
 }
 
