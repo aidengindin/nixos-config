@@ -23,6 +23,12 @@
       fsType = "vfat";
     };
 
+    fileSystems."/mnt/usbhdd" =
+    { device = "/dev/disk/by-uuid/21ad0ead-db3c-46c0-a6aa-20bd470866e2";
+      fsType = "btrfs";
+      options = [ "subvol=usbhdd" ];
+    };
+
   # fileSystems."/backup" = {
   #   device = "21ad0ead-db3c-46c0-a6aa-20bd470866e2";
   #   fsType = "btrfs";
