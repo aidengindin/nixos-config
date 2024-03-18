@@ -4,16 +4,8 @@
   imports = [ ../../services ];
 
   agindin.services = {
-    ryot = {
+    restic = {
       enable = true;
-      mountPath = "/docker-volumes/ryot/db";
-    };
-    rustic = {
-      enable = true;
-    };
-    wallabag = {
-      enable = true;
-      mountPath = "/docker-volumes/wallabag";
     };
     blocky = {
       enable = true;
