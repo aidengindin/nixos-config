@@ -47,10 +47,9 @@ in
         };
       };
     in {
-      local = mkIf cfg.localBackup.enable {
-        inherit commonOptions;
+      local = mkIf cfg.localBackup.enable (commonOptions // {
         repositoryFile = cfg.localBackup.repositoryFile;
-      };
+      });
     };
   };
 }
