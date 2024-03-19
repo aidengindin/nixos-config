@@ -11,6 +11,13 @@ in
       default = [];
       description = "Paths to back up";
     };
+    localBackup = {
+      enable = mkEnableOption "restic local backup";
+      repositoryFile = mkOption {
+        type = types.path;
+        description = "Path to local backup file";
+      };
+    };
     passwordPath = mkOption {
       type = types.path;
       description = "Path to age-encrypted password file";
@@ -40,9 +47,9 @@ in
         };
       };
     in {
-      local = {
+      local = mkIf cfg.localBackup.enable {
         inherit commonOptions;
-        repositoryFile = /mnt/usbhdd/restic;
+        repositoryFile = cfg.localBackup.repositoryFile;
       };
     };
   };

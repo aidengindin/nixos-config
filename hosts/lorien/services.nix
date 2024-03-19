@@ -9,6 +9,10 @@
       paths = [
         "/docker-volumes/"
       ];
+      localBackup = {
+        enable = true;
+        repositoryFile = /mnt/usbhdd/restic;
+      };
       passwordPath = ../../secrets/restic-password.age;
     };
     blocky = {
