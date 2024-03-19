@@ -6,6 +6,10 @@
   agindin.services = {
     restic = {
       enable = true;
+      paths = [
+        "/docker-volumes/"
+      ];
+      passwordPath = ../../secrets/restic-password.age;
     };
     blocky = {
       enable = true;
