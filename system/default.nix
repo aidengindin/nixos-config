@@ -5,6 +5,7 @@
     ./desktop.nix
     ./firefox.nix
     ./gamingOptimizations.nix
+    ./network.nix
     ./ssh.nix
   ];
 
