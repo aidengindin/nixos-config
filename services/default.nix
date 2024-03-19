@@ -4,7 +4,7 @@
   imports = [
     ./arion.nix
     ./blocky.nix
-    ./rustic.nix
+    ./restic.nix
     ./ryot.nix
     ./wallabag.nix
   ];
