@@ -1,18 +1,26 @@
+let
+  stableVersion = "23.11";
+  unstableVersion = "24.05";
+in
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-${stableVersion}";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     jovian = {
       url = "github:Jovian-Experiments/Jovian-NixOS/";
       inputs.nixpkgs.follows = "unstable";
     };
-    home-manager.url = "github:nix-community/home-manager/release-23.11";
-    darwin = {
-      url = "github:lnl7/nix-darwin";
+    # home-manager.url = "github:nix-community/home-manager/release-23.11";
+    home-manager = {
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    emacs-overlay = {
-      url = "github:nix-community/emacs-overlay/"; 
+    hm-unstable = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "unstable";
+    };
+    darwin = {
+      url = "github:lnl7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     arion = {
@@ -25,16 +33,18 @@
     };
  };
 
-  outputs = { self, nixpkgs, unstable, jovian, home-manager, darwin, emacs-overlay, arion, agenix }:
+  outputs = { self, nixpkgs, unstable, jovian, home-manager, hm-unstable, darwin, arion, agenix }:
     let
-      emacsModule = ({ config, ... }: {
-        nixpkgs.overlays = [
-	        emacs-overlay.overlay
-	      ];
-      });
-      standardNixosModules = [
-        home-manager.nixosModules.home-manager
+      standardNixosModules = isUnstable: [
+        if isUnstable
+          then hm-unstable.nixosModules.home-manager
+          else home-manager.nixosModules.home-manager
         agenix.nixosModules.default
+        ({ config, ... }: {
+          home.stateVersion = if isUnstable
+            then unstableVersion
+            else stableVersion;
+        });
       ];
       standardSpecialArgs = {
         inherit agenix;
@@ -45,7 +55,7 @@
         lorien = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = standardSpecialArgs;
-          modules = standardNixosModules ++ [
+          modules = (standardNixosModules false) ++ [
             ./hosts/lorien
             arion.nixosModules.arion
           ];
@@ -54,7 +64,7 @@
         weathertop = unstable.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = standardSpecialArgs;
-          modules = standardNixosModules ++ [
+          modules = (standardNixosModules true) ++ [
             ./hosts/weathertop
             jovian.nixosModules.default
           ];
@@ -67,7 +77,6 @@
           modules = [
             ./hosts/shadowfax
             home-manager.darwinModules.home-manager
-            emacsModule
           ];
         };
       };
