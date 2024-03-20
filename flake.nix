@@ -1,10 +1,6 @@
-let
-  stableVersion = "23.11";
-  unstableVersion = "24.05";
-in
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-${stableVersion}";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     jovian = {
       url = "github:Jovian-Experiments/Jovian-NixOS/";
@@ -12,7 +8,7 @@ in
     };
     # home-manager.url = "github:nix-community/home-manager/release-23.11";
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/release-23.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hm-unstable = {
@@ -36,15 +32,10 @@ in
   outputs = { self, nixpkgs, unstable, jovian, home-manager, hm-unstable, darwin, arion, agenix }:
     let
       standardNixosModules = isUnstable: [
-        if isUnstable
+        (if isUnstable
           then hm-unstable.nixosModules.home-manager
-          else home-manager.nixosModules.home-manager
+          else home-manager.nixosModules.home-manager)
         agenix.nixosModules.default
-        ({ config, ... }: {
-          home.stateVersion = if isUnstable
-            then unstableVersion
-            else stableVersion;
-        });
       ];
       standardSpecialArgs = {
         inherit agenix;
