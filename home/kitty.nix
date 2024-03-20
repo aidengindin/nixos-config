@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.kitty;
-  inherit (lib) mkIf mkEnableOption mkForce mkOverride;
+  inherit (lib) mkIf mkEnableOption;
 in
 {
   options.agindin.kitty = {

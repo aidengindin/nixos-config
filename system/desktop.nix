@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 let
   cfg = config.agindin.desktop;
-  inherit (lib) mkOption mkEnableOption mkIf types;
+  inherit (lib) mkEnableOption mkIf;
 in
 {
   options.agindin.desktop = {

@@ -9,12 +9,11 @@
     # add `environment.pathsToLink = [ "/share/zsh" ];` to system config to get completions for system packages
 
     shellAliases = {
-      grep = "grep --color=auto";
       mkdir = "mkdir -p";
-      ps = "ps aux | grep -v grep --color=auto | grep -i";
       s = "kitten ssh";
       
       ls = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
+      l = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
       ll = "eza -lah --group-directories-first";
 
       gg = "git status";
@@ -47,17 +46,6 @@
 
       # Fix zsh-autocomplete on NixOS
       # bindkey "''${key[Up]}" up-line-or-search
-
-      # Powerlevel10k setup, preserved for posterity
-      POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv)
-      POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status background_jobs)
-      POWERLEVEL9K_PROMPT_ON_NEWLINE=false
-      POWERLEVEL9K_STATUS_OK=false
-      POWERLEVEL9K_STATUS_HIDE_SIGNAME=true
-      POWERLEVEL9K_CONTEXT_FOREGROUND=232
-      POWERLEVEL9K_CONTEXT_BACKGROUND=248
-      POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
-      POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
 
       BAT_THEME="Nord"
     '';

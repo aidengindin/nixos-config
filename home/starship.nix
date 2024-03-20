@@ -6,7 +6,7 @@
       battery.disabled = true;
       git_metrics.disabled = false;
       hostname = {
-        ssh_symbol = "⎈ ";
+        ssh_symbol = "⎈";
       };
     };
   };
