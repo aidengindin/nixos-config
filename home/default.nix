@@ -3,6 +3,7 @@
   imports = [
     ./cli.nix
     ./emacs.nix
+    ./java.nix
     ./kitty.nix
     ./latex.nix
     ./nvim.nix
