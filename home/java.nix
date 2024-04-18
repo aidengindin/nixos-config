@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 {
   config = {
-    programs.java = {
+    home-manager.users.agindin.programs.java = {
       enable = true;
       package = pkgs.jdk21;
     };
