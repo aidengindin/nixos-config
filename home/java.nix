@@ -5,6 +5,10 @@
       enable = true;
       package = pkgs.jdk21;
     };
+
+    environment.systemPackages = with pkgs; [
+      maven
+    ];
   };
 }
 
