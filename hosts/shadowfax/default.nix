@@ -2,7 +2,6 @@
 {
   imports = [
     ./home.nix
-    ./services.nix
   ];
 
   # Make sure the Nix daemon always runs

@@ -6,11 +6,11 @@ in
 {
   options.agindin.services.ollama = {
     enable = mkEnableOption "ollama";
-  }
+  };
 
   config = mkIf cfg.enable {
     services.ollama = {
       enable = true;
-    }
-  }
+    };
+  };
 }
