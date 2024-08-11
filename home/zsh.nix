@@ -4,7 +4,7 @@
   config.home-manager.users.agindin.programs.zsh = {
     enable = true;
 
-    enableAutosuggestions = true;
+    autosuggestion.enable = true;
     enableCompletion = true;
     # add `environment.pathsToLink = [ "/share/zsh" ];` to system config to get completions for system packages
 
