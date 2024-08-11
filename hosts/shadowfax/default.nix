@@ -14,10 +14,22 @@
     package = pkgs.nixFlakes;
     extraOptions = ''
         experimental-features = nix-command flakes
-      '';            
+      '';
+      optimise = {
+        automatic = true;
+        interval = {
+          Weekday = 0;
+          Hour = 1;
+          Minute = 0;
+        };
+      };
       gc = {
         automatic = true;
-        dates = "weekly";
+        interval = {
+          Weekday = 0;
+          Hour = 0;
+          Minute = 0;
+        };
         options = "--delete-older-than 30d";
       };
   };
