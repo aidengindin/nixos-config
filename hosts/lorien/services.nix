@@ -19,5 +19,9 @@
       enable = true;
       adsAllowedClients = [ "100.119.136.129" ];
     };
+    calibre = {
+      enable = true;
+      version = "v7.16.0-ls296";
+    }
   };
 }
