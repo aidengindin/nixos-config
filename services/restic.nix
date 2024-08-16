@@ -20,19 +20,19 @@ in
     };
     passwordPath = mkOption {
       type = types.path;
-      description = "Path to age-encrypted password file";
+      description = "Path to password file";
     };
   };
 
   config = mkIf cfg.enable {
-    age.secrets = {
-      resticPassword.file = cfg.passwordPath;
-    };
+    # age.secrets = {
+    #   resticPassword.file = cfg.passwordPath;
+    # };
 
     services.restic.backups = let
       commonOptions = {
         initialize = true;
-        passwordFile = config.age.secrets.restic-password.path;
+        passwordFile = cfg.passwordPath;
         paths = cfg.paths;
         pruneOpts = [
           "--keep-daily 7"
