@@ -11,5 +11,7 @@ in
 {
   "wallabag-db-password.age".publicKeys = [ lorienHost lorienUser ];
   "restic-password.age".publicKeys = [ lorienHost lorienUser ];
+  "tandoor-secret-key.age".publicKeys = [ lorienHost ];
+  "tandoor-postgres-password.age".publicKeys = [ lorienHost ];
 }
 
