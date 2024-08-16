@@ -4,7 +4,12 @@
   imports = [ ../../services ];
 
   age.secrets = {
-    restic-password.file = ../../secrets/restic-password.age;
+    restic-password = {
+      file = ../../secrets/restic-password.age;
+      owner = "root";
+      group = "keys";
+      mode = "0440";
+    };
   };
 
   agindin.services = {
