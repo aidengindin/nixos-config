@@ -17,8 +17,8 @@ in
     virtualisation.oci-containers.containers.calibre = {
       image = "lscr.io/linuxserver/calibre:${cfg.version}";
       environment = {
-        PUID = 1000;
-        PGID = 1000;
+        PUID = "1000";
+        PGID = "1000";
         TZ = "America/New_York";
         TITLE = "Calibre";
       };
