@@ -17,7 +17,7 @@
         enable = true;
         repositoryFile = /mnt/usbhdd/restic;
       };
-      passwordPath = config.age.restic-password.path;
+      passwordPath = config.age.secrets.restic-password.path;
     };
 
     blocky = {
