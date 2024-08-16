@@ -53,7 +53,7 @@
           #   Hour = 1;
           #   Minute = 0;
           # };
-          dates = "weekly";
+          dates = [ "weekly" ];
         };
         gc = {
           automatic = true;
@@ -62,7 +62,7 @@
           #   Hour = 0;
           #   Minute = 0;
           # };
-          dates = "weekly";
+          dates = [ "weekly" ];
           options = "--delete-older-than 30d";
         };
     };
