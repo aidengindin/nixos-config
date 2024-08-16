@@ -36,8 +36,19 @@ in
       description = "Restic backup service user";
       home = "/var/lib/restic";
       createHome = true;
+      openssh.authorizedKeys.keys = [];
     };
     users.groups.restic = {};
+
+    system.activationScripts.resticSshKey = ''
+      if [ ! -e /var/lib/restic/.ssh/id_ed25519 ]; then
+        mkdir -p /var/lib/restic/.ssh
+        ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f /var/lib/restic/.ssh/id_ed25519 -q -N ""
+        chown -R restic:restic /var/lib/restic/.ssh
+        chmod 700 /var/lib/restic/.ssh
+        chmod 600 /var/lib/restic/.ssh/id_ed25519
+      fi
+    '';
 
     systemd = mkIf cfg.localBackup.enable {
       tmpfiles.rules = [
