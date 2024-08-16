@@ -14,7 +14,7 @@ in
     localBackup = {
       enable = mkEnableOption "restic local backup";
       repository = mkOption {
-        type = types.path;
+        type = types.str;
         description = "Path to local backup directory";
       };
       repositoryMountUnitName = mkOption {
@@ -40,7 +40,7 @@ in
 
     systemd = mkIf cfg.localBackup.enable {
       tmpfiles.rules = [
-        "d ${cfg.localBackup.repository.path} 0750 restic restic - -"
+        "d ${cfg.localBackup.repository} 0750 restic restic - -"
       ];
       services."restic-backups-local" = mkIf (cfg.localBackup.repositoryMountUnitName != "") {
         after = [ cfg.localBackup.repositoryMountUnitName ];
@@ -68,7 +68,7 @@ in
       };
     in {
       local = mkIf cfg.localBackup.enable (commonOptions // {
-        repository= "${cfg.localBackup.repository.path}";
+        repository = cfg.localBackup.repository;
       });
     };
   };
