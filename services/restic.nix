@@ -37,6 +37,7 @@ in
       home = "/var/lib/restic";
       createHome = true;
     };
+    users.groups.restic = {};
 
     systemd = mkIf cfg.localBackup.enable {
       tmpfiles.rules = [
