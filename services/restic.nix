@@ -13,9 +13,9 @@ in
     };
     localBackup = {
       enable = mkEnableOption "restic local backup";
-      repositoryFile = mkOption {
+      repository = mkOption {
         type = types.path;
-        description = "Path to local backup file";
+        description = "Path to local backup directory";
       };
     };
     passwordPath = mkOption {
@@ -44,7 +44,7 @@ in
       };
     in {
       local = mkIf cfg.localBackup.enable (commonOptions // {
-        repositoryFile = cfg.localBackup.repositoryFile;
+        repository= "${cfg.localBackup.repository}";
       });
     };
   };
