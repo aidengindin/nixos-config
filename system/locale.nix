@@ -1,4 +1,4 @@
-{ config, lib, pkgs }:
+{ config, lib, pkgs, ... }:
 {
   config = {
     time.timeZone = "America/New_York";
