@@ -25,14 +25,10 @@ in
   };
 
   config = mkIf cfg.enable {
-    # age.secrets = {
-    #   resticPassword.file = cfg.passwordPath;
-    # };
-
     services.restic.backups = let
       commonOptions = {
         initialize = true;
-        passwordFile = cfg.passwordPath;
+        passwordFile = "${cfg.passwordPath}";
         paths = cfg.paths;
         pruneOpts = [
           "--keep-daily 7"
@@ -53,4 +49,3 @@ in
     };
   };
 }
-
