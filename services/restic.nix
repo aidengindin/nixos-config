@@ -21,7 +21,7 @@ in
         type = types.str;
         description = "Systemd mount unit name for the device containing the local repository (if applicable)";
         default = "";
-      }
+      };
     };
     passwordPath = mkOption {
       type = types.path;
