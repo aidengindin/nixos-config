@@ -32,7 +32,7 @@ in
     services.restic.backups = let
       commonOptions = {
         initialize = true;
-        passwordFile = config.age.secrets.resticPassword.path;
+        passwordFile = config.age.secrets.restic-password.path;
         paths = cfg.paths;
         pruneOpts = [
           "--keep-daily 7"
