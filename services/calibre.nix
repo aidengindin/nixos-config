@@ -27,9 +27,9 @@ in
       ];
       extraOptions = [
         "--dns=1.1.1.1"
+        "--restart=unless-stopped"
         "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
       ];
-      restart = "unless-stopped";
     };
   };
 }
