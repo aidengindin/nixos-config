@@ -55,6 +55,7 @@ in
         "d ${cfg.localBackup.repository} 0750 restic restic - -"
       ];
       services."restic-backups-local" = mkIf (cfg.localBackup.repositoryMountUnitName != "") {
+        serviceConfig.SupplementaryGroups = [ config.users.groups.keys.name ];  # TODO: this shouldn't be under mkIf
         after = [ cfg.localBackup.repositoryMountUnitName ];
         requires = [ cfg.localBackup.repositoryMountUnitName ];
       };
