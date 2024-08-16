@@ -3,6 +3,10 @@
 {
   imports = [ ../../services ];
 
+  age.secrets = {
+    restic-password.file = ../secrets/restic-password.age;
+  };
+
   agindin.services = {
     restic = {
       enable = true;
@@ -13,7 +17,7 @@
         enable = true;
         repositoryFile = /mnt/usbhdd/restic;
       };
-      passwordPath = ../../secrets/restic-password.age;
+      passwordPath = config.age.restic-password.path;
     };
 
     blocky = {
