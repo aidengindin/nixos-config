@@ -25,10 +25,10 @@ in
       volumes = [
         "/docker-volumes/calibre:/config"
       ];
-      networks = [
-        "reverse-proxy"
+      extraOptions = [
+        "--dns=1.1.1.1"
+        "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
       ];
-      dns = "1.1.1.1";
       restart = "unless-stopped";
     };
   };
