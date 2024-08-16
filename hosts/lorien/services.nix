@@ -4,7 +4,7 @@
   imports = [ ../../services ];
 
   age.secrets = {
-    restic-password.file = ../secrets/restic-password.age;
+    restic-password.file = ../../secrets/restic-password.age;
   };
 
   agindin.services = {
