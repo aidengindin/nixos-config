@@ -10,7 +10,7 @@ in
       type = types.str;
       example = "v7.16.0-ls296";
       description = "Calibre version tag to pull";
-    }
+    };
   };
 
   config = mkIf cfg.enable {
