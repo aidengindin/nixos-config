@@ -16,6 +16,7 @@
       localBackup = {
         enable = true;
         repository= /mnt/usbhdd/restic;
+        repositoryMountUnitName = "mnt-usbhdd.mount";
       };
       passwordPath = config.age.secrets.restic-password.path;
     };

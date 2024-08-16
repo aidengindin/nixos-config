@@ -17,6 +17,11 @@ in
         type = types.path;
         description = "Path to local backup directory";
       };
+      repositoryMountUnitName = mkOption {
+        type = types.str;
+        description = "Systemd mount unit name for the device containing the local repository (if applicable)";
+        default = "";
+      }
     };
     passwordPath = mkOption {
       type = types.path;
@@ -25,6 +30,24 @@ in
   };
 
   config = mkIf cfg.enable {
+    users.users.restic = {
+      isSystemUser = true;
+      group = "restic";
+      description = "Restic backup service user";
+      home = "/var/lib/restic";
+      createHome = true;
+    };
+
+    systemd = mkIf cfg.localBackup.enable {
+      tmpfiles.rules = [
+        "d ${cfg.localBackup.repository.path} 0750 restic restic - -"
+      ];
+      services."restic-backups-local" = mkIf (cfg.localBackup.repositoryMountUnitName != "") {
+        after = [ cfg.localBackup.repositoryMountUnitName ];
+        requires = [ cfg.localBackup.repositoryMountUnitName ];
+      };
+    };
+
     services.restic.backups = let
       commonOptions = {
         initialize = true;
@@ -41,10 +64,11 @@ in
           OnClockChange = true;
           OnTimezoneChange = true;
         };
+        user = "restic";
       };
     in {
       local = mkIf cfg.localBackup.enable (commonOptions // {
-        repository= "${cfg.localBackup.repository}";
+        repository= "${cfg.localBackup.repository.path}";
       });
     };
   };
