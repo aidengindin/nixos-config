@@ -50,6 +50,9 @@ in
       fi
     '';
 
+    # grant the restic user access to any directories it's backing up
+    systemd.tmpfiles.rules = lib.flatten (map (path: [ "d ${path} 0750 root restic - -" ]) cfg.paths );
+
     systemd = mkIf cfg.localBackup.enable {
       tmpfiles.rules = [
         "d ${cfg.localBackup.repository} 0750 restic restic - -"
