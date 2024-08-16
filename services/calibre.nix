@@ -30,6 +30,6 @@ in
       ];
       dns = "1.1.1.1";
       restart = "unless-stopped";
-    }
-  }
+    };
+  };
 }
