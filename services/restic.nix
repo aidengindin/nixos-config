@@ -30,6 +30,8 @@ in
   };
 
   config = mkIf cfg.enable {
+    environment.systemPackages = with pkgs; [ acl ];
+
     users.users.restic = {
       isSystemUser = true;
       group = "restic";
@@ -40,25 +42,35 @@ in
     };
     users.groups.restic = {};
 
-    system.activationScripts.resticSshKey = ''
-      if [ ! -e /var/lib/restic/.ssh/id_ed25519 ]; then
-        mkdir -p /var/lib/restic/.ssh
-        ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f /var/lib/restic/.ssh/id_ed25519 -q -N ""
-        chown -R restic:restic /var/lib/restic/.ssh
-        chmod 700 /var/lib/restic/.ssh
-        chmod 600 /var/lib/restic/.ssh/id_ed25519
-      fi
-    '';
+    system.activationScripts = {
 
-    # grant the restic user access to any directories it's backing up
-    systemd.tmpfiles.rules = lib.flatten (map (path: [ "d ${path} 0750 root restic - -" ]) cfg.paths );
+      # generate an ssh key for the restic user
+      resticSshKey = ''
+        if [ ! -e /var/lib/restic/.ssh/id_ed25519 ]; then
+          mkdir -p /var/lib/restic/.ssh
+          ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f /var/lib/restic/.ssh/id_ed25519 -q -N ""
+          chown -R restic:restic /var/lib/restic/.ssh
+          chmod 700 /var/lib/restic/.ssh
+          chmod 600 /var/lib/restic/.ssh/id_ed25519
+        fi
+      '';
 
-    systemd = mkIf cfg.localBackup.enable {
-      tmpfiles.rules = [
+      # grant the restic user access to any directories it's backing up
+      resticPermissions = ''
+        ${lib.concatMapStrings (path: ''
+          ${pkgs.acl}/bin/setfacl -R -m u:restic:rX ${path}
+          ${pkgs.acl}/bin/setfacl -R -dm u:restic:rX ${path}
+        '') cfg.paths}
+      '';
+    };
+
+    systemd = {
+      tmpfiles.rules = lib.optionals cfg.localBackup.enable [
         "d ${cfg.localBackup.repository} 0750 restic restic - -"
       ];
-      services."restic-backups-local" = mkIf (cfg.localBackup.repositoryMountUnitName != "") {
-        serviceConfig.SupplementaryGroups = [ config.users.groups.keys.name ];  # TODO: this shouldn't be under mkIf
+      services."restic-backups-local" = {
+        serviceConfig.SupplementaryGroups = [ config.users.groups.keys.name ];
+      } // mkIf (cfg.localBackup.repositoryMountUnitName != "") {
         after = [ cfg.localBackup.repositoryMountUnitName ];
         requires = [ cfg.localBackup.repositoryMountUnitName ];
       };
