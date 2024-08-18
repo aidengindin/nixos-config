@@ -35,12 +35,7 @@ in
         };
       };
 
-      extraFlags = [
-        "--health-cmd='curl -f http://localhost:80 || exit 1'"
-        "--health-interval=1m"
-        "--health-timeout=10s"
-        "--health-retries=3"
-      ];
+      # TODO: resource limits & healthcheck
 
       forwardPorts = [
         {
