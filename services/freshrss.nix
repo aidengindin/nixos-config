@@ -36,11 +36,6 @@ in
       };
 
       extraFlags = [
-        # set resource limits
-        "--memory=512M"
-        "--cpu-shares=256"
-
-        # healthcheck
         "--health-cmd='curl -f http://localhost:80 || exit 1'"
         "--health-interval=1m"
         "--health-timeout=10s"
