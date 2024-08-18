@@ -95,8 +95,8 @@ in
             timerConfig = {
               OnCalendar = "weekly";
               Persistent = true;
-            }
-          }
+            };
+          };
         };
       };
     };
