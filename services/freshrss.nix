@@ -20,6 +20,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    systemd.tmpfiles.rules = [
+      "d /var/lib/freshrss 0755 root root -"
+    ];
+
     containers.freshrss = {
       autoStart = true;
       ephemeral = true;
