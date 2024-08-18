@@ -36,6 +36,8 @@
       version = "v7.16.0-ls296";
     };
 
+    freshrss.enable = true;
+
     tandoor = {
       enable = true;
       version = "1.5.18";

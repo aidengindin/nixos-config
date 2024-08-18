@@ -20,6 +20,7 @@ let
     "freshrss.box" = "100.99.184.63";
     "hass.box" = "100.99.184.63";
     "nextcloud.box" = "100.99.184.63";
+    "nix.freshrss.box" = "100.99.184.63";
     "ntfy.box" = "100.99.184.63";
     "proxy.box" = "100.99.184.63";
     "server.calibre.box" = "100.99.184.63";
