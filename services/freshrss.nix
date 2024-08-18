@@ -16,7 +16,7 @@ in
       type = types.int;
       default = 10200;
       description = "Port on which FreshRSS will be accessible on the host";
-    }
+    };
   };
 
   config = mkIf cfg.enable {
