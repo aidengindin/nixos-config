@@ -12,11 +12,6 @@ in
 {
   options.agindin.services.freshrss = {
     enable = mkEnableOption "freshrss";
-    port = mkOption {
-      type = types.int;
-      default = 10200;
-      description = "Port on which FreshRSS will be accessible on the host";
-    };
   };
 
   config = mkIf cfg.enable {
@@ -40,14 +35,6 @@ in
       };
 
       # TODO: resource limits & healthcheck
-
-      forwardPorts = [
-        {
-          hostPort = cfg.port;
-          containerPort = 80;
-          protocol = "tcp";
-        }
-      ];
 
       config = { config, lib, pkgs, ... }: {
         services.timesyncd.enable = true;
@@ -93,11 +80,6 @@ in
           };
         };
       };
-    };
-  
-    networking.firewall = {
-      enable = true;
-      allowedTCPPorts = [ cfg.port ];
     };
   };
 }
