@@ -29,7 +29,7 @@ in
         "--dns=1.1.1.1"
         "--restart=unless-stopped"
         "--rm=false"
-        "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
+        # "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
       ];
     };
   };
