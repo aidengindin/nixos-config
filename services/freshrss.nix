@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.services.freshrss;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib) mkIf mkEnableOption;
   
   # script to export subscriptions using freshrss cli
   exportOpmlScript = pkgs.writeScript "export-freshrss-opml.sh" ''
