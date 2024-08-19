@@ -55,6 +55,7 @@ in
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
+          "--link tandoor-postgres:tandoor-postgres"
         ];
       };
 
@@ -77,7 +78,6 @@ in
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
-          # "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
         ];
       };
     };
