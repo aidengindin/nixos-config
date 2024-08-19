@@ -25,13 +25,14 @@ in
       volumes = [
         "/docker-volumes/calibre:/config"
       ];
+      ports = [
+        "8200:8080"
+        "8201:8081"
+      ];
       extraOptions = [
         "--dns=1.1.1.1"
         "--restart=unless-stopped"
         "--rm=false"
-        "-p 0.0.0.0:8200:8080"
-        "-p 0.0.0.0:8201:8081"
-        # "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
       ];
     };
   };

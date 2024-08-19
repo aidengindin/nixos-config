@@ -49,11 +49,12 @@ in
         dependsOn = [
           "tandoor-postgres"
         ];
+        ports = [
+          "8300:8080"
+        ];
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
-          "-p 0.0.0.0:8300:8080"
-          # "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
         ];
       };
 
