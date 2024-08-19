@@ -33,6 +33,7 @@ in
         "--dns=1.1.1.1"
         "--restart=unless-stopped"
         "--rm=false"
+        "--network=reverse-proxy"
       ];
     };
   };
