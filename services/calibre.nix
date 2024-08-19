@@ -29,6 +29,8 @@ in
         "--dns=1.1.1.1"
         "--restart=unless-stopped"
         "--rm=false"
+        "-p 10200:8080"
+        "-p 10201:8081"
         # "--network=reverse-proxy"  # TODO: temporary until I switch everything to nix
       ];
     };
