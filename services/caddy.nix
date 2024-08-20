@@ -142,7 +142,15 @@ in
     };
 
     systemd = {
-      services.caddy = {
+      services.caddy = let
+        startCaddy = pkgs.writeShellScript "start-caddy" ''
+          #!/bin/bash
+          export CLOUDFLARE_API_KEY=$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)
+          echo "CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY" >> /tmp/caddy_debug.log  # TODO: remove this line in production
+          exec ${pkgs.caddy-cloudflare}/bin/caddy run --config /etc/caddy/caddy_config
+        '';
+
+      in {
         # environment = {
         #   CLOUDFLARE_API_KEY = builtins.readFile config.age.secrets.cloudflare-api-key.path;
         # };
@@ -150,12 +158,15 @@ in
           LoadCredential = [
             "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
           ];
-          ExecStartPre = [
-            "${pkgs.bash}/bin/bash -c 'echo CLOUDFLARE_API_KEY=$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key) > /tmp/caddy-env'"
+          # ExecStartPre = [
+          #   "${pkgs.bash}/bin/bash -c 'echo CLOUDFLARE_API_KEY=$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key) > /tmp/caddy-env'"
+          # ];
+          # environmentFile = "/tmp/caddy-env";
+          ExecStart = [
+            "${startCaddy}"
           ];
-          environmentFile = "/tmp/caddy-env";
           ExecStartPost = [
-            "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
+            # "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
             "${pkgs.bash}/bin/bash -c 'rm -f /tmp/caddy-env'"
           ];
           AmbientCapabilities = "cap_net_bind_service";
