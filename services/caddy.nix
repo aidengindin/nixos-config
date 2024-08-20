@@ -103,7 +103,6 @@ in
       email = "aiden+letsencrypt@aidengindin.com";
       globalConfig = ''
         acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
-        acme_ca https://acme-v02.api.letsencrypt.org/
       '';
       extraConfig = let
         tlsSetup = ''
