@@ -153,7 +153,7 @@ in
           NoNewPrivileges = true;
           ExecStartPre = [  # TODO: REMOVE ONCE DEBUGGED
             "${pkgs.bash}/bin/bash -c 'echo \"API Token starts with: $${CLOUDFLARE_API_TOKEN:0:8}\" >> /tmp/caddy_debug.log'"
-          ]
+          ];
         };
       };
       sockets.caddy = {
