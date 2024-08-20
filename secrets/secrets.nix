@@ -8,13 +8,15 @@ let
   resticUser = if builtins.pathExists /var/lib/restic/.ssh/id_ed25519.pub
                then builtins.readFile /var/lib/restic/.ssh/id_ed25519.pub
                else "";
+  lorienCaddy = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDhPFaF9+zV9A/8/Rk1KYT75Y/ROtmAYYYbjYjw4/vP caddy@lorien";
 
   userKeys = [ shadowfaxUser lorienUser resticUser ];
 in
 {
   "wallabag-db-password.age".publicKeys = [ lorienHost lorienUser ];
-  "restic-password.age".publicKeys = [ lorienHost lorienUser resticUser ];
+  "restic-password.age".publicKeys = [ lorienHost lorienUser resticUser ];  # TODO: lock down access
   "tandoor-secret-key.age".publicKeys = [ lorienHost lorienUser ];
   "tandoor-postgres-password.age".publicKeys = [ lorienHost lorienUser ];
+  "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienCaddy ];
 }
 

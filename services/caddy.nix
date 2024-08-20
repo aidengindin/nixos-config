@@ -16,10 +16,27 @@ in
   };
 
   config = mkIf cfg.enable {
+    users.users.caddy = {
+      isSystemUser = true;
+      group = "caddy";
+      description = "Caddy reverse proxy user";
+      home = "/var/lib/caddy";
+      createHome = true;
+      openssh.authorizedKeys.keys = [];
+    };
+
+    age.secrets.cloudflare-api-key = {  # TODO: create this secret
+      file = ../secrets/lorien-caddy-cloudflare-api-key.age;  # TODO: make this configurable
+      owner = "caddy";
+    };
+
     services.caddy = {
       enable = true;
       email = "aiden+letsencrypt@aidengindin.com";
-      extraConfig = mkStrIf enableFreshrss ''
+      extraConfig = ''
+        acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
+
+      '' + mkStrIf enableFreshrss ''
         freshrss.gindin.xyz {
           reverse_proxy 192.168.100.11:80
         }
@@ -40,6 +57,16 @@ in
       '';
     };
 
-    networking.firewall.allowedTCPPorts = [ 443 ];
+    systemd.services.caddy.environment = {
+      CLOUDFLARE_API_KEY = "\\$CREDENTIALS_DIRECTORY/cloudflare-api-key";
+    };
+
+    systemd.services.caddy.serviceConfig = {
+      LoadCredential = [
+        "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
+      ];
+    };
+
+    networking.firewall.allowedTCPPorts = [ 80 443 ];
   };
 }
