@@ -144,7 +144,7 @@ in
     systemd = {
       services.caddy = {
         environment = {
-          CLOUDFLARE_API_KEY = "$CREDENTIALS_DIRECTORY/cloudflare-api-key";
+          CLOUDFLARE_API_KEY = "$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)";
         };
         serviceConfig = {
           LoadCredential = [
@@ -154,8 +154,8 @@ in
           CapabilityBoundingSet = "cap_net_bind_service";
           NoNewPrivileges = true;
           ExecStartPre = [  # TODO: REMOVE ONCE DEBUGGED
-            "${pkgs.bash}/bin/bash -c 'echo \"age secret file contents: $(cat ${config.age.secrets.cloudflare-api-key.path})\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
+            "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"
           ];
         };
       };
