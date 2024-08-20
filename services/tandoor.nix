@@ -55,8 +55,7 @@ in
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
-          # "--network=reverse-proxy"
-          "--link tandoor-postgres:tandoor-postgres"
+          # "--link tandoor-postgres:tandoor-postgres"
         ];
       };
 
@@ -79,7 +78,6 @@ in
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
-          # "--network=reverse-proxy"
         ];
       };
     };
