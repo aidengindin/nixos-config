@@ -149,7 +149,7 @@ in
             "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
           ];
           environmentFile = "$CREDENTIALS_DIRECTORY/cloudflare-api-key";
-          ExecStartPost = [
+          ExecStartPre = [
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
           ];
