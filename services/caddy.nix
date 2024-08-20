@@ -148,7 +148,7 @@ in
           LoadCredential = [
             "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
           ];
-          environmentFile = "/tmp/caddy.env";
+          EnvironmentFile = "/tmp/caddy.env";
           ExecStartPre = [
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'cp $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
