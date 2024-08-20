@@ -103,7 +103,7 @@ in
       email = "aiden+letsencrypt@aidengindin.com";
       globalConfig = ''
         acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
-        acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+        acme_ca https://acme-v02.api.letsencrypt.org/
       '';
       extraConfig = let
         tlsSetup = ''
@@ -141,22 +141,13 @@ in
 
     systemd = {
       services.caddy = {
-        # environment = {
-        #   CLOUDFLARE_API_KEY = builtins.readFile config.age.secrets.cloudflare-api-key.path;
-        # };
         serviceConfig = {
           LoadCredential = [
             "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
           ];
           EnvironmentFile = "/tmp/caddy.env";
           ExecStartPre = [
-            "${pkgs.bash}/bin/bash -c '${pkgs.caddy-cloudflare}/bin/caddy list-modules -s >> /tmp/caddy_modules.log'"
-            "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'cp -rf $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
-          ];
-          ExecStartPost = [
-            "${pkgs.bash}/bin/bash -c 'echo \"caddy env file contents: $(cat /tmp/caddy.env)\" >> /tmp/caddy_debug.log'"
-            "${pkgs.bash}/bin/bash -c 'env >> /tmp/caddy_env_dump.log'"
           ];
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
