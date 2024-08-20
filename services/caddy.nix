@@ -101,8 +101,15 @@ in
       email = "aiden+letsencrypt@aidengindin.com";
       globalConfig = ''
         acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
+        acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
       '';
       extraConfig = ''
+        *.gindin.xyz {
+          tls {
+            dns cloudflare {env.CLOUDFLARE_API_KEY}
+          }
+        }
+
         ${mkStrIf enableFreshrss ''
         freshrss.gindin.xyz {
           reverse_proxy 192.168.100.11:80
