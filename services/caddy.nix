@@ -99,7 +99,9 @@ in
       enable = true;
       package = pkgs.caddy-cloudflare;
       email = "aiden+letsencrypt@aidengindin.com";
+      # TODO: remove debug option once debugged
       globalConfig = ''
+        debug
         acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
         acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
       '';
@@ -149,6 +151,9 @@ in
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
           NoNewPrivileges = true;
+          ExecStartPre = [  # TODO: REMOVE ONCE DEBUGGED
+            "${pkgs.bash}/bin/bash -c 'echo \"API Token starts with: $${CLOUDFLARE_API_TOKEN:0:8}\" >> /tmp/caddy_debug.log'"
+          ]
         };
       };
       sockets.caddy = {
