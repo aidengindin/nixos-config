@@ -142,7 +142,7 @@ in
       };
       sockets.caddy = {
         description = "Caddy web server sockets";
-        wantedBy = "sockets.target";
+        wantedBy = [ "sockets.target" ];
         socketConfig = {
           ListenStream = [
             "0.0.0.0:80"
