@@ -151,7 +151,10 @@ in
           environmentFile = "$CREDENTIALS_DIRECTORY/cloudflare-api-key";
           ExecStartPre = [
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
-            "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
+            # "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
+          ];
+          ExecStartPost = [
+            "${pkgs.bash}/bin/bash -c 'env >> /tmp/caddy_env_dump.log'"
           ];
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
