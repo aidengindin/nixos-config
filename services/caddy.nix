@@ -25,7 +25,7 @@ in
       openssh.authorizedKeys.keys = [];
     };
 
-    age.secrets.cloudflare-api-key = {  # TODO: create this secret
+    age.secrets.cloudflare-api-key = {
       file = ../secrets/lorien-caddy-cloudflare-api-key.age;  # TODO: make this configurable
       owner = "caddy";
     };
@@ -34,9 +34,7 @@ in
       enable = true;
       email = "aiden+letsencrypt@aidengindin.com";
       globalConfig = ''
-        {
-          acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
-        }
+        acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
       '';
       extraConfig = ''
         ${mkStrIf enableFreshrss ''
