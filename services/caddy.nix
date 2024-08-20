@@ -152,6 +152,7 @@ in
           CapabilityBoundingSet = "cap_net_bind_service";
           NoNewPrivileges = true;
           ExecStartPre = [  # TODO: REMOVE ONCE DEBUGGED
+            "${pkgs.bash}/bin/bash -c 'echo \"age secret file contents: $(cat ${config.age.secrets.cloudflare-api-key.path})\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-token)\" >> /tmp/caddy_debug.log'"
           ];
         };
