@@ -150,6 +150,7 @@ in
           ];
           EnvironmentFile = "/tmp/caddy.env";
           ExecStartPre = [
+            "${pkgs.bash}/bin/bash -c '${pkgs.caddy-cloudflare}/bin/caddy list-modules -s >> /tmp/caddy_modules.log'"
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'cp -rf $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
           ];
