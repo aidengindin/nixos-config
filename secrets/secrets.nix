@@ -14,9 +14,9 @@ let
 in
 {
   "wallabag-db-password.age".publicKeys = [ lorienHost lorienUser ];
-  "restic-password.age".publicKeys = [ lorienHost lorienUser resticUser ];  # TODO: lock down access
+  "restic-password.age".publicKeys = [ lorienHost lorienUser resticUser ];
   "tandoor-secret-key.age".publicKeys = [ lorienHost lorienUser ];
   "tandoor-postgres-password.age".publicKeys = [ lorienHost lorienUser ];
-  "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienCaddy ];
+  "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienUser lorienCaddy ];
 }
 
