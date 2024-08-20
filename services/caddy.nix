@@ -103,25 +103,35 @@ in
         acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
         acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
       '';
-      extraConfig = ''
+      extraConfig = let
+        tlsSetup = ''
+          tls {
+            dns cloudflare {env.CLOUDFLARE_API_KEY}
+          }
+        '';
+      in ''
         ${mkStrIf enableFreshrss ''
         freshrss.gindin.xyz {
           reverse_proxy 192.168.100.11:80
+          ${tlsSetup}
         }
         ''}
 
         ${mkStrIf enableTandoor ''
         tandoor.gindin.xyz {
           reverse_proxy 127.0.0.1:8300
+          ${tlsSetup}
         }
         ''}
 
         ${mkStrIf enableCalibre ''
         calibre.gindin.xyz {
           reverse_proxy 127.0.0.1:8200
+          ${tlsSetup}
         }
         server.calibre.gindin.xyz {
           reverse_proxy 127.0.0.1:8201
+          ${tlsSetup}
         }
         ''}
       '';
