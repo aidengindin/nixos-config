@@ -31,6 +31,8 @@
       adsAllowedClients = [ "100.119.136.129" ];
     };
 
+    caddy.enable = true;
+
     calibre = {
       enable = true;
       version = "v7.16.0-ls296";
