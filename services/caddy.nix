@@ -34,26 +34,30 @@ in
       enable = true;
       email = "aiden+letsencrypt@aidengindin.com";
       extraConfig = ''
-        acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
-
-      '' + mkStrIf enableFreshrss ''
-        freshrss.gindin.xyz {
-          reverse_proxy 192.168.100.11:80
+        {
+          acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
         }
 
-      '' + mkStrIf enableTandoor ''
-        tandoor.gindin.xyz {
-          reverse_proxy 127.0.0.1:8300
-        }
+        ${mkStrIf enableFreshrss ''
+          freshrss.gindin.xyz {
+            reverse_proxy 192.168.100.11:80
+          }
+        ''}
 
-      '' + mkStrIf enableCalibre ''
-        calibre.gindin.xyz {
-          reverse_proxy 127.0.0.1:8200
-        }
-        server.calibre.gindin.xyz {
-          reverse_proxy 127.0.0.1:8201
-        }
+        ${mkStrIf enableTandoor ''
+          tandoor.gindin.xyz {
+            reverse_proxy 127.0.0.1:8300
+          }
+        ''}
 
+        ${mkStrIf enableCalibre ''
+          calibre.gindin.xyz {
+            reverse_proxy 127.0.0.1:8200
+          }
+          server.calibre.gindin.xyz {
+            reverse_proxy 127.0.0.1:8201
+          }
+        ''};
       '';
     };
 
