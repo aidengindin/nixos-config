@@ -47,8 +47,7 @@ in
 
             src = prev.caddy.src;
 
-            # vendorSha256 = "sha256:mwIsWJYKuEZpOU38qZOG1LEh4QpK4EO0/8l4UGsroU8=";
-            vendorHash = lib.fakeHash;
+            vendorHash = "sha256-0Lw291cGHj4qXkfgp9wqNC6ZOHNRbKrkWfv3lCzwMv8=";
 
             overrideModAttrs = (_: {
               preBuild = ''
