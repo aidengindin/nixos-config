@@ -148,12 +148,13 @@ in
           LoadCredential = [
             "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
           ];
-          environmentFile = "$CREDENTIALS_DIRECTORY/cloudflare-api-key";
+          environmentFile = "/tmp/caddy.env";
           ExecStartPre = [
             "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
-            # "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
+            "${pkgs.bash}/biin/bash - 'cp $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
           ];
           ExecStartPost = [
+            "${pkgs.bash}/bin/bash -c 'echo \"caddy env file contents: $(cat /tmp/caddy.env)\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'env >> /tmp/caddy_env_dump.log'"
           ];
           AmbientCapabilities = "cap_net_bind_service";
