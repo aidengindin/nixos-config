@@ -101,9 +101,7 @@ in
       enable = true;
       package = pkgs.caddy-cloudflare;
       email = "aiden+letsencrypt@aidengindin.com";
-      # TODO: remove debug option once debugged
       globalConfig = ''
-        debug
         acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
         acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
       '';
@@ -142,32 +140,17 @@ in
     };
 
     systemd = {
-      services.caddy = let
-        startCaddy = pkgs.writeShellScript "start-caddy" ''
-          #!/bin/bash
-          export CLOUDFLARE_API_KEY=$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)
-          echo "CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY" >> /tmp/caddy_debug.log  # TODO: remove this line in production
-          exec ${pkgs.caddy-cloudflare}/bin/caddy run --config /etc/caddy/caddy_config
-        '';
-
-      in {
+      services.caddy = {
         # environment = {
         #   CLOUDFLARE_API_KEY = builtins.readFile config.age.secrets.cloudflare-api-key.path;
         # };
         serviceConfig = {
-          LoadCredential = [
-            "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
-          ];
-          # ExecStartPre = [
-          #   "${pkgs.bash}/bin/bash -c 'echo CLOUDFLARE_API_KEY=$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key) > /tmp/caddy-env'"
+          # LoadCredential = [
+          #   "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
           # ];
-          # environmentFile = "/tmp/caddy-env";
-          ExecStart = [
-            "${startCaddy}"
-          ];
+          environmentFile = "${config.age.secrets.cloudflare-api-key.path}";
           ExecStartPost = [
-            # "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
-            "${pkgs.bash}/bin/bash -c 'rm -f /tmp/caddy-env'"
+            "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
           ];
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
