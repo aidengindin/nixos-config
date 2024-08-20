@@ -93,6 +93,8 @@ in
     age.secrets.cloudflare-api-key = {
       file = ../secrets/lorien-caddy-cloudflare-api-key.age;  # TODO: make this configurable
       owner = "root";
+      group = "keys";
+      mode = "0440";
     };
 
     services.caddy = {
@@ -153,7 +155,7 @@ in
           NoNewPrivileges = true;
           ExecStartPre = [  # TODO: REMOVE ONCE DEBUGGED
             "${pkgs.bash}/bin/bash -c 'echo \"age secret file contents: $(cat ${config.age.secrets.cloudflare-api-key.path})\" >> /tmp/caddy_debug.log'"
-            "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-token)\" >> /tmp/caddy_debug.log'"
+            "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key)\" >> /tmp/caddy_debug.log'"
           ];
         };
       };
