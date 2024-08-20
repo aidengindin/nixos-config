@@ -92,7 +92,7 @@ in
 
     age.secrets.cloudflare-api-key = {
       file = ../secrets/lorien-caddy-cloudflare-api-key.age;  # TODO: make this configurable
-      owner = "caddy";
+      owner = "root";
     };
 
     services.caddy = {
