@@ -47,7 +47,7 @@ in
         services.freshrss = {
           enable = true;
           defaultUser = "admin";
-          baseUrl = "http://nix.freshrss.box";
+          baseUrl = "https://freshrss.gindin.xyz";
           authType = "none";
         };
 
