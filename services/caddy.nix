@@ -39,25 +39,25 @@ in
         }
 
         ${mkStrIf enableFreshrss ''
-          freshrss.gindin.xyz {
-            reverse_proxy 192.168.100.11:80
-          }
+        freshrss.gindin.xyz {
+          reverse_proxy 192.168.100.11:80
+        }
         ''}
 
         ${mkStrIf enableTandoor ''
-          tandoor.gindin.xyz {
-            reverse_proxy 127.0.0.1:8300
-          }
+        tandoor.gindin.xyz {
+          reverse_proxy 127.0.0.1:8300
+        }
         ''}
 
         ${mkStrIf enableCalibre ''
-          calibre.gindin.xyz {
-            reverse_proxy 127.0.0.1:8200
-          }
-          server.calibre.gindin.xyz {
-            reverse_proxy 127.0.0.1:8201
-          }
-        ''};
+        calibre.gindin.xyz {
+          reverse_proxy 127.0.0.1:8200
+        }
+        server.calibre.gindin.xyz {
+          reverse_proxy 127.0.0.1:8201
+        }
+        ''}
       '';
     };
 
