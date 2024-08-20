@@ -143,19 +143,24 @@ in
 
     systemd = {
       services.caddy = {
-        environment = {
-          CLOUDFLARE_API_KEY = builtins.readFile config.age.secrets.cloudflare-api-key.path;
-        };
+        # environment = {
+        #   CLOUDFLARE_API_KEY = builtins.readFile config.age.secrets.cloudflare-api-key.path;
+        # };
         serviceConfig = {
-          # LoadCredential = [
-          #   "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
-          # ];
+          LoadCredential = [
+            "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
+          ];
+          ExecStartPre = [
+            "${pkgs.bash}/bin/bash -c 'echo CLOUDFLARE_API_KEY=$(cat $CREDENTIALS_DIRECTORY/cloudflare-api-key) > /tmp/caddy-env'"
+            "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"
+          ];
+          environmentFile = "/tmp/caddy-env";
+          ExecStartPost = [
+            "${pkgs.bash}/bin/bash -c 'rm -f /tmp/caddy-env'"
+          ];
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
           NoNewPrivileges = true;
-          ExecStartPre = [  # TODO: REMOVE ONCE DEBUGGED
-            "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"
-          ];
         };
       };
       sockets.caddy = {
