@@ -145,11 +145,12 @@ in
         #   CLOUDFLARE_API_KEY = builtins.readFile config.age.secrets.cloudflare-api-key.path;
         # };
         serviceConfig = {
-          # LoadCredential = [
-          #   "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
-          # ];
-          environmentFile = "${config.age.secrets.cloudflare-api-key.path}";
+          LoadCredential = [
+            "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
+          ];
+          environmentFile = "$CREDENTIALS_DIRECTORY/cloudflare-api-key";
           ExecStartPost = [
+            "${pkgs.bash}/bin/bash -c 'echo \"API Token file contents: $(cat $CREDENTIALS_DIRECTORY/cloudflare-api-token)\" >> /tmp/caddy_debug.log'"
             "${pkgs.bash}/bin/bash -c 'echo \"CLOUDFLARE_API_KEY value: $CLOUDFLARE_API_KEY\" >> /tmp/caddy_debug.log'"  # TODO: remove
           ];
           AmbientCapabilities = "cap_net_bind_service";
