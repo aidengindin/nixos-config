@@ -33,11 +33,12 @@ in
     services.caddy = {
       enable = true;
       email = "aiden+letsencrypt@aidengindin.com";
-      extraConfig = ''
+      globalConfig = ''
         {
           acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
         }
-
+      '';
+      extraConfig = ''
         ${mkStrIf enableFreshrss ''
         freshrss.gindin.xyz {
           reverse_proxy 192.168.100.11:80
