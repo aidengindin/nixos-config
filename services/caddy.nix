@@ -137,7 +137,7 @@ in
           ];
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
-          NoNewPrivileges = "yes";
+          NoNewPrivileges = true;
         };
       };
       sockets.caddy = {
