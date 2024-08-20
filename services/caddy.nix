@@ -38,7 +38,7 @@ in
           '';
 
         in {
-          caddy-cloudflare = prev.buildGo120Module {
+          caddy-cloudflare = prev.buildGo121Module {
             pname = "caddy-cloudflare";
             version = prev.caddy.version;
             runVend = true;
