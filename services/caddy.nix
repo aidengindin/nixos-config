@@ -17,6 +17,7 @@ in
 
   config = mkIf cfg.enable {
     nixpkgs.overlays = [
+      # based on https://noah.masu.rs/posts/caddy-cloudflare-dns/
       (final: prev:
         let
           plugins = [ "github.com/caddy-dns/cloudflare" ];
@@ -68,6 +69,7 @@ in
             '';
 
             meta = with prev.lib; {
+              mainProgram = "caddy";
               homepage = "https://caddyserver.com";
               description =
                 "Fast, cross-platform HTTP/2 web server with automatic HTTPS";
@@ -124,14 +126,32 @@ in
       '';
     };
 
-    systemd.services.caddy.environment = {
-      CLOUDFLARE_API_KEY = "\\$CREDENTIALS_DIRECTORY/cloudflare-api-key";
-    };
-
-    systemd.services.caddy.serviceConfig = {
-      LoadCredential = [
-        "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
-      ];
+    systemd = {
+      services.caddy = {
+        environment = {
+          CLOUDFLARE_API_KEY = "\\$CREDENTIALS_DIRECTORY/cloudflare-api-key";
+        };
+        serviceConfig = {
+          LoadCredential = [
+            "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
+          ];
+          AmbientCapabilities = "cap_net_bind_service";
+          CapabilityBoundingSet = "cap_net_bind_service";
+          NoNewPrivileges = "yes";
+        };
+      };
+      sockets.caddy = {
+        description = "Caddy web server sockets";
+        wantedBy = "sockets.target";
+        socketConfig = {
+          ListenStream = [
+            "0.0.0.0:80"
+            "[::]:80"
+            "0.0.0.0:443"
+            "[::]:443"
+          ];
+        };
+      };
     };
 
     networking.firewall.allowedTCPPorts = [ 80 443 ];
