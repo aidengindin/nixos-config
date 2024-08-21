@@ -45,7 +45,17 @@ in
         wantedBy = [ "multi-user.target" ];
         after = [ "docker.service" ];
         script = ''
-          ${pkgs.docker}/bin/docker network create --subnet=${cfg.subnet} tandoor-network
+          if ! ${pkgs.docker}/bin/docker network inspect tandoor-network &>/dev/null; then
+            echo "tandoor-network does not exist. Creating..."
+            if ${pkgs.docker}/bin/docker network create --subnet=${cfg.subnet} tandoor-network; then
+              echo "Network created with subnet ${cfg.subnet}"
+            else
+              echo "Failed to create network."
+              exit 1
+            fi
+          else
+            echo "tandoor-network already exists. Skipping creation."
+          fi
         '';
       };
 
