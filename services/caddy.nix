@@ -19,7 +19,7 @@ in
       type = types.path;
       default =  ../secrets/lorien-caddy-cloudflare-api-key.age;
       description = "Path to age-encrypted file containing Cloudflare API token";
-    }
+    };
   };
 
   config = mkIf cfg.enable {
