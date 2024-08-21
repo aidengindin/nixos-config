@@ -18,12 +18,12 @@ in
     };
     subnet = mkOption {
       type = types.str;
-      default = "172.18.0.0/24";
+      default = "172.100.0.0/24";
       description = "Subnet for the Tandoor Docker network to use";
     };
     ip = mkOption {
       type = types.str;
-      default = "172.18.0.10";
+      default = "172.100.0.10";
       description = "IP address for the Tandoor container";
     };
   };
@@ -41,7 +41,7 @@ in
         wantedBy = [ "multi-user.target" ];
         after = [ "docker.service" ];
         script = ''
-          ${pkgs.docker}/bin/docker network create --subnet=${cfg.subnet} tandoor-network || true
+          ${pkgs.docker}/bin/docker network create --subnet=${cfg.subnet} tandoor-network
         '';
       };
 
