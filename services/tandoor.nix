@@ -16,12 +16,37 @@ in
       example = "15-alpine";
       description = "Postgres container version tag to pull";
     };
+    subnet = mkOption {
+      type = types.str;
+      default = "172.18.0.0/24";
+      description = "Subnet for the Tandoor Docker network to use";
+    };
+    ip = mkOption {
+      type = types.str;
+      default = "172.18.0.10";
+      description = "IP address for the Tandoor container";
+    };
   };
 
   config = mkIf cfg.enable {
     age.secrets = {
       tandoor-secret-key.file = ../secrets/tandoor-secret-key.age;
       tandoor-postgres-password.file = ../secrets/tandoor-postgres-password.age;
+    };
+
+    systemd.services = {
+      create-tandoor-network = {
+        description = "Create Docker network for Tandoor containers";
+        serviceConfig.type = "oneshot";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "docker.service" ];
+        script = ''
+          ${pkgs.docker}/bin/docker network create --subnet=${cfg.subnet} tandoor-network || true
+        '';
+      };
+
+      docker-tandoor.after = [ "create-tandoor-network.service" ];
+      docker-tandoor-postgres.after = [ "create-tandoor-network.service" ];
     };
 
     virtualisation.oci-containers.containers = {
@@ -55,7 +80,8 @@ in
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
-          # "--link tandoor-postgres:tandoor-postgres"
+          "--network=tandoor-network"
+          "--ip=${cfg.ip}"
         ];
       };
 
@@ -78,6 +104,7 @@ in
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
+          "--network=tandoor-network"
         ];
       };
     };
