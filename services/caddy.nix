@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.services.caddy;
-  inherit (lib) mkIf mkEnableOption;
+  inherit (lib) mkIf mkEnableOption mkOption types;
 
   # helper function to conditionally insert strings
   mkStrIf = cond: str: if cond then str else "";
