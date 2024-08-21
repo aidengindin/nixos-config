@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.services.freshrss;
-  inherit (lib) mkIf mkEnableOption;
+  inherit (lib) mkIf mkEnableOption mkOption types;
   
   # script to export subscriptions using freshrss cli
   exportOpmlScript = pkgs.writeScript "export-freshrss-opml.sh" ''
@@ -12,6 +12,10 @@ in
 {
   options.agindin.services.freshrss = {
     enable = mkEnableOption "freshrss";
+    host = mkOption {
+      type = types.str;
+      default = "freshrss.gindin.xyz";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -47,7 +51,7 @@ in
         services.freshrss = {
           enable = true;
           defaultUser = "admin";
-          baseUrl = "https://freshrss.gindin.xyz";
+          baseUrl = "https://${cfg.host}";
           authType = "none";
         };
 

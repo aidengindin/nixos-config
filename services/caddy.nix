@@ -3,21 +3,30 @@ let
   cfg = config.agindin.services.caddy;
   inherit (lib) mkIf mkEnableOption;
 
+  # helper function to conditionally insert strings
   mkStrIf = cond: str: if cond then str else "";
 
+  # makes accessing these options less tedious
   myServices = config.agindin.services;
-  enableFreshrss = myServices.freshrss.enable;
-  enableTandoor = myServices.tandoor.enable;
-  enableCalibre = myServices.calibre.enable;
+  freshrss = myServices.freshrss;
+  tandoor = myServices.tandoor;
+  calibre = myServices.calibre;
 in
 {
   options.agindin.services.caddy = {
     enable = mkEnableOption "Enable Caddy reverse proxy";
+    cloudflareApiKeyFile = mkOption {
+      type = types.path;
+      default =  ../secrets/lorien-caddy-cloudflare-api-key.age;
+      description = "Path to age-encrypted file containing Cloudflare API token";
+    }
   };
 
   config = mkIf cfg.enable {
+
+    # we need to compile a custom build of caddy to include cloudflare dns support
+    # based on https://noah.masu.rs/posts/caddy-cloudflare-dns/
     nixpkgs.overlays = [
-      # based on https://noah.masu.rs/posts/caddy-cloudflare-dns/
       (final: prev:
         let
           plugins = [ "github.com/caddy-dns/cloudflare" ];
@@ -91,7 +100,7 @@ in
     };
 
     age.secrets.cloudflare-api-key = {
-      file = ../secrets/lorien-caddy-cloudflare-api-key.age;  # TODO: make this configurable
+      file = cfg.cloudflareApiKeyFile;
       owner = "root";
       group = "keys";
       mode = "0440";
@@ -111,26 +120,26 @@ in
           }
         '';
       in ''
-        ${mkStrIf enableFreshrss ''
-        freshrss.gindin.xyz {
+        ${mkStrIf freshrss.enable ''
+        ${freshrss.host} {
           reverse_proxy 192.168.100.11:80
           ${tlsSetup}
         }
         ''}
 
-        ${mkStrIf enableTandoor ''
-        tandoor.gindin.xyz {
-          reverse_proxy 127.0.0.1:8300
+        ${mkStrIf tandoor.enable ''
+        ${tandoor.host} {
+          reverse_proxy ${tandoor.ip}:8080
           ${tlsSetup}
         }
         ''}
 
-        ${mkStrIf enableCalibre ''
-        calibre.gindin.xyz {
+        ${mkStrIf calibre.enable ''
+        ${calibre.host} {
           reverse_proxy 127.0.0.1:8200
           ${tlsSetup}
         }
-        server.calibre.gindin.xyz {
+        ${calibre.serverHost} {
           reverse_proxy 127.0.0.1:8201
           ${tlsSetup}
         }

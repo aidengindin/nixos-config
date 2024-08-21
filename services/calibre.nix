@@ -11,6 +11,14 @@ in
       example = "v7.16.0-ls296";
       description = "Calibre version tag to pull";
     };
+    host = mkOption {
+      type = types.str;
+      default = "calibre.gindin.xyz";
+    };
+    serverHost = mkOption {
+      type = types.str;
+      default = "server.calibre.gindin.xyz";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -33,7 +41,6 @@ in
         "--dns=1.1.1.1"
         "--restart=unless-stopped"
         "--rm=false"
-        # "--network=reverse-proxy"
       ];
     };
   };

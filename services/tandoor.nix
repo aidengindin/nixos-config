@@ -26,6 +26,10 @@ in
       default = "172.100.0.10";
       description = "IP address for the Tandoor container";
     };
+    host = mkOption {
+      type = types.str;
+      default = "tandoor.gindin.xyz";
+    };
   };
 
   config = mkIf cfg.enable {
