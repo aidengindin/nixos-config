@@ -20,7 +20,7 @@ in
       type = types.str;
       default = "enp1s0";
       description = "Host network interface to use for NAT";
-    }
+    };
   };
 
   config = mkIf cfg.enable {
