@@ -23,6 +23,12 @@ in
       "d /var/lib/freshrss 0755 root root -"
     ];
 
+    networking.nat = {
+      enable = true;
+      internalInterfaces = [ "ve-freshrss" ];
+      externalInterfaces = "tailscale0";
+    };
+
     containers.freshrss = {
       autoStart = true;
       ephemeral = true;
