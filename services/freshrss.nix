@@ -16,6 +16,11 @@ in
       type = types.str;
       default = "freshrss.gindin.xyz";
     };
+    interface = mkOption {
+      type = types.str;
+      default = "enp1s0";
+      description = "Host network interface to use for NAT";
+    }
   };
 
   config = mkIf cfg.enable {
@@ -26,8 +31,14 @@ in
     networking.nat = {
       enable = true;
       internalInterfaces = [ "ve-freshrss" ];
-      externalInterfaces = "tailscale0";
+      externalInterface = cfg.interface;
     };
+
+    networking.firewall.extraCommands = ''
+      iptables -t nat -A POSTROUTING -s 192.168.100.0/24 -o ${cfg.interface} -j MASQUERADE
+      iptables -A FORWARD -i ${cfg.interface} -o ve-freshrss -m state --state RELATED,ESTABLISHED -j ACCEPT
+      iptables -A FORWARD -i ve-freshrss -o ${cfg.interface} -j ACCEPT
+    '';
 
     containers.freshrss = {
       autoStart = true;
@@ -62,6 +73,7 @@ in
         };
 
         networking.firewall.allowedTCPPorts = [ 80 ];
+        networking.nameservers = [ "1.1.1.1" ];
 
         # auto-export subscriptions as opml weekly
         systemd = {
