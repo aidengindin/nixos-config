@@ -3,6 +3,7 @@
 {
   imports = [
     ./arion.nix
+    ./authelia.nix
     ./blocky.nix
     ./caddy.nix
     ./calibre.nix

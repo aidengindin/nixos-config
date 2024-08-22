@@ -8,9 +8,10 @@ let
 
   # makes accessing these options less tedious
   myServices = config.agindin.services;
+  authelia = myServices.authelia;
+  calibre = myServices.calibre;
   freshrss = myServices.freshrss;
   tandoor = myServices.tandoor;
-  calibre = myServices.calibre;
 in
 {
   options.agindin.services.caddy = {
@@ -142,6 +143,12 @@ in
         ${calibre.serverHost} {
           reverse_proxy 127.0.0.1:8201
           ${tlsSetup}
+        }
+        ''}
+
+        ${mkStrIf authelia.enable ''
+        users.gindin.xyz {
+          reverse_proxy 192.168.101.11:${config.services.lldap.settings.http_port}
         }
         ''}
       '';
