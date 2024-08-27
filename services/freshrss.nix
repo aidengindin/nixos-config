@@ -59,7 +59,7 @@ in
         };
 
         "/var/freshrss-password.txt" = {
-          hostPath = config.age.secrets.freshrss-password.path;
+          hostPath = "${config.age.secrets.freshrss-password.path}";
           isReadOnly = true;
         };
       };
