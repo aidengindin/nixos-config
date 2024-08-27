@@ -81,6 +81,13 @@ in
           authType = "form";
         };
 
+        services.phpfpm.pools.freshrss.settings = {
+          "php_admin_value[session.cookie_httponly]" = "1";
+          "php_admin_value[session.use_only_cookies]" = "1";
+          "php_admin_value[session.cookie_secure]" = "1";
+          "php_admin_value[session.cookie_samesite]" = "Lax";
+        };
+
         networking.firewall.allowedTCPPorts = [ 80 ];
         networking.nameservers = [ "1.1.1.1" ];
 
