@@ -77,7 +77,7 @@ in
           enable = true;
           defaultUser = "admin";
           passwordFile = "/var/freshrss-password.txt";
-          baseUrl = "https://${cfg.host}/read";  # adding /read seems to make cookies work, for some reason
+          baseUrl = "https://${cfg.host}";
           authType = "form";
         };
 
