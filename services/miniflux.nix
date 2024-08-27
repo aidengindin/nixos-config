@@ -21,7 +21,7 @@ in {
       miniflux-credentials.file = ../secrets/miniflux-credentials.age;
     };
 
-    network.nat = {
+    networking.nat = {
       enable = true;
       internalInterfaces = [ "ve-miniflux" ];
       externalInterface = cfg.interface;
