@@ -40,8 +40,6 @@
 
     freshrss.enable = true;
 
-    miniflux.enable = true;
-
     tandoor = {
       enable = true;
       version = "1.5.18";
