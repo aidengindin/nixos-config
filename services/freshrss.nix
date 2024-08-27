@@ -24,6 +24,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    age.secrets = {
+      freshrss-password.file = ../secrets/freshrss-password.age;
+    };
+
     systemd.tmpfiles.rules = [
       "d /var/lib/freshrss 0755 root root -"
     ];
@@ -53,6 +57,11 @@ in
           hostPath = "/var/lib/freshrss";
           isReadOnly = false;
         };
+
+        "/var/freshrss-password.txt" = {
+          hostPath = config.age.secrets.freshrss-password.path;
+          isReadOnly = true;
+        };
       };
 
       # TODO: resource limits & healthcheck
@@ -67,6 +76,7 @@ in
         services.freshrss = {
           enable = true;
           defaultUser = "admin";
+          passwordFile = "/var/freshrss-password.txt";
           baseUrl = "https://${cfg.host}";
           authType = "form";
         };
