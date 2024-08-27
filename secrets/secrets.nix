@@ -18,5 +18,6 @@ in
   "tandoor-secret-key.age".publicKeys = [ lorienHost lorienUser ];
   "tandoor-postgres-password.age".publicKeys = [ lorienHost lorienUser ];
   "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienUser lorienCaddy ];
+  "freshrss-password.age".publicKeys = [ lorienHost lorienUser ];
 }
 
