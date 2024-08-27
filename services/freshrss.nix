@@ -56,7 +56,6 @@ in
       };
 
       # TODO: resource limits & healthcheck
-
       config = { config, lib, pkgs, ... }: {
         services.timesyncd.enable = true;
         system.stateVersion = "24.05";
@@ -69,7 +68,7 @@ in
           enable = true;
           defaultUser = "admin";
           baseUrl = "https://${cfg.host}";
-          authType = "none";
+          authType = "form";
         };
 
         networking.firewall.allowedTCPPorts = [ 80 ];
