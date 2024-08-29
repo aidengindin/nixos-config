@@ -25,7 +25,9 @@ in
   "authelia-oidc-hmac-secret".publicKeys = [ lorienHost lorienUser ];
   "authelia-session-secret".publicKeys = [ lorienHost lorienUser ];
   "authelia-storage-encryption-key".publicKeys = [ lorienHost lorienUser ];
+
   "authelia-freshrss-client-id".publicKeys = [ lorienHost lorienUser ];
   "authelia-freshrss-client-secret".publicKeys = [ lorienHost lorienUser ];
+  "freshrss-client-crypto-key".publicKeys = [ lorienHost lorienUser ];
 }
 
