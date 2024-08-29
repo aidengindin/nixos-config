@@ -20,14 +20,14 @@ in
   "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienUser lorienCaddy ];
   "freshrss-password.age".publicKeys = [ lorienHost lorienUser ];
   "miniflux-credentials.age".publicKeys = [ lorienHost lorienUser ];
-  "authelia-jwt-secret".publicKeys = [ lorienHost lorienUser ];
-  "authelia-oidc-issuer-private-key".publicKeys = [ lorienHost lorienUser ];
-  "authelia-oidc-hmac-secret".publicKeys = [ lorienHost lorienUser ];
-  "authelia-session-secret".publicKeys = [ lorienHost lorienUser ];
-  "authelia-storage-encryption-key".publicKeys = [ lorienHost lorienUser ];
+  "authelia-jwt-secret.age".publicKeys = [ lorienHost lorienUser ];
+  "authelia-oidc-issuer-private-key.age".publicKeys = [ lorienHost lorienUser ];
+  "authelia-oidc-hmac-secret.age".publicKeys = [ lorienHost lorienUser ];
+  "authelia-session-secret.age".publicKeys = [ lorienHost lorienUser ];
+  "authelia-storage-encryption-key.age".publicKeys = [ lorienHost lorienUser ];
 
-  "authelia-freshrss-client-id".publicKeys = [ lorienHost lorienUser ];
-  "authelia-freshrss-client-secret".publicKeys = [ lorienHost lorienUser ];
-  "freshrss-client-crypto-key".publicKeys = [ lorienHost lorienUser ];
+  "authelia-freshrss-client-id.age".publicKeys = [ lorienHost lorienUser ];
+  "authelia-freshrss-client-secret.age".publicKeys = [ lorienHost lorienUser ];
+  "freshrss-client-crypto-key.age".publicKeys = [ lorienHost lorienUser ];
 }
 
