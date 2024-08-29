@@ -27,6 +27,11 @@ in
       authelia-freshrss-client-secret.file = ../secrets/authelia-freshrss-client-secret.age;
     };
 
+    systemd.tmpfiles.rules = [
+      "d /var/lib/authelia/authelia 0755 root root -"
+      "d /var/lib/authelia/postgresql 0755 root root -"
+    ];
+
     containers.authelia = {
       autoStart = true;
       ephemeral = true;
