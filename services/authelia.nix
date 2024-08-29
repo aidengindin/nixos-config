@@ -3,6 +3,7 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.services.authelia;
+  uid = 1500;  # uid for the authelia user
   inherit (lib) mkIf mkEnableOption mkOption types;
 in
 {
@@ -17,15 +18,61 @@ in
 
   config = mkIf cfg.enable {
     age.secrets = {
-      authelia-jwt-secret.file = ../secrets/authelia-jwt-secret.age;
-      authelia-oidc-issuer-private-key.file = ../secrets/authelia-oidc-issuer-private-key.age;
-      authelia-oidc-hmac-secret.file = ../secrets/authelia-oidc-hmac-secret.age;
-      authelia-session-secret.file = ../secrets/authelia-session-secret.age;
-      authelia-storage-encryption-key.file = ../secrets/authelia-storage-encryption-key.age;
+      authelia-jwt-secret = {
+        file = ../secrets/authelia-jwt-secret.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
+      authelia-oidc-issuer-private-key = {
+        file = ../secrets/authelia-oidc-issuer-private-key.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
+      authelia-oidc-hmac-secret = {
+        file = ../secrets/authelia-oidc-hmac-secret.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
+      authelia-session-secret = {
+        file = ../secrets/authelia-session-secret.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
+      authelia-storage-encryption-key = {
+        file = ../secrets/authelia-storage-encryption-key.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
 
-      authelia-freshrss-client-id.file = ../secrets/authelia-freshrss-client-id.age;
-      authelia-freshrss-client-secret.file = ../secrets/authelia-freshrss-client-secret.age;
+      authelia-freshrss-client-id = {
+        file = ../secrets/authelia-freshrss-client-id.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
+      authelia-freshrss-client-secret = {
+        file = ../secrets/authelia-freshrss-client-secret.age;
+        owner = "authelia";
+        group = "authelia";
+        mode = "0440";
+      };
     };
+
+    users.users.authelia = {
+      isSystemUser = true;
+      uid = uid;
+      group = "authelia";
+      description = "Authelia user";
+      home = "/var/lib/authelia";
+      createHome = true;
+      openssh.authorizedKeys.keys = [];
+    };
+    users.groups.authelia = {};
 
     systemd.tmpfiles.rules = [
       "d /var/lib/authelia/authelia 0755 root root -"
@@ -74,6 +121,7 @@ in
         users.users.authelia = {
           isSystemUser = true;
           group = "authelia";
+          uid = uid;
           description = "Authelia user";
           home = "/etc/authelia";
           createHome = true;
@@ -81,10 +129,10 @@ in
         };
         users.groups.authelia = {};
 
-        systemd.tmpfiles.rules = [
-          "d /run/secrets 0751 root authelia -"
-          "Z /run/secrets/* 0640 root authelia -"
-        ];
+        # systemd.tmpfiles.rules = [
+        #   "d /run/secrets 0751 root authelia -"
+        #   "Z /run/secrets/* 0640 root authelia -"
+        # ];
 
         services = {
           postgresql = {
