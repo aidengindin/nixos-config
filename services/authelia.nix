@@ -143,7 +143,7 @@ in
                 };
                 authorization_policies.default = {
                   default_policy = "one_factor";
-                }
+                };
               };
 
               # Necessary for Caddy integration
