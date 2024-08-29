@@ -21,6 +21,10 @@ in
       default =  ../secrets/lorien-caddy-cloudflare-api-key.age;
       description = "Path to age-encrypted file containing Cloudflare API token";
     };
+    autheliaHost = mkOption {
+      type = types.str;
+      description = "Host (IP or domain) of Authelia server";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -121,8 +125,19 @@ in
           }
         '';
       in ''
+        ${mkStrIf authelia.enable ''
+        auth.gindin.xyz {
+          reverse_proxy 192.168.101.11:9091
+          ${tlsSetup}
+        }
+        ''}
+
         ${mkStrIf freshrss.enable ''
         ${freshrss.host} {
+          forward_auth ${autheliaHost} {
+            uri /api/authz/forward-auth
+            copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+          }
           reverse_proxy 192.168.100.11:80
           ${tlsSetup}
         }
