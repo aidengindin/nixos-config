@@ -81,6 +81,11 @@ in
         };
         users.groups.authelia = {};
 
+        systemd.tmpfiles.rules = [
+          "d /run/secrets 0751 root authelia -"
+          "Z /run/secrets/* 0640 root authelia -"
+        ];
+
         services = {
           postgresql = {
             enable = true;
