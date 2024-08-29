@@ -24,6 +24,7 @@ in
     };
     autheliaHost = mkOption {
       type = types.str;
+      default = "192.168.101.11:9091";
       description = "Host (IP or domain) of Authelia server";
     };
   };
@@ -128,14 +129,14 @@ in
       in ''
         ${mkStrIf authelia.enable ''
         auth.gindin.xyz {
-          reverse_proxy 192.168.101.11:9091
+          reverse_proxy ${autheliaHost}
           ${tlsSetup}
         }
         ''}
 
         ${mkStrIf freshrss.enable ''
         ${freshrss.host} {
-          forward_auth ${autheliaHost} {
+          forward_auth ${cfg.autheliaHost} {
             uri /api/authz/forward-auth
             copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
           }

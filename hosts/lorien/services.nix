@@ -32,6 +32,10 @@
     };
 
     caddy.enable = true;
+    authelia = {
+      enable = true;
+      host = "lorien";  # TODO: make this automatic
+    };
 
     calibre = {
       enable = true;
