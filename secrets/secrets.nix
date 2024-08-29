@@ -18,6 +18,8 @@ in
   "tandoor-secret-key.age".publicKeys = [ lorienHost lorienUser ];
   "tandoor-postgres-password.age".publicKeys = [ lorienHost lorienUser ];
   "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienUser lorienCaddy ];
+  "freshrss-password.age".publicKeys = [ lorienHost lorienUser ];
+  "miniflux-credentials.age".publicKeys = [ lorienHost lorienUser ];
   "authelia-jwt-secret".publicKeys = [ lorienHost lorienUser ];
   "authelia-oidc-issuer-private-key".publicKeys = [ lorienHost lorienUser ];
   "authelia-oidc-hmac-secret".publicKeys = [ lorienHost lorienUser ];

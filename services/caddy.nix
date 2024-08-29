@@ -11,6 +11,7 @@ let
   authelia = myServices.authelia;
   calibre = myServices.calibre;
   freshrss = myServices.freshrss;
+  miniflux = myServices.miniflux;
   tandoor = myServices.tandoor;
 in
 {
@@ -139,6 +140,13 @@ in
             copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
           }
           reverse_proxy 192.168.100.11:80
+          ${tlsSetup}
+        }
+        ''}
+
+        ${mkStrIf miniflux.enable ''
+        ${miniflux.host} {
+          reverse_proxy 192.168.102.11:80
           ${tlsSetup}
         }
         ''}
