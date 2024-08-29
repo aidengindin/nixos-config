@@ -43,7 +43,7 @@ in
       bindMounts = let 
         # TODO: extract this helper function, as it's used in other files
         bindSecret = name: secretPath: {
-          "/run/secrets/${name}" = {
+          "/run/secrets/${name}.txt" = {
             hostPath = "${secretPath}";
             isReadOnly = true;
           };

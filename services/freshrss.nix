@@ -62,7 +62,7 @@ in
 
       bindMounts = let
         bindSecret = name: secretPath: {
-          "/run/secrets/${name}" = {
+          "/run/secrets/${name}.txt" = {
             hostPath = "${secretPath}";
             isReadOnly = true;
           };
@@ -99,11 +99,11 @@ in
         systemd = {
           services.freshrss = {
             serviceConfig = {
-              LoadCredential = [
-                "client-id:/run/secrets/client-id.txt"
-                "client-secret:/run/secrets/client-secret.txt"
-                "client-crypto-key:/run/secrets/client-crypto-secret.txt"
-              ];
+              # LoadCredential = [
+              #   "client-id:/run/secrets/client-id.txt"
+              #   "client-secret:/run/secrets/client-secret.txt"
+              #   "client-crypto-key:/run/secrets/client-crypto-secret.txt"
+              # ];
               ExecStartPre = [
                 "${pkgs.bash}/bin/bash -c 'echo \"OIDC_CLIENT_ID=$(cat /run/secrets/client-id.txt)\" > /run/freshrss-secrets'"
                 "${pkgs.bash}/bin/bash -c 'echo \"OIDC_CLIENT_SECRET=$(cat /run/secrets/client-secret.txt)\" >> /run/freshrss-secrets'"
