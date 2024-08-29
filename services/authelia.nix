@@ -9,7 +9,7 @@ in
   options.agindin.services.authelia = {
     enable = mkEnableOption "Enable Authelia SSO provider";
     host = mkOption {
-      types = types.str;
+      type = types.str;
       example = "lorien";
       description = "Hostname of the device running Authelia";
     };
