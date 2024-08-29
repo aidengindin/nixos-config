@@ -33,7 +33,7 @@ in
     age.secrets = {
       client-id.file = ../secrets/authelia-freshrss-client-id.age;
       client-secret.file = ../secrets/authelia-freshrss-client-secret.age;
-      client-crypto-key.file = ../secrets/freshrss-client-crypto-key.age
+      client-crypto-key.file = ../secrets/freshrss-client-crypto-key.age;
     };
 
     systemd.tmpfiles.rules = [
@@ -109,7 +109,7 @@ in
                 "OIDC_SCOPES=openid profile"
                 "OIDC_X_FORWARDED_HEADERS=X-Forwarded-Host X-Forwarded-Port X-Forwarded-Proto"
               ];
-            }
+            };
           };
 
           # auto-export subscriptions as opml weekly
