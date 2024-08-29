@@ -21,9 +21,20 @@ in
       default = "enp1s0";
       description = "Host network interface to use for NAT";
     };
+    oidcProviderMetadataUrl = mkOption {
+      type = types.str;
+      default = "https://auth.gindin.xyz/.well-known/openid-configuration";
+      description = "The OIDC provider metadata URL";
+    };
   };
 
   config = mkIf cfg.enable {
+
+    age.secrets = {
+      client-id.file = ../secrets/authelia-freshrss-client-id.age;
+      client-secret.file = ../secrets/authelia-freshrss-client-secret.age;
+      client-crypto-key.file = ../secrets/freshrss-client-crypto-key.age
+    };
 
     systemd.tmpfiles.rules = [
       "d /var/lib/freshrss 0755 root root -"
@@ -49,12 +60,22 @@ in
       hostAddress = "192.168.100.10";
       localAddress = "192.168.100.11";
 
-      bindMounts = {
+      bindMounts = let
+        bindSecret = name: secretPath: {
+          "/run/secrets/${name}" = {
+            hostPath = "${secretPath}";
+            isReadOnly = true;
+          };
+        };
+      in with config.age.secrets; {
         "/var/lib/freshrss" = {
           hostPath = "/var/lib/freshrss";
           isReadOnly = false;
         };
-      };
+      }
+      // bindSecret "client-id" client-id.path
+      // bindSecret "client-secret" client-secret.path
+      // bindSecret "client-crypto-key" client-crypto-key.path;
 
       # TODO: resource limits & healthcheck
       config = { config, lib, pkgs, ... }: {
@@ -69,14 +90,29 @@ in
           enable = true;
           defaultUser = "aidengindin";
           baseUrl = "https://${cfg.host}";
-          authType = "none";
+          authType = "http_auth";
         };
 
         networking.firewall.allowedTCPPorts = [ 80 ];
         networking.nameservers = [ "1.1.1.1" ];
 
-        # auto-export subscriptions as opml weekly
         systemd = {
+          services.freshrss = {
+            serviceConfig = {
+              Environment = [
+                "OIDC_ENABLED=1"
+                "OIDC_PROVIDER_METADATA_URL=${cfg.oidcProviderMetadataUrl}"
+                "OIDC_CLIENT_ID=${builtins.readFile /run/secrets/client-id.txt}"
+                "OIDC_CLIENT_SECRET=${builtins.readFile /run/secrets/client-secret.txt}"
+                "OIDC_CLIENT_CRYPTO_KEY=${builtins.readFile /run/secrets/client-crypto-key.txt}"
+                "OIDC_REMOTE_USER_CLAIM=preferred_username"
+                "OIDC_SCOPES=openid profile"
+                "OIDC_X_FORWARDED_HEADERS=X-Forwarded-Host X-Forwarded-Port X-Forwarded-Proto"
+              ];
+            }
+          };
+
+          # auto-export subscriptions as opml weekly
           services.freshrss-opml-export = {
             description = "Export FreshRSS subscriptions to OPML for backup";
             serviceConfig = {
