@@ -80,6 +80,8 @@ in
                 ensureDBOwnership = true;
               }
             ];
+            
+            # TODO: lock this down
             authentication = lib.mkForce ''
                 # TYPE  DATABASE        USER            ADDRESS                 METHOD
                 local   all             all                                     trust
