@@ -99,12 +99,24 @@ in
         systemd = {
           services.freshrss = {
             serviceConfig = {
+              LoadCredential = [
+                "client-id:/run/secrets/client-id.txt"
+                "client-secret:/run/secrets/client-secret.txt"
+                "client-crypto-key:/run/secrets/client-crypto-secret.txt"
+              ];
+              ExecStartPre = [
+                "${pkgs.bash}/bin/bash -c 'echo \"OIDC_CLIENT_ID=$(cat /run/secrets/client-id.txt)\" > /run/freshrss-secrets'"
+                "${pkgs.bash}/bin/bash -c 'echo \"OIDC_CLIENT_SECRET=$(cat /run/secrets/client-secret.txt)\" >> /run/freshrss-secrets'"
+                "${pkgs.bash}/bin/bash -c 'echo \"OIDC_CLIENT_CRYPTO_KEY=$(cat /run/secrets/client-crypto-key.txt)\" >> /run/freshrss-secrets'"
+                "${pkgs.bash}/bin/bash -c 'chmod 600 /run/freshrss-secrets'"
+              ];
+              EnvironmentFile = "/run/freshrss-secrets";
               Environment = [
                 "OIDC_ENABLED=1"
                 "OIDC_PROVIDER_METADATA_URL=${cfg.oidcProviderMetadataUrl}"
-                "OIDC_CLIENT_ID=${builtins.readFile /run/secrets/client-id.txt}"
-                "OIDC_CLIENT_SECRET=${builtins.readFile /run/secrets/client-secret.txt}"
-                "OIDC_CLIENT_CRYPTO_KEY=${builtins.readFile /run/secrets/client-crypto-key.txt}"
+                # "OIDC_CLIENT_ID=${builtins.readFile /run/secrets/client-id.txt}"
+                # "OIDC_CLIENT_SECRET=${builtins.readFile /run/secrets/client-secret.txt}"
+                # "OIDC_CLIENT_CRYPTO_KEY=${builtins.readFile /run/secrets/client-crypto-key.txt}"
                 "OIDC_REMOTE_USER_CLAIM=preferred_username"
                 "OIDC_SCOPES=openid profile"
                 "OIDC_X_FORWARDED_HEADERS=X-Forwarded-Host X-Forwarded-Port X-Forwarded-Proto"
