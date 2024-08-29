@@ -129,7 +129,7 @@ in
       in ''
         ${mkStrIf authelia.enable ''
         auth.gindin.xyz {
-          reverse_proxy ${autheliaHost}
+          reverse_proxy ${cfg.autheliaHost}
           ${tlsSetup}
         }
         ''}
