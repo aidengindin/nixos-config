@@ -169,12 +169,6 @@ in
           ${tlsSetup}
         }
         ''}
-
-        ${mkStrIf authelia.enable ''
-        users.gindin.xyz {
-          reverse_proxy 192.168.101.11:${config.services.lldap.settings.http_port}
-        }
-        ''}
       '';
     };
 
