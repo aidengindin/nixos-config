@@ -66,6 +66,16 @@ in
         services.timesyncd.enable = true;
         system.stateVersion = "24.05";
 
+        users.users.authelia = {
+          isSystemUser = true;
+          group = "authelia";
+          description = "Authelia user";
+          home = "/etc/authelia";
+          createHome = true;
+          openssh.authorizedKeys.keys = [];
+        };
+        users.groups.authelia = {};
+
         services = {
           postgresql = {
             enable = true;
