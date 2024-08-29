@@ -72,7 +72,7 @@ in
       createHome = true;
       openssh.authorizedKeys.keys = [];
     };
-    users.groups.authelia = {};
+    users.groups.authelia.gid = uid;
 
     systemd.tmpfiles.rules = [
       "d /var/lib/authelia/authelia 0755 root root -"
@@ -127,7 +127,7 @@ in
           createHome = true;
           openssh.authorizedKeys.keys = [];
         };
-        users.groups.authelia = {};
+        users.groups.authelia.gid = uid;
 
         # systemd.tmpfiles.rules = [
         #   "d /run/secrets 0751 root authelia -"
