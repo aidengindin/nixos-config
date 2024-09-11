@@ -204,7 +204,7 @@ in
                 ];
               };
 
-              notifier.smtp = {};  # TODO: set this up
+              # notifier.smtp = {};  # TODO: set this up
 
               identity_providers.oidc = {
                 cors = {
