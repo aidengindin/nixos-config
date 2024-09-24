@@ -170,18 +170,18 @@ in
           NoNewPrivileges = true;
         };
       };
-      sockets.caddy = {
-        description = "Caddy web server sockets";
-        wantedBy = [ "sockets.target" ];
-        socketConfig = {
-          ListenStream = [
-            "0.0.0.0:80"
-            "[::]:80"
-            "0.0.0.0:443"
-            "[::]:443"
-          ];
-        };
-      };
+      # sockets.caddy = {
+      #   description = "Caddy web server sockets";
+      #   wantedBy = [ "sockets.target" ];
+      #   socketConfig = {
+      #     ListenStream = [
+      #       "0.0.0.0:80"
+      #       "[::]:80"
+      #       "0.0.0.0:443"
+      #       "[::]:443"
+      #     ];
+      #   };
+      # };
     };
 
     networking.firewall.allowedTCPPorts = [ 80 443 ];
