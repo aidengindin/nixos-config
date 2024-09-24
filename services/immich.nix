@@ -81,12 +81,12 @@ in
         environment = {
           IMMICH_VERSION = cfg.version;
           # UPLOAD_LOCATION = "./library";
-          DB_HOST = "database";
+          DB_HOST = "immich-database";
           DB_PORT = "5432";
           DB_USERNAME = "immich";
           DB_PASSWORD_FILE = "/etc/password.txt";
           DB_DATABASE_NAME = "immich";
-          REDIS_HOST = "immich-redis";
+          REDIS_HOSTNAME = "immich-redis";
           REDIS_PORT = "6379";
           IMMICH_MACHINE_LEARNING_URL = "http://immich-machine-learning:3003";
         };
