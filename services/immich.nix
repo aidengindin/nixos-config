@@ -73,7 +73,6 @@ in
     virtualisation.oci-containers.containers = {
       immich-server = {
         image = "ghcr.io/immich-app/immich-server:${cfg.version}";
-        containerName = "immich_server";
         volumes = [
           "${toString cfg.uploadLocation}:/usr/src/app/upload"
           "${config.age.secrets.immich-db-password.path}:/etc/password.txt"
@@ -103,7 +102,6 @@ in
 
       "immich-machine-learning" = {
         image = "ghcr.io/immich-app/immich-machine-learning:${cfg.version}";
-        containerName = "immich-machine-learning";
         volumes = [
           "${toString cfg.dataLocation}/model-cache:/cache"
         ];
@@ -119,7 +117,6 @@ in
 
       "immich-redis" = {
         image = "docker.io/redis:6.2-alpine@sha256:2d1463258f2764328496376f5d965f20c6a67f66ea2b06dc42af351f75248792";
-        containerName = "immich-redis";
         extraOptions = [
             "--rm=false"
             "--restart=always"
@@ -129,7 +126,6 @@ in
 
       "immich-database" = {
         image = "docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0";
-        containerName = "immich_postgres";
         environment = {
           POSTGRES_PASSWORD_FILE = "/etc/password.txt";
           POSTGRES_USER = "immich";
