@@ -91,7 +91,7 @@ in
           IMMICH_MACHINE_LEARNING_URL = "http://immich-machine-learning:3003";
         };
         ports = [ "2283:3001" ];
-        after = [ "immich-redis" "immich-database" ];
+        dependsOn = [ "immich-redis" "immich-database" ];
         extraOptions = [
             "--rm=false"
             "--restart=always"
