@@ -78,7 +78,7 @@ in
           "${config.age.secrets.immich-db-password.path}:/etc/password.txt"
           "/etc/localtime:/etc/localtime:ro"
         ];
-        environment = cfg.environmentVariables // {
+        environment = {
           IMMICH_VERSION = cfg.version;
           # UPLOAD_LOCATION = "./library";
           DB_HOST = "database";
