@@ -81,7 +81,7 @@ in
         environment = {
           IMMICH_VERSION = cfg.version;
           # UPLOAD_LOCATION = "./library";
-          DB_HOST = "immich-database";
+          DB_HOSTNAME = "immich-database";
           DB_PORT = "5432";
           DB_USERNAME = "immich";
           DB_PASSWORD_FILE = "/etc/password.txt";
