@@ -140,8 +140,9 @@ in
           "${toString cfg.dataLocation}/db:/var/lib/postgresql/data"
           "${config.age.secrets.immich-db-password.path}:/etc/password.txt"
         ];
-        command = [
-          "postgres"
+        # command = [
+        cmd = [
+          # "postgres"
           "-c" "shared_preload_libraries=vectors.so"
           "-c" "search_path=\"$$user\", public, vectors"
           "-c" "logging_collector=on"
