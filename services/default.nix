@@ -7,6 +7,7 @@
     ./caddy.nix
     ./calibre.nix
     ./freshrss.nix
+    ./immich.nix
     ./miniflux.nix
     ./ollama.nix
     ./restic.nix

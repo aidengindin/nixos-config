@@ -9,6 +9,7 @@ let
   # makes accessing these options less tedious
   myServices = config.agindin.services;
   freshrss = myServices.freshrss;
+  immich = myServices.immich;
   miniflux = myServices.miniflux;
   tandoor = myServices.tandoor;
   calibre = myServices.calibre;
@@ -131,6 +132,13 @@ in
         ${mkStrIf miniflux.enable ''
         ${miniflux.host} {
           reverse_proxy 192.168.102.11:80
+          ${tlsSetup}
+        }
+        ''}
+
+        ${mkStrIf immich.enable ''
+        ${immich.host} {
+          reverse_proxy ${immich.ip}:3001
           ${tlsSetup}
         }
         ''}
