@@ -40,6 +40,11 @@
 
     freshrss.enable = true;
 
+    immich = {
+      enable = true;
+      version = "v1.115.0";
+    };
+
     tandoor = {
       enable = true;
       version = "1.5.18";

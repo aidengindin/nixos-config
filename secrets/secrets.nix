@@ -20,5 +20,6 @@ in
   "lorien-caddy-cloudflare-api-key.age".publicKeys = [ lorienHost lorienUser lorienCaddy ];
   "freshrss-password.age".publicKeys = [ lorienHost lorienUser ];
   "miniflux-credentials.age".publicKeys = [ lorienHost lorienUser ];
+  "immich-db-password.age".publicKeys = [ lorienHost lorienUser ];
 }
 
