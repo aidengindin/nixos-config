@@ -102,8 +102,8 @@ in
 
     age.secrets.cloudflare-api-key = {
       file = cfg.cloudflareApiKeyFile;
-      owner = "root";
-      group = "keys";
+      owner = "caddy";
+      group = "caddy";
       mode = "0440";
     };
 
@@ -158,13 +158,14 @@ in
     systemd = {
       services.caddy = {
         serviceConfig = {
-          LoadCredential = [
-            "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
-          ];
-          EnvironmentFile = "/tmp/caddy.env";
-          ExecStartPre = [
-            "${pkgs.bash}/bin/bash -c 'cp -rf $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
-          ];
+          # LoadCredential = [
+          #   "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
+          # ];
+          # EnvironmentFile = "/tmp/caddy.env";
+          # ExecStartPre = [
+          #   "${pkgs.bash}/bin/bash -c 'cp -rf $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
+          # ];
+          EnvironmentFile = "${config.age.secrets.cloudflare-api-key.path}";
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
           NoNewPrivileges = true;
