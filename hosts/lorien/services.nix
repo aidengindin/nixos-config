@@ -16,7 +16,11 @@
     restic = {
       enable = true;
       paths = [
-        "/docker-volumes/"
+        "/docker-volumes/calibre"
+        "/docker-volumes/tandoor"
+        "/var/lib/freshrss"
+        "/var/lib/immich"
+        "/srv/immich"
       ];
       localBackup = {
         enable = true;
