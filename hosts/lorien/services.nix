@@ -46,7 +46,7 @@
 
     immich = {
       enable = true;
-      version = "v1.115.0";
+      version = "v1.117.0";
     };
 
     tandoor = {
