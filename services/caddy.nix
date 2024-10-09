@@ -13,6 +13,7 @@ let
   miniflux = myServices.miniflux;
   tandoor = myServices.tandoor;
   calibre = myServices.calibre;
+  memos = myServices.memos;
 in
 {
   options.agindin.services.caddy = {
@@ -160,37 +161,25 @@ in
           ${tlsSetup}
         }
         ''}
+
+        ${mkStrIf memos.enable ''
+        ${memos.host} {
+          reverse_proxy 127.0.0.1:5230
+          ${tlsSetup}
+        }
+        ''}
       '';
     };
 
     systemd = {
       services.caddy = {
         serviceConfig = {
-          # LoadCredential = [
-          #   "cloudflare-api-key:${config.age.secrets.cloudflare-api-key.path}"
-          # ];
-          # EnvironmentFile = "/tmp/caddy.env";
-          # ExecStartPre = [
-          #   "${pkgs.bash}/bin/bash -c 'cp -rf $CREDENTIALS_DIRECTORY/cloudflare-api-key /tmp/caddy.env'"
-          # ];
           EnvironmentFile = "${config.age.secrets.cloudflare-api-key.path}";
           AmbientCapabilities = "cap_net_bind_service";
           CapabilityBoundingSet = "cap_net_bind_service";
           NoNewPrivileges = true;
         };
       };
-      # sockets.caddy = {
-      #   description = "Caddy web server sockets";
-      #   wantedBy = [ "sockets.target" ];
-      #   socketConfig = {
-      #     ListenStream = [
-      #       "0.0.0.0:80"
-      #       "[::]:80"
-      #       "0.0.0.0:443"
-      #       "[::]:443"
-      #     ];
-      #   };
-      # };
     };
 
     networking.firewall.allowedTCPPorts = [ 80 443 ];
