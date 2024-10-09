@@ -25,6 +25,11 @@ in
         Restart = "always";
         RestartSec = 5;
       };
+
+      preStart = ''
+        mkdir -p /var/opt/memos
+        chown memos:memos /var/lib/memos
+      '';
     };
   };
 }
