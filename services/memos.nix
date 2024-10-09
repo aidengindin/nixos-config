@@ -28,7 +28,7 @@ in
       wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart = "${pkgs.memos}/bin/memos --port 5230 --data /var/lib/memos";
+        ExecStart = "${pkgs.memos}/bin/memos --port 5230 --data /var/lib/memos --mode prod";
         Restart = "always";
         RestartSec = 5;
         User = "memos";
