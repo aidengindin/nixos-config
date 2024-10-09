@@ -15,21 +15,27 @@ in
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [ memos ];
 
-      systemd.services.memos = {
-      description = "Memos Note-taking Service";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+    users.users.memos = {
+      isSystemUser = true;
+      description = "Memos Service User";
+    };
 
-      serviceConfig = {
-        ExecStart = "${pkgs.memos}/bin/memos --port 5230";
-        Restart = "always";
-        RestartSec = 5;
-      };
+    systemd.services.memos = {
+    description = "Memos Note-taking Service";
+    after = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
 
-      preStart = ''
-        mkdir -p /var/opt/memos
-        chown memos:memos /var/lib/memos
-      '';
+    serviceConfig = {
+      ExecStart = "${pkgs.memos}/bin/memos --port 5230";
+      Restart = "always";
+      RestartSec = 5;
+      User = "memos";
+    };
+
+    preStart = ''
+      mkdir -p /var/opt/memos
+      chown memos:memos /var/lib/memos
+    '';
     };
   };
 }
