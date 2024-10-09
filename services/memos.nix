@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  cfg = config.agindin.services.freshrss;
+  cfg = config.agindin.services.memos;
   inherit (lib) mkIf mkEnableOption mkOption types;
 in
 {
