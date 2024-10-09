@@ -23,23 +23,30 @@ in
     users.groups.memos = {};
 
     systemd.services.memos = {
-    description = "Memos Note-taking Service";
-    after = [ "network.target" ];
-    wantedBy = [ "multi-user.target" ];
+      description = "Memos Note-taking Service";
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
 
-    serviceConfig = {
-      ExecStart = "${pkgs.memos}/bin/memos --port 5230";
-      Restart = "always";
-      RestartSec = 5;
-      User = "memos";
-      StateDirectory = "/var/opt/memos";
-      StateDirectoryMode = "0755";
-    };
+      serviceConfig = {
+        ExecStart = "${pkgs.memos}/bin/memos --port 5230 --data /var/lib/memos";
+        Restart = "always";
+        RestartSec = 5;
+        User = "memos";
+        Group = "memos";
+        StateDirectory = "memos";
+        StateDirectoryMode = "0750";
+        RuntimeDirectory = "memos";
+        RuntimeDirectoryMode = "0750";
+      };
 
     # preStart = ''
     #   mkdir -p /var/opt/memos
     #   chown memos:memos /var/opt/memos
     # '';
     };
+
+    systemd.tmpfiles.rules = [
+      "d /var/lib/memos 0750 memos memos - -"
+    ];
   };
 }
