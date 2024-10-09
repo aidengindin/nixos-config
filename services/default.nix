@@ -10,6 +10,7 @@
     ./immich.nix
     ./memos.nix
     ./miniflux.nix
+    ./nextcloud.nix
     ./ollama.nix
     ./restic.nix
     ./ryot.nix

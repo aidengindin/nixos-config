@@ -14,6 +14,7 @@ let
   tandoor = myServices.tandoor;
   calibre = myServices.calibre;
   memos = myServices.memos;
+  nextcloud = myServices.nextcloud;
 in
 {
   options.agindin.services.caddy = {
@@ -165,6 +166,13 @@ in
         ${mkStrIf memos.enable ''
         ${memos.host} {
           reverse_proxy 127.0.0.1:5230
+          ${tlsSetup}
+        }
+        ''}
+
+        ${mkStrIf nextcloud.enable ''
+        ${nextcloud.host} {
+          reverse_proxy 192.168.103.11:80
           ${tlsSetup}
         }
         ''}
