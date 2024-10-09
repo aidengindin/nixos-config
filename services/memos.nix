@@ -18,7 +18,9 @@ in
     users.users.memos = {
       isSystemUser = true;
       description = "Memos Service User";
+      group = "memos";
     };
+    users.groups.memos = {};
 
     systemd.services.memos = {
     description = "Memos Note-taking Service";
