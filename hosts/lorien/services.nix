@@ -51,6 +51,8 @@
 
     memos.enable = true;
 
+    nextcloud.enable = true;
+
     tandoor = {
       enable = true;
       version = "1.5.18";
