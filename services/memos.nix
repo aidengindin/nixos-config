@@ -36,7 +36,7 @@ in
 
     preStart = ''
       mkdir -p /var/opt/memos
-      chown memos:memos /var/lib/memos
+      chown memos:memos /var/opt/memos
     '';
     };
   };
