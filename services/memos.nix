@@ -32,12 +32,14 @@ in
       Restart = "always";
       RestartSec = 5;
       User = "memos";
+      StateDirectory = "/var/opt/memos";
+      StateDirectoryMode = "0755";
     };
 
-    preStart = ''
-      mkdir -p /var/opt/memos
-      chown memos:memos /var/opt/memos
-    '';
+    # preStart = ''
+    #   mkdir -p /var/opt/memos
+    #   chown memos:memos /var/opt/memos
+    # '';
     };
   };
 }
