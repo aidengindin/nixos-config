@@ -9,7 +9,7 @@ in
     host = mkOption {
       type = types.str;
       default = "memos.gindin.xyz";
-    }
+    };
   };
 
   config = mkIf cfg.enable {
