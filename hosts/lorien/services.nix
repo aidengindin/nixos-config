@@ -49,6 +49,8 @@
       version = "v1.117.0";
     };
 
+    memos.enable = true;
+
     tandoor = {
       enable = true;
       version = "1.5.18";

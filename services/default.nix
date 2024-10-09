@@ -8,6 +8,7 @@
     ./calibre.nix
     ./freshrss.nix
     ./immich.nix
+    ./memos.nix
     ./miniflux.nix
     ./ollama.nix
     ./restic.nix
