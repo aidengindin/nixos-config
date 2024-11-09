@@ -46,7 +46,7 @@
 
     immich = {
       enable = true;
-      version = "v1.117.0";
+      version = "v1.120.1";
     };
 
     memos.enable = true;

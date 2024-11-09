@@ -139,7 +139,7 @@ in
 
         ${mkStrIf immich.enable ''
         ${immich.host} {
-          reverse_proxy ${immich.ip}:3001
+          reverse_proxy ${immich.ip}:2283
           ${tlsSetup}
         }
         ''}
