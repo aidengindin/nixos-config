@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./arion.nix
     ./blocky.nix
     ./caddy.nix
     ./calibre.nix

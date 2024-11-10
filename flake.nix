@@ -3,12 +3,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    # packages & configurations for steam deck
-    jovian = {
-      url = "github:Jovian-Experiments/Jovian-NixOS/";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
     # managing user environments - both stable & unstable modules
     home-manager = {
       url = "github:nix-community/home-manager/release-24.05";
@@ -25,12 +19,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # managing docker containers
-    arion = {
-      url = "github:hercules-ci/arion";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # secrets management
     agenix = {
       url = "github:ryantm/agenix";
@@ -38,7 +26,7 @@
     };
  };
 
-  outputs = { self, nixpkgs, unstable, jovian, home-manager, hm-unstable, darwin, arion, agenix }:
+  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, darwin, agenix }:
     let
 
       # standard modules shared by all NixOS systems,
@@ -64,17 +52,6 @@
           specialArgs = standardSpecialArgs;
           modules = (standardNixosModules false) ++ [
             ./hosts/lorien
-            arion.nixosModules.arion
-          ];
-        };
-
-        # my steam deck
-        weathertop = unstable.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = standardSpecialArgs;
-          modules = (standardNixosModules true) ++ [
-            ./hosts/weathertop
-            jovian.nixosModules.default
           ];
         };
       };
