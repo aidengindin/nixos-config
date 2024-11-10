@@ -11,9 +11,7 @@
     ./miniflux.nix
     ./ollama.nix
     ./restic.nix
-    ./ryot.nix
     ./tandoor.nix
-    ./wallabag.nix
   ];
 }
 
