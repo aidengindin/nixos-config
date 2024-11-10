@@ -15,18 +15,7 @@ let
     ips = [ "9.9.9.9" ];
   }];
 
-  customDNS = {
-    "calibre.box" = "100.99.184.63";
-    "freshrss.box" = "100.99.184.63";
-    "hass.box" = "100.99.184.63";
-    "nextcloud.box" = "100.99.184.63";
-    "nix.freshrss.box" = "100.99.184.63";
-    "ntfy.box" = "100.99.184.63";
-    "proxy.box" = "100.99.184.63";
-    "server.calibre.box" = "100.99.184.63";
-    "tandoor.box" = "100.99.184.63";
-    "wallabag.box" = "100.99.184.63";
-  };
+  customDNS = {};
 
   blacklist = [
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
