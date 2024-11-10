@@ -39,7 +39,7 @@
 
     calibre = {
       enable = true;
-      version = "v7.16.0-ls296";
+      version = "v7.21.0-ls310";
     };
 
     freshrss.enable = true;
@@ -53,7 +53,7 @@
 
     tandoor = {
       enable = true;
-      version = "1.5.18";
+      version = "1.5.20";
       postgresVersion = "15-alpine";
     };
   };
