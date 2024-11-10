@@ -87,6 +87,15 @@
           modules = [
             ./hosts/shadowfax
             home-manager.darwinModules.home-manager
+
+            # ghostscript fix
+            {
+              nixpkgs.overlays = [
+                (final: prev: {
+                  ghostscript = unstable.legacyPackages.aarch64-darwin.ghostscript;
+                })
+              ];
+            }
           ];
         };
       };

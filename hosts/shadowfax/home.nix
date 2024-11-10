@@ -6,7 +6,6 @@
 
   users.users.agindin.home = "/Users/agindin";
 
-  agindin.kitty.enable = true;
   agindin.latex.enable = true;
 
   # this line should not be edited even when upgrading NixOS versions

@@ -37,4 +37,6 @@
   environment.systemPackages = with pkgs; [
     ollama
   ];
+
+  system.stateVersion = 5;
 }
