@@ -9,6 +9,7 @@
     ./latex.nix
     ./nvim.nix
     ./starship.nix
+    ./zoxide.nix
     # ./zsh.nix
   ];
 

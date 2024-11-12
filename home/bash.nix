@@ -10,6 +10,7 @@
       # enable = true;
       interactiveShellInit = lib.mkBefore ''
         source ${pkgs.blesh}/share/blesh/ble.sh
+        ble-import -f integration/zoxide
         eval "$(${pkgs.starship}/bin/starship init bash)"
         eval "$(${pkgs.atuin}/bin/atuin init bash)"
       '';
