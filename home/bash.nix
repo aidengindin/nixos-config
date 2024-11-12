@@ -10,6 +10,7 @@
       enable = true;
       interactiveShellInit = lib.mkBefore ''
         source ${pkgs.blesh}/share/blesh/ble.sh
+        eval "$(${pkgs.starship}/bin/starship init bash)"
       '';
     };
 
