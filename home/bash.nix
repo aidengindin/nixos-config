@@ -3,7 +3,7 @@
 {
   config = {
     # users.users.agindin.shell = pkgs.bash;
-    environment.systemPackages = with pkgs; [ blesh ];
+    environment.systemPackages = with pkgs; [ blesh atuin ];
     environment.shells = with pkgs; [ bash ];
 
     programs.bash = {
@@ -11,6 +11,7 @@
       interactiveShellInit = lib.mkBefore ''
         source ${pkgs.blesh}/share/blesh/ble.sh
         eval "$(${pkgs.starship}/bin/starship init bash)"
+        eval "$(${pkgs.atuin}/bin/atuin init bash)"
       '';
     };
 
