@@ -14,11 +14,8 @@
 
   config.users.users.agindin = {
     name = "agindin";
-    shell = pkgs.bash;
   };
 
-  config.environment.shells = with pkgs; [ zsh bash ];
-  
   config.home-manager.users.agindin = {
     programs.git = {
       enable = true;
