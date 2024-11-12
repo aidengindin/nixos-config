@@ -7,7 +7,7 @@
     environment.shells = with pkgs; [ bash ];
 
     programs.bash = {
-      enable = true;
+      # enable = true;
       interactiveShellInit = lib.mkBefore ''
         source ${pkgs.blesh}/share/blesh/ble.sh
         eval "$(${pkgs.starship}/bin/starship init bash)"
