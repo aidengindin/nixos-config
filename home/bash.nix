@@ -16,6 +16,11 @@
       '';
     };
 
+    # allow home manager to manage bash
+    home-manager.users.agindin = {
+      programs.bash.enable = true;
+    };
+
     environment.shellAliases = {
       mkdir = "mkdir -p";
       

@@ -3,6 +3,7 @@
   imports = [
     ./bash.nix
     ./cli.nix
+    ./direnv.nix
     ./emacs.nix
     ./java.nix
     ./kitty.nix
