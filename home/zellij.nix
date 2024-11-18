@@ -1,9 +1,9 @@
 { config, pkgs, ... }:
 {
   config = {
-    programs.zellij = {
+    home-manager.users.agindin.programs.zellij = {
       enable = true;
       enableBashIntegration = true;
-    }
+    };
   };
 }
