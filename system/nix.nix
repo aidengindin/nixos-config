@@ -4,7 +4,7 @@
     nixpkgs.config.allowUnfree = true;
 
     nix = {
-      package = pkgs.nixFlakes;
+      package = nixVersions.stable;
       extraOptions = ''
           experimental-features = nix-command flakes
         '';
