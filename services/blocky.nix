@@ -74,6 +74,10 @@ let
     ''
   ];
 
+  malware = [
+    "https://raw.githubusercontent.com/smed79/mdlm/master/hosts.txt"
+  ];
+
 in
 {
   options.agindin.services.blocky = {
@@ -123,13 +127,15 @@ in
         blocking = {
           denylists = {
             defaultGroup = blacklist;
+            adsAllowed = malware;
           };
           allowlists = {
             defaultGroup = whitelist;
+            adsAllowed = whitelist;
           };
           clientGroupsBlock = {
             default = [ "defaultGroup" ];
-            adsAllowed = [];
+            adsAllowed = [ "adsAllowed" ];
           };
         };
 
