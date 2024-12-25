@@ -51,7 +51,7 @@ in
           '';
 
         in {
-          caddy-cloudflare = prev.buildGo121Module {
+          caddy-cloudflare = prev.buildGoModule {
             pname = "caddy-cloudflare";
             version = prev.caddy.version;
             runVend = true;
@@ -60,7 +60,7 @@ in
 
             src = prev.caddy.src;
 
-            vendorHash = "sha256-0Lw291cGHj4qXkfgp9wqNC6ZOHNRbKrkWfv3lCzwMv8=";
+            vendorHash = "sha256-fTcMtg5GGEgclIwJCav0jjWpqT+nKw2OF1Ow0MEEitk=";
 
             overrideModAttrs = (_: {
               preBuild = ''
