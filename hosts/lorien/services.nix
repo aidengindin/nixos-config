@@ -39,7 +39,7 @@
 
     calibre = {
       enable = true;
-      version = "v7.21.0-ls310";
+      version = "v7.23.0-ls314";
     };
 
     freshrss.enable = true;
