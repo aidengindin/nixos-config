@@ -53,7 +53,7 @@
 
     tandoor = {
       enable = true;
-      version = "1.5.20";
+      version = "1.5.24";
       postgresVersion = "15-alpine";
     };
   };
