@@ -104,6 +104,7 @@ in
     services.blocky = {
       enable = true;
       settings = {
+        log.level = "debug";
         ports = {
           dns = cfg.port;
           # http = cfg.httpPort;
