@@ -71,6 +71,8 @@ let
       /^((www|(w[0-9]\.)?web|media((-[a-z]{3}|\.[a-z]{4})[0-9]{1,2}-[0-9](\.|-)(cdn|fna))?)\.)?whatsapp\.(com|net)$/
       /(\.|^)signal\.org$/
       link.axios.com
+      analytics.strava.com
+      tracing-collector.strava.com
     ''
   ];
 
