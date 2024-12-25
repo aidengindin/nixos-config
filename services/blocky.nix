@@ -74,6 +74,10 @@ let
     ''
   ];
 
+  malware = [
+    "https://raw.githubusercontent.com/smed79/mdlm/master/hosts.txt"
+  ];
+
 in
 {
   options.agindin.services.blocky = {
@@ -104,6 +108,7 @@ in
     services.blocky = {
       enable = true;
       settings = {
+        log.level = "debug";
         ports = {
           dns = cfg.port;
           # http = cfg.httpPort;
@@ -120,15 +125,17 @@ in
         };
 
         blocking = {
-          blackLists = {
-            all = blacklist;
+          denylists = {
+            defaultGroup = blacklist;
+            adsAllowed = malware;
           };
-          whiteLists = {
-            all = whitelist;
+          allowlists = {
+            defaultGroup = whitelist;
+            adsAllowed = whitelist;
           };
           clientGroupsBlock = {
-            default = [ "all" ];
-            adsAllowed = [];
+            default = [ "defaultGroup" ];
+            adsAllowed = [ "adsAllowed" ];
           };
         };
 
