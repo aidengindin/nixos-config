@@ -121,13 +121,13 @@ in
 
         blocking = {
           blackLists = {
-            all = blacklist;
+            defaultGroup = blacklist;
           };
           whiteLists = {
-            all = whitelist;
+            defaultGroup = whitelist;
           };
           clientGroupsBlock = {
-            default = [ "all" ];
+            default = [ "defaultGroup" ];
             adsAllowed = [];
           };
         };
