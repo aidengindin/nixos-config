@@ -72,6 +72,7 @@ let
       /(\.|^)signal\.org$/
       link.axios.com
       email.strava.com
+      thirdparty.bnc.lt
     ''
   ];
 
