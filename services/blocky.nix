@@ -121,10 +121,10 @@ in
         };
 
         blocking = {
-          blackLists = {
+          denylists = {
             defaultGroup = blacklist;
           };
-          whiteLists = {
+          allowlists = {
             defaultGroup = whitelist;
           };
           clientGroupsBlock = {
