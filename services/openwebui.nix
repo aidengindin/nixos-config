@@ -62,7 +62,7 @@ in
 
     virtualisation.oci-containers.containers = {
       openwebui = {
-        image = "openwebui/openwebui:${cfg.tag}";
+        image = "ghcr.io/openweb-ui/openwebui:${cfg.tag}";
         volumes = [
           "/var/lib/openwebui:/app/backend/data"
         ];
