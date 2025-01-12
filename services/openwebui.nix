@@ -66,12 +66,14 @@ in
         volumes = [
           "/var/lib/openwebui:/app/backend/data"
         ];
+        environmentFiles = [
+          config.age.secrets.openwebui-env.path
+        ];
         extraOptions = [
           "--restart=unless-stopped"
           "--rm=false"
           "--network=openwebui-network"
           "--ip=${cfg.ip}"
-          "--env-file ${config.age.secrets.openwebui-env.path}"
         ];
       };
     };
