@@ -13,12 +13,12 @@ in
     };
     subnet = mkOption {
       type = types.str;
-      default = "172.101.0.0/24";
+      default = "172.100.20.0/24";
       description = "Subnet for the openwebui Docker network to use";
     };
     ip = mkOption {
       type = types.str;
-      default = "172.101.0.10";
+      default = "172.100.20.10";
       description = "IP address for the openwebui container";
     };
     host = mkOption {

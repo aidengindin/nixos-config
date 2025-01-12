@@ -56,5 +56,10 @@
       version = "1.5.24";
       postgresVersion = "15-alpine";
     };
+
+    openwebui = {
+      enable = true;
+      tag = "git-4269df0";
+    };
   };
 }
