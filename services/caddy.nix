@@ -14,6 +14,7 @@ let
   tandoor = myServices.tandoor;
   calibre = myServices.calibre;
   memos = myServices.memos;
+  openwebui = myServices.openwebui;
 in
 {
   options.agindin.services.caddy = {
@@ -165,6 +166,13 @@ in
         ${mkStrIf memos.enable ''
         ${memos.host} {
           reverse_proxy 127.0.0.1:5230
+          ${tlsSetup}
+        }
+        ''}
+
+        ${mkStrIf openwebui.enable ''
+        ${openwebui.host} {
+          reverse_proxy ${openwebui.ip}:8080
           ${tlsSetup}
         }
         ''}
