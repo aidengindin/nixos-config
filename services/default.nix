@@ -10,6 +10,7 @@
     ./memos.nix
     ./miniflux.nix
     ./ollama.nix
+    ./openwebui.nix
     ./restic.nix
     ./tandoor.nix
   ];
