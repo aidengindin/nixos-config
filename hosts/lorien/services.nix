@@ -39,27 +39,25 @@
 
     calibre = {
       enable = true;
-      version = "v7.23.0-ls314";
+      version = "v7.24.0-ls321";
     };
 
     freshrss.enable = true;
 
     immich = {
       enable = true;
-      version = "v1.123.0";
+      version = "v1.125.7";
     };
-
-    memos.enable = true;
 
     tandoor = {
       enable = true;
-      version = "1.5.24";
+      version = "1.5.31";
       postgresVersion = "15-alpine";
     };
 
     openwebui = {
       enable = true;
-      tag = "git-4269df0";
+      tag = "git-e9d6ada";
     };
   };
 }
