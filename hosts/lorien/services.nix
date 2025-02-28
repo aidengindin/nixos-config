@@ -37,31 +37,10 @@
 
     caddy.enable = true;
 
-    # https://hub.docker.com/r/linuxserver/calibre
-    calibre = {
-      enable = true;
-      version = "7.26.0";
-    };
-
+    calibre.enable = true;
     freshrss.enable = true;
-
-    # https://github.com/immich-app/immich/releases
-    immich = {
-      enable = true;
-      version = "v1.126.1";
-    };
-
-    # https://hub.docker.com/r/vabene1111/recipes/tags
-    tandoor = {
-      enable = true;
-      version = "1.5.31";
-      postgresVersion = "15-alpine";
-    };
-
-    # https://github.com/open-webui/open-webui/releases
-    openwebui = {
-      enable = true;
-      tag = "git-6fedd72";
-    };
+    immich.enable = true;
+    openwebui.enable = true;
+    tandoor.enable = true;
   };
 }

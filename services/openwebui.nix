@@ -7,8 +7,9 @@ in
   options.agindin.services.openwebui = {
     enable = mkEnableOption "openwebui";
     tag = mkOption {
+      # https://github.com/open-webui/open-webui/releases
       type = types.str;
-      example = "git-4269df0";
+      default = "git-95cadac";
       description = "Tag of the openwebui image to use";
     };
     subnet = mkOption {

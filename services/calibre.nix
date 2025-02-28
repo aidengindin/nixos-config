@@ -7,8 +7,9 @@ in
   options.agindin.services.calibre = {
     enable = mkEnableOption "calibre";
     version = mkOption {
+      # https://hub.docker.com/r/linuxserver/calibre
       type = types.str;
-      example = "v7.16.0-ls296";
+      default = "7.26.0";
       description = "Calibre version tag to pull";
     };
     host = mkOption {
