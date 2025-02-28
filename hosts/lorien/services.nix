@@ -40,7 +40,7 @@
     # https://hub.docker.com/r/linuxserver/calibre
     calibre = {
       enable = true;
-      version = "v7.26.0";
+      version = "7.26.0";
     };
 
     freshrss.enable = true;
