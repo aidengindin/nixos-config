@@ -7,13 +7,14 @@ in
   options.agindin.services.tandoor = {
     enable = mkEnableOption "tandoor";
     version = mkOption {
+      # https://hub.docker.com/r/vabene1111/recipes/tags
       type = types.str;
-      example = "1.5.18";
+      default = "1.5.31";
       description = "Tandoor version tag to pull";
     };
     postgresVersion = mkOption {
       type = types.str;
-      example = "15-alpine";
+      default = "15-alpine";
       description = "Postgres container version tag to pull";
     };
     subnet = mkOption {
