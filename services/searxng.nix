@@ -18,7 +18,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    services.searxng = {
+    services.searx = {
       enable = true;
       redisCreateLocally = true;
 
