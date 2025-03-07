@@ -15,6 +15,7 @@ let
   calibre = myServices.calibre;
   memos = myServices.memos;
   openwebui = myServices.openwebui;
+  searxng = myServices.searxng;
 in
 {
   options.agindin.services.caddy = {
@@ -173,6 +174,13 @@ in
         ${mkStrIf openwebui.enable ''
         ${openwebui.host} {
           reverse_proxy ${openwebui.ip}:8080
+          ${tlsSetup}
+        }
+        ''}
+
+        ${mkStrIf searxng.enable ''
+        ${searxng.host} {
+          reverse_proxy 127.0.0.1:8888
           ${tlsSetup}
         }
         ''}
