@@ -12,6 +12,7 @@
     ./ollama.nix
     ./openwebui.nix
     ./restic.nix
+    ./searxng.nix
     ./tandoor.nix
   ];
 }

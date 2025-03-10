@@ -22,5 +22,5 @@ in
   "miniflux-credentials.age".publicKeys = [ lorienHost lorienUser ];
   "immich-db-password.age".publicKeys = [ lorienHost lorienUser ];
   "openwebui-env.age".publicKeys = [ lorienHost lorienUser ];
+  "searxng-secret-key.age".publicKeys = [ lorienHost lorienUser ];
 }
-
