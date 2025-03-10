@@ -48,6 +48,17 @@ in
           public_instance = false;
           secret_key = config.age.secrets.searxng-secret-key.path;
         };
+
+        ui = {
+          default_locale = "en";
+          static_use_hash = true;
+          theme_arg.simple_style = "black";
+        };
+
+        search = {
+          safe_search = 0;
+          autocomplete = "duckduckgo";
+        };
       };
     };
   };
