@@ -18,6 +18,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    age.secrets = {
+      searxng-secret-key.file = ../secrets/searxng-secret-key.age;
+    };
+
     services.searx = {
       enable = true;
       redisCreateLocally = true;
@@ -42,6 +46,7 @@ in
           port = 8888;
           bind_address = "127.0.0.1";
           public_instance = false;
+          secret_key = config.age.secrets.searxng-secret-key.path;
         };
       };
     };
