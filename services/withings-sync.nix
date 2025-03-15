@@ -4,50 +4,54 @@ let
   inherit (lib) mkIf mkEnableOption mkOption types mapAttrs' nameValuePair concatStringsSep;
 
   syncOpts = { name, config, ... }: {
-    garminCredentials = {
-      username = mkOption {
-        type = types.str;
-        description = "Garmin Connect username";
+    options = {
+      enable = mkEnableOption "withings-sync service for ${name}";
+
+      garminCredentials = {
+        username = mkOption {
+          type = types.str;
+          description = "Garmin Connect username";
+        };
+        passwordFile = mkOption {
+          type = types.path;
+          description = "Path to a file containing the Garmin Connect password";
+        };
       };
-      passwordFile = mkOption {
+
+      stateDir = mkOption {
         type = types.path;
-        description = "Path to a file containing the Garmin Connect password";
+        default = "/var/lib/withings-sync/${name}";
+        description = "Directory to store state in";
       };
-    };
 
-    stateDir = mkOption {
-      type = types.path;
-      default = "/var/lib/withings-sync/${name}";
-      description = "Directory to store state in";
-    };
+      features = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "List of features to enable (e.g. BLOOD_PRESSURE)";
+        example = [ "BLOOD_PRESSURE" ];
+      };
 
-    features = mkOption {
-      type = types.listOf types.str;
-      default = [];
-      description = "List of features to enable (e.g. BLOOD_PRESSURE)";
-      example = [ "BLOOD_PRESSURE" ];
-    };
+      interval = mkOption {
+        type = types.str;
+        default = "1h";
+        description = "Systemd timer interval to run the sync";
+      };
 
-    interval = mkOption {
-      type = types.str;
-      default = "1h";
-      description = "Systemd timer interval to run the sync";
-    };
+      extraArgs = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "Extra arguments to pass to the sync script";
+      };
 
-    extraArgs = mkOption {
-      type = types.listOf types.str;
-      default = [];
-      description = "Extra arguments to pass to the sync script";
-    };
+      user = mkOption {
+        type = types.str;
+        description = "User to run the sync script as";
+      };
 
-    user = mkOption {
-      type = types.str;
-      description = "User to run the sync script as";
-    };
-
-    group = mkOption {
-      type = types.str;
-      description = "Group to run the sync script as";
+      group = mkOption {
+        type = types.str;
+        description = "Group to run the sync script as";
+      };
     };
   };
 in
@@ -71,7 +75,7 @@ in
       cfg.package
     ];
 
-    systemd.tmpfiles.rules = lib.concatLists (mapAttrs' (name: userCfg: [
+    systemd.tmpfiles.rules = lib.concatLists (lib.mapAttrsToList (name: userCfg: [
       ''
         d ${userCfg.stateDir}/config 0700 ${userCfg.user} ${userCfg.group} -
       ''
@@ -118,8 +122,9 @@ in
         };
 
         script = let
-          featuresArg = lib.optional (userCfg.features != []) 
-            "--features ${concatStringsSep " " userCfg.features}";
+          featuresArg = if userCfg.features != []
+            then "--features ${concatStringsSep "," userCfg.features}"
+            else "";
         in ''
           set -euo pipefail
 

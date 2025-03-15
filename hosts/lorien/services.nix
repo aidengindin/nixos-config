@@ -70,6 +70,7 @@
       enable = true;
       users = {
         aiden = {
+          enable = true;
           garminCredentials = {
             username = "aiden@thegindins.com";
             passwordFile = config.age.secrets.aiden-garmin-password.path;
