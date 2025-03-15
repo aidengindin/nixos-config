@@ -8,6 +8,7 @@
     users = {
       aiden-withings-sync = {
         isSystemUser = true;
+        group = "aiden-withings-sync";
         home = "/var/lib/withings-sync/aiden";
         createHome = true;
       };
