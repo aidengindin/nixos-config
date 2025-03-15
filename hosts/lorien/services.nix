@@ -1,7 +1,21 @@
-{config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [ ../../services ];
+
+  # create users needed for services
+  users = {
+    users = {
+      aiden-withings-sync = {
+        isSystemUser = true;
+        home = "/var/lib/withings-sync/aiden";
+        createHome = true;
+      };
+    };
+    groups = {
+      aiden-withings-sync = {};
+    };
+  };
 
   age.secrets = {
     restic-password = {
@@ -9,6 +23,13 @@
       owner = "root";
       group = "keys";
       mode = "0440";
+    };
+
+    aiden-garmin-password = {
+      file = ../../secrets/aiden-garmin-password.age;
+      owner = "aiden-withings-sync";
+      group = "aiden-withings-sync";
+      mode = "0400";
     };
   };
 
@@ -43,5 +64,19 @@
     openwebui.enable = true;
     searxng.enable = true;
     tandoor.enable = true;
+
+    withings-sync = {
+      enable = true;
+      users = {
+        aiden = {
+          garminCredentials = {
+            username = "aiden@thegindins.com";
+            passwordFile = config.age.secrets.aiden-garmin-password.path;
+          };
+          user = "aiden-withings-sync";
+          group = "aiden-withings-sync";
+        };
+      };
+    };
   };
 }
