@@ -72,7 +72,7 @@
         aiden = {
           enable = true;
           garminCredentials = {
-            username = "aiden@thegindins.com";
+            username = "aiden@aidengindin.com";
             passwordFile = config.age.secrets.aiden-garmin-password.path;
           };
           user = "aiden-withings-sync";
