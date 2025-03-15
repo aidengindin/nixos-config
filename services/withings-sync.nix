@@ -3,6 +3,12 @@ let
   cfg = config.agindin.services.withings-sync;
   inherit (lib) mkIf mkEnableOption mkOption types mapAttrs' nameValuePair concatStringsSep;
 
+  withingsPackage = pkgs.python312Packages.withings-sync.overrideAttrs (oldAttrs: {
+    propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
+      pkgs.python312Packages.setuptools
+    ];
+  });
+
   syncOpts = { name, config, ... }: {
     options = {
       enable = mkEnableOption "withings-sync service for ${name}";
@@ -65,7 +71,7 @@ in
     };
     package = mkOption {
       type = types.package;
-      default = pkgs.python312Packages.withings-sync;
+      default = withingsPackage;
       description = "Nix package to use for withings-sync";
     };
   };
