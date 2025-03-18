@@ -3,9 +3,9 @@
   config.homebrew.casks = [
     {
       name = "librewolf";
-      args = [
-        "--no-quarantine"
-      ];
+      args = {
+        no_quarantine = true;
+      };
     }
   ];
 }
