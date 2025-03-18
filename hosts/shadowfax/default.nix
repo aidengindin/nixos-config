@@ -1,6 +1,7 @@
 { pkgs, ... }:
 {
   imports = [
+    ../../macos
     ./home.nix
   ];
 
