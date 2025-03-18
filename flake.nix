@@ -41,6 +41,7 @@
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix;
+        unstablePkgs = unstable.legacyPackages.x86_64-linux;
       };
     in
     {
