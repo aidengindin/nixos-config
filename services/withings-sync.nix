@@ -1,11 +1,11 @@
-{ config, lib, unstablePkgs ? pkgs, ... }:
+{ config, lib, pkgs, unstablePkgs, ... }:
 let
   cfg = config.agindin.services.withings-sync;
   inherit (lib) mkIf mkEnableOption mkOption types mapAttrs' nameValuePair concatStringsSep;
 
   withingsPackage = unstablePkgs.python312Packages.withings-sync.overrideAttrs (oldAttrs: {
     propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
-      pkgs.python312Packages.setuptools
+      unstablePkgs.python312Packages.setuptools
     ];
   });
 
