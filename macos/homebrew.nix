@@ -8,6 +8,13 @@
         cleanup = "zap";
         upgrade = true;
       };
+      casks = [
+        "sol"
+        "unnaturalscrollwheels"
+      ];
+      brews = [
+        "qmk"
+      ];
     };
   };
 }
