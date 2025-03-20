@@ -12,9 +12,16 @@
         home = "/var/lib/withings-sync/aiden";
         createHome = true;
       };
+      ally-withings-sync = {
+        isSystemUser = true;
+        group = "ally-withings-sync";
+        home = "/var/lib/withings-sync/ally";
+        createHome = true;
+      };
     };
     groups = {
       aiden-withings-sync = {};
+      ally-withings-sync = {};
     };
   };
 
@@ -32,6 +39,13 @@
       group = "aiden-withings-sync";
       mode = "0400";
     };
+
+    # ally-garmin-password = {
+    #   file = ../../secrets/ally-garmin-password.age;
+    #   owner = "ally-withings-sync";
+    #   group = "ally-withings-sync";
+    #   mode = "0400";
+    # };
   };
 
   agindin.services = {
@@ -78,6 +92,15 @@
           user = "aiden-withings-sync";
           group = "aiden-withings-sync";
         };
+        # ally = {
+        #   enable = true;
+        #   garminCredentials = {
+        #     username = "ally.dinhofer@gmail.com";
+        #     passwordFile = config.age.secrets.ally-garmin-password.path;
+        #   };
+        #   user = "ally-withings-sync";
+        #   group = "ally-withings-sync";
+        # };
       };
     };
   };

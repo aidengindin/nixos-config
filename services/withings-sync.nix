@@ -4,6 +4,12 @@ let
   inherit (lib) mkIf mkEnableOption mkOption types mapAttrs' nameValuePair concatStringsSep;
 
   withingsPackage = unstablePkgs.python312Packages.withings-sync.overrideAttrs (oldAttrs: {
+    src = pkgs.fetchFromGitHub {
+      owner = "aidengindin";
+      repo = "withings-sync";
+      rev = "feat/credential-file-env-variable";
+      sha256 = lib.fakeHash;
+    };
     propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
       unstablePkgs.python312Packages.setuptools
     ];
@@ -136,12 +142,10 @@ in
 
           export HOME="${userCfg.stateDir}"
 
-          # Read password from file
-          GARMIN_PASSWORD=$(cat "${userCfg.garminCredentials.passwordFile}")
+          export GARMIN_PASSWORD_FILE="${userCfg.garminCredentials.passwordFile}"
 
           withings-sync \
             --garmin-username "${userCfg.garminCredentials.username}" \
-            --garmin-password "$GARMIN_PASSWORD" \
             ${featuresArg} \
             ${concatStringsSep " " userCfg.extraArgs}
         '';
