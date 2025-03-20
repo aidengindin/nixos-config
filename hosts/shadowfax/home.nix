@@ -4,8 +4,6 @@
     ../../common
   ];
 
-  users.users.agindin.home = "/Users/agindin";
-
   agindin.latex.enable = true;
 
   # this line should not be edited even when upgrading NixOS versions
