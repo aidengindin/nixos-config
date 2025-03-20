@@ -8,7 +8,7 @@ let
       owner = "aidengindin";
       repo = "withings-sync";
       rev = "feat/credential-file-env-variable";
-      sha256 = "sha256-11q85x5r8fg93jcywifjpcfphxn6kyrhwxfs9aqh27524sxr5avm";
+      sha256 = lib.fakeHash;
     };
     propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
       unstablePkgs.python312Packages.setuptools
