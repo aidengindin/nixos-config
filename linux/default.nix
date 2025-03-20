@@ -7,7 +7,6 @@
     ./gamingOptimizations.nix
     ./locale.nix
     ./network.nix
-    ./nix.nix
     ./ssh.nix
   ];
 
@@ -20,10 +19,7 @@
       packages = with pkgs; [];
     };
 
-    programs.zsh.enable = true;
-
     environment.systemPackages = with pkgs; [
-      htop
       agenix.packages.${pkgs.system}.default
     ];
   };

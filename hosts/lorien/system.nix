@@ -3,7 +3,7 @@
 {
   imports =
     [
-      ../../system
+      ../../linux
     ];
 
   agindin.ssh = {
