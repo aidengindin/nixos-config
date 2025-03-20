@@ -8,11 +8,11 @@
     ./java.nix
     ./kitty.nix
     ./latex.nix
+    ./nix.nix
     ./nvim.nix
     ./starship.nix
     ./zellij.nix
     ./zoxide.nix
-    # ./zsh.nix
   ];
 
   config.users.users.agindin = {
