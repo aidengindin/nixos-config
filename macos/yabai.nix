@@ -49,9 +49,9 @@ in
           alt + shift - 0x29 : yabai -m window --swap east
 
           # Resize windows
-          alt + cmd - j : yabai -m window --resize left:-20:0 || yabai -m window --resize right:-20:0
-          alt + cmd - k : yabai -m window --resize bottom:0:20 || yabai -m window --resize top:0:20
-          alt + cmd - l : yabai -m window --resize top:0:-20 || yabai -m window --resize bottom:0:-20
+          alt + cmd - j    : yabai -m window --resize left:-20:0 || yabai -m window --resize right:-20:0
+          alt + cmd - k    : yabai -m window --resize bottom:0:20 || yabai -m window --resize top:0:20
+          alt + cmd - l    : yabai -m window --resize top:0:-20 || yabai -m window --resize bottom:0:-20
           alt + cmd - 0x29 : yabai -m window --resize right:20:0 || yabai -m window --resize left:20:0
 
           alt - b : yabai -m space --balance
