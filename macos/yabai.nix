@@ -37,22 +37,22 @@ in
         enable = true;
         skhdConfig = ''
           # Focus windows
-          alt - j : yabai -m window --focus west
-          alt - k : yabai -m window --focus south
-          alt - l : yabai -m window --focus north
-          alt - ; : yabai -m window --focus east
+          alt - j    : yabai -m window --focus west
+          alt - k    : yabai -m window --focus south
+          alt - l    : yabai -m window --focus north
+          alt - 0x29 : yabai -m window --focus east
 
           # Move windows
-          alt + shift - j : yabai -m window --swap west
-          alt + shift - k : yabai -m window --swap south
-          alt + shift - l : yabai -m window --swap north
-          alt + shift - ; : yabai -m window --swap east
+          alt + shift - j    : yabai -m window --swap west
+          alt + shift - k    : yabai -m window --swap south
+          alt + shift - l    : yabai -m window --swap north
+          alt + shift - 0x29 : yabai -m window --swap east
 
           # Resize windows
-          alt + cmd - h : yabai -m window --resize left:-20:0 || yabai -m window --resize right:-20:0
-          alt + cmd - j : yabai -m window --resize bottom:0:20 || yabai -m window --resize top:0:20
-          alt + cmd - k : yabai -m window --resize top:0:-20 || yabai -m window --resize bottom:0:-20
-          alt + cmd - l : yabai -m window --resize right:20:0 || yabai -m window --resize left:20:0
+          alt + cmd - j : yabai -m window --resize left:-20:0 || yabai -m window --resize right:-20:0
+          alt + cmd - k : yabai -m window --resize bottom:0:20 || yabai -m window --resize top:0:20
+          alt + cmd - l : yabai -m window --resize top:0:-20 || yabai -m window --resize bottom:0:-20
+          alt + cmd - 0x29 : yabai -m window --resize right:20:0 || yabai -m window --resize left:20:0
 
           alt - b : yabai -m space --balance
 
