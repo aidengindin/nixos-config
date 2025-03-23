@@ -27,7 +27,7 @@ in
           focus_follows_mouse = "autoraise";
           mouse_follows_focus = "off";
 
-          external_bar = "all:20:0";
+          # external_bar = "all:20:0";
         };
         extraConfig = ''
           yabai -m rule --add app="^System Settings$" manage=off
