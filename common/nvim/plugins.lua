@@ -112,7 +112,15 @@ require("lazy").setup({
     "vim-pandoc/vim-pandoc",
     dependencies = { "vim-pandoc/vim-pandoc-syntax" }
   },
-  "airblade/vim-gitgutter"
+  "airblade/vim-gitgutter",
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons"
+    }
+  }
 })
 
 vim.opt.termguicolors = true
