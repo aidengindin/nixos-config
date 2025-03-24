@@ -188,13 +188,18 @@ require("lazy").setup({
     version = "*",
     opts = {
       sources = {
-        default = { "lsp", "path", "snippets", "buffer" },
-        per_filetype = {
-          codecompanion = { "codecompanion" }
+        default = { "codecompanion" },
+        providers = {
+          codecompanion = {
+            name = "CodeCompanion",
+            module = "codecompanion.providers.completion.blink",
+            enabled = true
+          }
         }
       }
     }
-  }
+  },
+  config = true
 })
 
 vim.opt.termguicolors = true
