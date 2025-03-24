@@ -185,9 +185,9 @@ require("lazy").setup({
   },
   {
     "saghen/blink.cmp",
-    version = "*",
+    version = "0.14.2",
     config = function()
-      require("blink").setup({
+      require("blink.cmp").setup({
         sources = {
           default = { "codecompanion" },
           providers = {
