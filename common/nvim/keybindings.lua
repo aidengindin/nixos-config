@@ -18,7 +18,7 @@ wk.register({
 
   { "<leader>g", desc = "git", mode = { "n" } },
   { "<leader>gg", "<cmd>Neogit<cr>", desc = "neogit" },
-  { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "commit" }
+  { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "commit" },
 
   { "<leader>u", "<cmd>Undotreetoggle<cr>", desc = "undotree" }
 })
