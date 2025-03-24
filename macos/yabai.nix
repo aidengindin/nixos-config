@@ -16,11 +16,11 @@ in
         config = {
           layout = "bsp";
 
-          top_padding = 15;
-          bottom_padding = 15;
-          left_padding = 15;
-          right_padding = 15;
-          window_gap = 15;
+          top_padding = 5;
+          bottom_padding = 5;
+          left_padding = 5;
+          right_padding = 5;
+          window_gap = 5;
 
           mouse_modifier = "alt";
 
