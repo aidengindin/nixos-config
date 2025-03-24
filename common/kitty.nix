@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, isLinux, isDarwin, ... }:
 let
   cfg = config.agindin.kitty;
   inherit (lib) mkIf mkEnableOption;

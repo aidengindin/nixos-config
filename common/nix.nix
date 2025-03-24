@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, isLinux, isDarwin, ... }:
 let
   inherit (lib) mkIf strings;
 in
