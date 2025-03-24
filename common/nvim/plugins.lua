@@ -185,21 +185,23 @@ require("lazy").setup({
   },
   {
     "saghen/blink.cmp",
-    version = "0.14.2",
-    config = function()
-      require("blink.cmp").setup({
-        sources = {
-          default = { "codecompanion" },
-          providers = {
-            codecompanion = {
-              name = "CodeCompanion",
-              module = "codecompanion.providers.completion.blink",
-              enabled = true
-            }
-          }
-        }
-      })
-    end
+    dependencides = { "rafamadriz/friendly-snippets" },
+    version = "v0.14.2",
+    config = true
+    -- config = function()
+    --   require("blink.cmp").setup({
+    --     sources = {
+    --       default = { "codecompanion" },
+    --       providers = {
+    --         codecompanion = {
+    --           name = "CodeCompanion",
+    --           module = "codecompanion.providers.completion.blink",
+    --           enabled = true
+    --         }
+    --       }
+    --     }
+    --   })
+    -- end
   }
 })
 
