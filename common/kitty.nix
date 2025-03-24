@@ -4,6 +4,10 @@ let
   inherit (lib) mkIf mkEnableOption;
 in
 {
+  imports = [
+    ./variables.nix
+  ];
+
   options.agindin.kitty = {
     enable = mkEnableOption "kitty";
   };

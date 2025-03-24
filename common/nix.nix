@@ -3,6 +3,10 @@ let
   inherit (lib) mkIf strings;
 in
 {
+  imports = [
+    ./variables.nix
+  ];
+
   config = {
     nixpkgs.config.allowUnfree = true;
 

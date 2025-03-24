@@ -1,8 +1,6 @@
 { config, pkgs, ... }:
 {
   imports = [
-    ./variables.nix
-
     ./bash.nix
     ./cli.nix
     ./direnv.nix
