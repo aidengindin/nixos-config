@@ -186,20 +186,21 @@ require("lazy").setup({
   {
     "saghen/blink.cmp",
     version = "*",
-    opts = {
-      sources = {
-        default = { "codecompanion" },
-        providers = {
-          codecompanion = {
-            name = "CodeCompanion",
-            module = "codecompanion.providers.completion.blink",
-            enabled = true
+    config = function()
+      require("blink").setup({
+        sources = {
+          default = { "codecompanion" },
+          providers = {
+            codecompanion = {
+              name = "CodeCompanion",
+              module = "codecompanion.providers.completion.blink",
+              enabled = true
+            }
           }
         }
-      }
-    }
-  },
-  config = true
+      })
+    end
+  }
 })
 
 vim.opt.termguicolors = true
