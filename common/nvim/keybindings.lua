@@ -13,10 +13,10 @@ wk.setup({
   }
 })
 
-wk.register({
+wk.add({
   { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "explorer" },
 
-  { "<leader>g", desc = "git", mode = { "n" } },
+  { "<leader>g", desc = "git", mode = "n" },
   { "<leader>gg", "<cmd>Neogit<cr>", desc = "neogit" },
   { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "commit" },
 
