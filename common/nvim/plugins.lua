@@ -66,7 +66,7 @@ require("lazy").setup({
     config = function()
       require("nvim-treesitter.configs").setup {
         highlight = {
-          enble = true;
+          enable = true;
         },
         ensure_installed = {  -- just enabling everything I use
           -- "awk",  -- not supported yet
@@ -120,9 +120,48 @@ require("lazy").setup({
       "nvim-treesitter/nvim-treesitter",
       "nvim-tree/nvim-web-devicons"
     }
+  },
+  {
+    "williamboman/mason.nvim",
+    config = function()
+      require("mason").setup()
+    end
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          "lua_ls",
+          "pyright",
+          "rust_analyzer"
+        },
+      })
+    end
+  },
+  {
+    "neovim/nvim-lspconfig",
+    config = function()
+      local lspconfig = require("lspconfig")
+      lspconfig.lua_ls.setup {
+        settings = {
+          Lua = {
+            diagnostics = { globals = { "vim" } }
+          }
+        }
+      }
+      lspconfig.pyright.setup {}
+      lspconfig.rust_analyzer.setup {}
+    end
   }
 })
 
 vim.opt.termguicolors = true
 vim.cmd[[colorscheme nord]]
+
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = true,
+  update_in_insert = false
+})
 
