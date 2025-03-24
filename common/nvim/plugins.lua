@@ -111,7 +111,8 @@ require("lazy").setup({
   {
     "vim-pandoc/vim-pandoc",
     dependencies = { "vim-pandoc/vim-pandoc-syntax" }
-  }
+  },
+  "airblade/vim-gitgutter"
 })
 
 vim.opt.termguicolors = true
