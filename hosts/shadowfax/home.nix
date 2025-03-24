@@ -5,6 +5,7 @@
   ];
 
   agindin.latex.enable = true;
+  agindin.kitty.enable = true;
   agindin.yabai.enable = true;
 
   # this line should not be edited even when upgrading NixOS versions

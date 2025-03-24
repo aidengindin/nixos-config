@@ -1,8 +1,6 @@
 { config, lib, pkgs, ... }:
 let
   inherit (lib) mkIf strings;
-  isLinux = strings.hasInfix "linux" pkgs.system;
-  isDarwin = strings.hasInfix "darwin" pkgs.system;
 in
 {
   config = {
