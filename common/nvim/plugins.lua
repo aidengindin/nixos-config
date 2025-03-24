@@ -154,7 +154,34 @@ require("lazy").setup({
       lspconfig.pyright.setup {}
       lspconfig.rust_analyzer.setup {}
     end
-  }
+  } --,
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter"
+  --   },
+  --   config = function()
+  --     require("codecompanion").setup({
+  --       strategies = {
+  --         chat = {
+  --           adapter = "anthropic"
+  --         },
+  --         inline = {
+  --           adapter = "anthropic"
+  --         }
+  --       }
+  --     })
+  --   end
+  -- },
+  -- {
+  --   "saghen/blink.cmp",
+  --   sources = {
+  --     per_filetype = {
+  --       codecompanion = { "codecompanion" }
+  --     }
+  --   }
+  -- }
 })
 
 vim.opt.termguicolors = true

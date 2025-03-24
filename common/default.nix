@@ -2,6 +2,7 @@
 {
   imports = [
     ./bash.nix
+    ./bitwarden.nix
     ./cli.nix
     ./direnv.nix
     ./emacs.nix
