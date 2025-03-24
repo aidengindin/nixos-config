@@ -10,7 +10,7 @@
     ./kitty.nix
     ./latex.nix
     ./nix.nix
-    ./npm.nix
+    ./node.nix
     ./nvim.nix
     ./starship.nix
     ./zellij.nix
