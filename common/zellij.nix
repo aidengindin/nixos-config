@@ -1,7 +1,8 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.agindin.zellij;
   inherit (lib) mkIf mkEnableOption;
+in
 {
   options.agindin.zellij = {
     enable = mkEnableOption "zellij";
