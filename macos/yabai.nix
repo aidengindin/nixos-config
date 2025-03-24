@@ -78,6 +78,8 @@ in
           alt + shift - 6 : yabai -m window --space 6
           alt + shift - 7 : yabai -m window --space 7
           alt + shift - 8 : yabai -m window --space 8
+
+          alt + shift - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~ ${pkgs.zellij}/bin/zellij
         '';
       };
       sketchybar = {
