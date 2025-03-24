@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 {
   imports = [
+    ./agenix.nix
     ./bash.nix
     ./bitwarden.nix
     ./cli.nix

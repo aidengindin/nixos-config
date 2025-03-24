@@ -1,7 +1,7 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, unstablePkgs, ... }:
 {
   config = {
-    environment.systemPackages = with pkgs; [ bitwarden-cli ];
+    environment.systemPackages = with unstablePkgs; [ bitwarden-cli ];
   };
 }
 

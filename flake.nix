@@ -64,6 +64,7 @@
           modules = [
             ./hosts/shadowfax
             home-manager.darwinModules.home-manager
+            agenix.darwinModules.default
 
             # ghostscript fix
             {
@@ -74,6 +75,10 @@
               ];
             }
           ];
+          specialArgs = {
+            inherit agenix;
+            unstablePkgs = unstable.legacyPackages.aarch64-darwin;
+          };
         };
       };
     };

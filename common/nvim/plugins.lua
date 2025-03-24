@@ -154,34 +154,43 @@ require("lazy").setup({
       lspconfig.pyright.setup {}
       lspconfig.rust_analyzer.setup {}
     end
-  } --,
-  -- {
-  --   "olimorris/codecompanion.nvim",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-treesitter/nvim-treesitter"
-  --   },
-  --   config = function()
-  --     require("codecompanion").setup({
-  --       strategies = {
-  --         chat = {
-  --           adapter = "anthropic"
-  --         },
-  --         inline = {
-  --           adapter = "anthropic"
-  --         }
-  --       }
-  --     })
-  --   end
-  -- },
-  -- {
-  --   "saghen/blink.cmp",
-  --   sources = {
-  --     per_filetype = {
-  --       codecompanion = { "codecompanion" }
-  --     }
-  --   }
-  -- }
+  },
+  {
+    "olimorris/codecompanion.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter"
+    },
+    config = function()
+      require("codecompanion").setup({
+        adapters = {
+          anthropic = function()
+            return require("codecompanion.adapters").extend("anthropic", {
+              env = {
+                api_key = "cmd:cat /run/secrets/codecompanion-anthropic-key"
+              }
+            })
+          end
+        },
+        strategies = {
+          chat = {
+            adapter = "anthropic"
+          },
+          inline = {
+            adapter = "anthropic"
+          }
+        }
+      })
+    end
+  },
+  {
+    "saghen/blink.cmp",
+    sources = {
+      per_filetype = {
+        codecompanion = { "codecompanion" }
+      }
+    }
+  }
 })
 
 vim.opt.termguicolors = true

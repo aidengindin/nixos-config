@@ -18,10 +18,6 @@
       extraGroups = [ "networkmanager" "wheel" ];
       packages = with pkgs; [];
     };
-
-    environment.systemPackages = with pkgs; [
-      agenix.packages.${pkgs.system}.default
-    ];
   };
 }
 
