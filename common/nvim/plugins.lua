@@ -156,53 +156,100 @@ require("lazy").setup({
     end
   },
   {
-    "olimorris/codecompanion.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter"
+    "yetone/avante.nvim",
+    event = "VeryLazy",
+    version = false,
+    opts = {
+      provider = "claude",
+      claude = {
+        endpoint = "https://api.anthropic.com",
+        model = "claude-3-7-sonnet-latest",
+        timeout = 30000,
+        temperature = 0,
+        max_tokens = 4096,
+        disable_tools = false
+      }
     },
-    config = function()
-      require("codecompanion").setup({
-        adapters = {
-          anthropic = function()
-            return require("codecompanion.adapters").extend("anthropic", {
-              env = {
-                api_key = "cmd:cat /run/agenix/codecompanion-anthropic-key"
-              }
-            })
-          end
-        },
-        strategies = {
-          chat = {
-            adapter = "anthropic"
+    build = "make",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "stevearc/dressing.nvim",
+      "MunifTanjim/nui.nvim",
+      "echasnovski/mini.pick",
+      "nvim-telescope/telescope.nvim",
+      "hrsh7th/nvim-cmp",
+      "ibhagwan/fzf-lua",
+      {
+        "HakonHarnes/img-clip.nvim",
+        event = "VeryLazy",
+        opts = {
+          default = {
+            embed_image_as_base64 = false,
+            prompt_for_file_name = false,
+            drag_and_drop = {
+              insert_mode = true,
+            },
+            use_absolute_path = true,
           },
-          inline = {
-            adapter = "anthropic"
-          }
-        }
-      })
-    end
-  },
-  {
-    "saghen/blink.cmp",
-    dependencides = { "rafamadriz/friendly-snippets" },
-    version = "v0.14.2",
-    config = true
-    -- config = function()
-    --   require("blink.cmp").setup({
-    --     sources = {
-    --       default = { "codecompanion" },
-    --       providers = {
-    --         codecompanion = {
-    --           name = "CodeCompanion",
-    --           module = "codecompanion.providers.completion.blink",
-    --           enabled = true
-    --         }
-    --       }
-    --     }
-    --   })
-    -- end
+        },
+      },
+      {
+        'MeanderingProgrammer/render-markdown.nvim',
+        opts = {
+          file_types = { "markdown", "Avante" },
+        },
+        ft = { "markdown", "Avante" },
+      }
+    }
   }
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter"
+  --   },
+  --   config = function()
+  --     require("codecompanion").setup({
+  --       adapters = {
+  --         anthropic = function()
+  --           return require("codecompanion.adapters").extend("anthropic", {
+  --             env = {
+  --               api_key = "cmd:cat /run/agenix/codecompanion-anthropic-key"
+  --             }
+  --           })
+  --         end
+  --       },
+  --       strategies = {
+  --         chat = {
+  --           adapter = "anthropic"
+  --         },
+  --         inline = {
+  --           adapter = "anthropic"
+  --         }
+  --       }
+  --     })
+  --   end
+  -- },
+  -- {
+  --   "saghen/blink.cmp",
+  --   dependencides = { "rafamadriz/friendly-snippets" },
+  --   version = "v0.14.2",
+  --   config = true
+  --   -- config = function()
+  --   --   require("blink.cmp").setup({
+  --   --     sources = {
+  --   --       default = { "codecompanion" },
+  --   --       providers = {
+  --   --         codecompanion = {
+  --   --           name = "CodeCompanion",
+  --   --           module = "codecompanion.providers.completion.blink",
+  --   --           enabled = true
+  --   --         }
+  --   --       }
+  --   --     }
+  --   --   })
+  --   -- end
+  -- }
 })
 
 vim.opt.termguicolors = true

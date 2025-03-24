@@ -1,14 +1,6 @@
 { config, lib, pkgs, ... }:
 {
   config = {
-    age.secrets = {
-      codecompanion-anthropic-key = {
-        file = ../secrets/codecompanion-anthropic-key.age;
-        owner = "agindin";
-        mode = "0400";
-      };
-    };
-
     home-manager.users.agindin = {
       programs.neovim = {
         enable = true;
