@@ -39,6 +39,8 @@ o.expandtab = true  -- use spaces instead of tabs
 -- use system clipboard
 o.clipboard = "unnamedplus"
 
+o.updatetime = 500
+
 require("plugins")
 require("keybindings")
 
