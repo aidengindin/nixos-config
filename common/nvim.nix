@@ -2,9 +2,11 @@
 {
   config = {
     age.secrets = {
-      codecompanion-anthropic-key.file = ../secrets/codecompanion-anthropic-key.age;
-      owner = "agindin";
-      mode = "0400";
+      codecompanion-anthropic-key = {
+        file = ../secrets/codecompanion-anthropic-key.age;
+        owner = "agindin";
+        mode = "0400";
+      };
     };
 
     home-manager.users.agindin = {
