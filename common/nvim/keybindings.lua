@@ -7,21 +7,19 @@ wk.setup({
     spelling = { enabled = true },
     presets = { operators = false }
   },
-  window = {
+  win = {
     border = "rounded",
     padding = { 2, 2, 2, 2 }
   }
 })
 
 wk.register({
-  e = { "<cmd>NvimTreeToggle<cr>", "explorer" },
+  { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "explorer" },
 
-  g = {
-    name = "git",
-    g = { "<cmd>Neogit<cr>", "neogit" },
-    c = { "<cmd>Neogit commit<cr>", "commit" }
-  },
+  { "<leader>g", desc = "git", mode = { "n" } },
+  { "<leader>gg", "<cmd>Neogit<cr>", desc = "neogit" },
+  { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "commit" }
 
-  u = { "<cmd>Undotreetoggle<cr>", "undotree" }
-}, { prefix = "<leader>" })
+  { "<leader>u", "<cmd>Undotreetoggle<cr>", desc = "undotree" }
+})
 
