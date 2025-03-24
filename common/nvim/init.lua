@@ -40,4 +40,5 @@ o.expandtab = true  -- use spaces instead of tabs
 o.clipboard = "unnamedplus"
 
 require("plugins")
+require("keybindings")
 
