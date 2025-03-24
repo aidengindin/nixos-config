@@ -92,6 +92,7 @@ require("lazy").setup({
           "json",
           "latex",
           "lua",
+          "markdown",
           "markdown_inline",
           "nix",
           "python",

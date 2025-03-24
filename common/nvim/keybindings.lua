@@ -28,6 +28,6 @@ wk.add({
   { "<leader>sr", "<cmd>Telescope lsp_references<cr>", desc = "LSP references" },
   { "<leader>sd", "<cmd>Telescope lsp_definitions<cr>", desc = "LSP definitions" },
 
-  { "<leader>u", "<cmd>Undotreetoggle<cr>", desc = "undotree" }
+  { "<leader>u", "<cmd>UndotreeToggle<cr>", desc = "undotree" }
 })
 
