@@ -167,7 +167,7 @@ require("lazy").setup({
           anthropic = function()
             return require("codecompanion.adapters").extend("anthropic", {
               env = {
-                api_key = "cmd:cat /run/secrets/codecompanion-anthropic-key"
+                api_key = "cmd:cat /run/agenix/codecompanion-anthropic-key"
               }
             })
           end
