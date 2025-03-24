@@ -185,9 +185,13 @@ require("lazy").setup({
   },
   {
     "saghen/blink.cmp",
+    version = "*",
     opts = {
       sources = {
-        default = { "codecompanion", "lsp", "path", "snippets", "buffer" }
+        default = { "lsp", "path", "snippets", "buffer" },
+        per_filetype = {
+          codecompanion = { "codecompanion" }
+        }
       }
     }
   }
