@@ -23,7 +23,7 @@ wk.add({
   { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "commit" },
 
   { "<leader>s", desc = "search", mode = "n" },
-  { "<leader>sf", "<cmd>tel.find_files()<cr>", "find files" },
+  { "<leader>sf", "<cmd>tel.find_files()<cr>", desc = "find files" },
 
   { "<leader>u", "<cmd>Undotreetoggle<cr>", desc = "undotree" }
 })
