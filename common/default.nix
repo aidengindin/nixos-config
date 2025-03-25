@@ -11,6 +11,7 @@
     ./java.nix
     ./kitty.nix
     ./latex.nix
+    ./mpv.nix
     ./nix.nix
     ./node.nix
     ./nvim.nix
