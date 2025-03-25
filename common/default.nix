@@ -20,7 +20,12 @@
     ./zoxide.nix
   ];
 
-  config.users.users.agindin = {
-    name = "agindin";
+  config = {
+    users.users.agindin = {
+      name = "agindin";
+    };
+    environment.systemPackages = with pkgs; [
+      jq
+    ];
   };
 }

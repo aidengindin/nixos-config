@@ -58,6 +58,18 @@ in
 
           alt - t : yabai -m window --toggle float
           alt - f : yabai -m window --toggle zoom-fullscreen
+          alt - p : echo "Checking floating status..." >> /tmp/skhd_debug.log; \
+                    if [ "$(yabai -m query --windows --window | jq -r .\"is-floating\")" = "true" ]; then \
+                      echo "Disabling PiP..." >> /tmp/skhd_debug.log; \
+                      yabai -m window --toggle float && \
+                      yabai -m window --sticky off && \
+                      yabai -m window --layer normal; \
+                    else \
+                      echo "Enabling PiP..." >> /tmp/skhd_debug.log; \
+                      yabai -m window --toggle float && \
+                      yabai -m window --sticky on && \
+                      yabai -m window --layer above; \
+                    fi
 
           # Space navigation
           alt - 1 : yabai -m space --focus 1
