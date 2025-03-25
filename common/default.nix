@@ -15,6 +15,7 @@
     ./nix.nix
     ./node.nix
     ./nvim.nix
+    ./spotify.nix
     ./starship.nix
     ./zellij.nix
     ./zoxide.nix

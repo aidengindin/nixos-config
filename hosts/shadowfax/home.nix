@@ -7,6 +7,7 @@
   agindin.latex.enable = true;
   agindin.kitty.enable = true;
   agindin.mpv.enable = true;
+  agindin.spotify.enable = true;
   agindin.yabai.enable = true;
   agindin.zellij.enable = true;
 
