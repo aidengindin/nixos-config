@@ -201,55 +201,58 @@ require("lazy").setup({
         ft = { "markdown", "Avante" },
       }
     }
+  },
+  {
+    "milanglacier/minuet-ai.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    config = function()
+      require("minuet").setup {
+        provider = "claude",
+        claude = {
+          api_key = vim.env.ANTHROPIC_API_KEY,
+          model = "claude-3-7-sonnet-latest",
+          temperature = 0.2,
+          max_tokens = 1024,
+        },
+        blink = {
+          enabled = true,
+          score_offset = 8,
+        },
+      }
+    end
+  },
+  {
+    "Saghen/blink.cmp",
+    dependencies = {
+      'rafamadriz/friendly-snippets',
+      "milanglacier/minuet-ai.nvim",
+    },
+    version = "v1.0.0",
+    config = function ()
+      require("blink-cmp").setup {
+        keymap = {
+          ["<A-y>"] = require("minuet").make_blink_map()
+        },
+        sources = {
+          default = { "minuet", "lsp", "path", "buffer", "snippets" }, -- Put minuet first for priority
+          providers = {
+            minuet = {
+              name = "minuet",
+              module = "minuet.blink",
+              score_offset = 8
+            }
+          }
+        },
+        completion = {
+          trigger = {
+            prefetch_on_insert = true
+          }
+        }
+      }
+    end,
   }
-  -- {
-  --   "olimorris/codecompanion.nvim",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-treesitter/nvim-treesitter"
-  --   },
-  --   config = function()
-  --     require("codecompanion").setup({
-  --       adapters = {
-  --         anthropic = function()
-  --           return require("codecompanion.adapters").extend("anthropic", {
-  --             env = {
-  --               api_key = "cmd:cat /run/agenix/codecompanion-anthropic-key"
-  --             }
-  --           })
-  --         end
-  --       },
-  --       strategies = {
-  --         chat = {
-  --           adapter = "anthropic"
-  --         },
-  --         inline = {
-  --           adapter = "anthropic"
-  --         }
-  --       }
-  --     })
-  --   end
-  -- },
-  -- {
-  --   "saghen/blink.cmp",
-  --   dependencides = { "rafamadriz/friendly-snippets" },
-  --   version = "v0.14.2",
-  --   config = true
-  --   -- config = function()
-  --   --   require("blink.cmp").setup({
-  --   --     sources = {
-  --   --       default = { "codecompanion" },
-  --   --       providers = {
-  --   --         codecompanion = {
-  --   --           name = "CodeCompanion",
-  --   --           module = "codecompanion.providers.completion.blink",
-  --   --           enabled = true
-  --   --         }
-  --   --       }
-  --   --     }
-  --   --   })
-  --   -- end
-  -- }
 })
 
 vim.opt.termguicolors = true
