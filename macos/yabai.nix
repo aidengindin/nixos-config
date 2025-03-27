@@ -91,7 +91,8 @@ in
           alt + shift - 7 : yabai -m window --space 7
           alt + shift - 8 : yabai -m window --space 8
 
-          alt + shift - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~ ${pkgs.zellij}/bin/zellij
+          alt + shift - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~
+          alt - e : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~ bash -ic "lf"
         '';
       };
       sketchybar = {

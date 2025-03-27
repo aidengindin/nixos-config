@@ -10,7 +10,7 @@ in
 
   config = mkIf cfg.enable {
     home-manager.users.agindin.programs.zellij = {
-      enable = true;
+      enable = false;
       enableBashIntegration = true;
       settings = {
         theme = "nord";
