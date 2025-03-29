@@ -1,0 +1,19 @@
+[[manager.prepend_keymap]]
+on = "h"
+run = "shell --interactive"
+
+[[manager.prepend_keymap]]
+on = "j"
+run = "leave"
+
+[[manager.prepend_keymap]]
+on = "k"
+run = "arrow 1"
+
+[[manager.prepend_keymap]]
+on = "l"
+run = "arrow -1"
+
+[[manager.prepend_keymap]]
+on = ";"
+run = "enter"

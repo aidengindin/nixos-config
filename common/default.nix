@@ -11,13 +11,13 @@
     ./java.nix
     ./kitty.nix
     ./latex.nix
-    ./lf.nix
     ./mpv.nix
     ./nix.nix
     ./node.nix
     ./nvim.nix
     ./spotify.nix
     ./starship.nix
+    ./yazi.nix
     ./zellij.nix
     ./zoxide.nix
   ];
