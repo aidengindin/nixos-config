@@ -7,6 +7,7 @@
     ./gamingOptimizations.nix
     ./locale.nix
     ./network.nix
+    ./nix.nix
     ./ssh.nix
   ];
 
