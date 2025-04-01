@@ -1,9 +1,20 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.agindin.zellij;
+  inherit (lib) mkIf mkEnableOption;
+in
 {
-  config = {
+  options.agindin.zellij = {
+    enable = mkEnableOption "zellij";
+  };
+
+  config = mkIf cfg.enable {
     home-manager.users.agindin.programs.zellij = {
-      enable = true;
+      enable = false;
       enableBashIntegration = true;
+      settings = {
+        theme = "nord";
+      };
     };
   };
 }

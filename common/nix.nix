@@ -1,10 +1,12 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, isLinux, isDarwin, ... }:
 let
   inherit (lib) mkIf strings;
-  isLinux = strings.hasInfix "linux" pkgs.system;
-  isDarwin = strings.hasInfix "darwin" pkgs.system;
 in
 {
+  imports = [
+    ./variables.nix
+  ];
+
   config = {
     nixpkgs.config.allowUnfree = true;
 

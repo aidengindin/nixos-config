@@ -2,6 +2,7 @@
 {
   imports = [
     ../../macos
+    ../../scripts
     ./home.nix
   ];
 

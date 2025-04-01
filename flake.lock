@@ -66,6 +66,24 @@
         "type": "github"
       }
     },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems_2"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "hm-unstable": {
       "inputs": {
         "nixpkgs": [
@@ -151,10 +169,26 @@
         "hm-unstable": "hm-unstable",
         "home-manager": "home-manager_2",
         "nixpkgs": "nixpkgs",
-        "unstable": "unstable"
+        "unstable": "unstable",
+        "wallabag-client": "wallabag-client"
       }
     },
     "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_2": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
@@ -182,6 +216,27 @@
         "owner": "nixos",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "wallabag-client": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1742964940,
+        "narHash": "sha256-NpRk2moCaSDctWDdGsykrPI0jjdaqYW9bBVOued0BPk=",
+        "owner": "artur-shaik",
+        "repo": "wallabag-client",
+        "rev": "7297d5c2ebb98586676633909b41fbcc482229be",
+        "type": "github"
+      },
+      "original": {
+        "owner": "artur-shaik",
+        "repo": "wallabag-client",
         "type": "github"
       }
     }
