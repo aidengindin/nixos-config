@@ -1,7 +1,7 @@
 { config, lib, pkgs, isLinux, isDarwin, ... }:
 let
   cfg = config.agindin.kitty;
-  inherit (lib) mkIf mkEnableOption;
+  inherit (lib) mkIf mkEnableOption mkMerge;
 in
 {
   imports = [
@@ -12,19 +12,27 @@ in
     enable = mkEnableOption "kitty";
   };
 
-  config = mkIf cfg.enable {
-    environment.systemPackages = mkIf isLinux [
-      pkgs.kitty
-    ];
-    homebrew.casks = mkIf isDarwin [
-      {
-        name = "kitty";
-        args = {
-          no_quarantine = true;
-        };
-      }
-    ];
-    home-manager.users.agindin.home.file.".config/kitty/kitty.conf".source = ./kitty/kitty.conf;
-  };
+  config = mkIf cfg.enable (mkMerge [
+    (mkIf isLinux {
+      environment.systemPackages = [
+        pkgs.kitty
+      ];
+    })
+
+    (mkIf isDarwin {
+      homebrew.casks = [
+        {
+          name = "kitty";
+          args = {
+            no_quarantine = true;
+          };
+        }
+      ];
+    })
+
+    {
+      home-manager.users.agindin.home.file.".config/kitty/kitty.conf".source = ./kitty/kitty.conf;
+    }
+  ]);
 }
 
