@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 {
   imports = [
-    ../../home
+    ../../common
   ];
 
   # this line should not be edited even when upgrading NixOS versions

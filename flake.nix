@@ -24,9 +24,14 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    wallabag-client = {
+      url = "github:artur-shaik/wallabag-client";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
  };
 
-  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, darwin, agenix }:
+  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, darwin, agenix, wallabag-client }:
     let
 
       # standard modules shared by all NixOS systems,
@@ -65,6 +70,7 @@
           modules = [
             ./hosts/shadowfax
             home-manager.darwinModules.home-manager
+            agenix.darwinModules.default
 
             # ghostscript fix
             {
@@ -74,7 +80,15 @@
                 })
               ];
             }
+
+            ({ config, pkgs, ... }: {
+              environment.systemPackages = [ wallabag-client.packages.aarch64-darwin.default ];
+            })
           ];
+          specialArgs = {
+            inherit agenix;
+            unstablePkgs = unstable.legacyPackages.aarch64-darwin;
+          };
         };
       };
     };
