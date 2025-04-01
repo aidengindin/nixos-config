@@ -12,14 +12,14 @@ in
     enable = mkEnableOption "kitty";
   };
 
-  config = mkIf cfg.enable (mkMerge [
-    (mkIf isLinux {
+  config = mkMerge [
+    (mkIf (cfg.enable && isLinux) {
       environment.systemPackages = [
         pkgs.kitty
       ];
     })
 
-    (mkIf isDarwin {
+    (mkIf (cfg.enable && isDarwin) {
       homebrew.casks = [
         {
           name = "kitty";
@@ -30,9 +30,9 @@ in
       ];
     })
 
-    {
+    (mkIf cfg.enable {
       home-manager.users.agindin.home.file.".config/kitty/kitty.conf".source = ./kitty/kitty.conf;
-    }
-  ]);
+    })
+  ];
 }
 
