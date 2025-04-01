@@ -2,7 +2,7 @@
 {
   config.nix = {
     optimise = {
-      enable = true;
+      automatic = true;
       dates = [ "weekly" ];
     };
     gc = {
