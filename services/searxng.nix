@@ -58,6 +58,8 @@ in
         search = {
           safe_search = 0;
           autocomplete = "duckduckgo";
+          default_lang = "en";
+          languages = [ "en" "en-US" ];
         };
       };
     };
