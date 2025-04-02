@@ -232,6 +232,11 @@ require("lazy").setup({
     version = "v1.0.0",
     config = function ()
       require("blink-cmp").setup {
+        fuzzy = {
+          prebuilt_binaries = {
+            force_version = "v1.0.0"
+          }
+        },
         keymap = {
           ["<A-y>"] = require("minuet").make_blink_map()
         },
