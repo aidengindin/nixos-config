@@ -5,6 +5,7 @@
     ./bash.nix
     ./bitwarden.nix
     ./cli.nix
+    ./dev.nix
     ./direnv.nix
     ./emacs.nix
     ./git.nix
