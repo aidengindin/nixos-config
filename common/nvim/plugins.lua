@@ -263,7 +263,7 @@ require("lazy").setup({
     config = function ()
       ---@type qmk.UserConfig
       local conf = {
-        name = "LAYOUT_span_grid",
+        name = "LAYOUT_split_3x5_3",
         layout = {
          "x x x x x _ x x x x x",
          "x x x x x _ x x x x x",
