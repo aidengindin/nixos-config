@@ -105,7 +105,11 @@ require("lazy").setup({
           "typescript",
           "xml",
           "yaml"
-        }
+        },
+        sync_install = true,
+        auto_install = true,
+        ignore_install = {},
+        modules = {}
       }
     end
   },
@@ -131,13 +135,14 @@ require("lazy").setup({
   {
     "williamboman/mason-lspconfig.nvim",
     config = function()
-      require("mason-lspconfig").setup({
+      require("mason-lspconfig").setup {
         ensure_installed = {
           "lua_ls",
           "pyright",
           "rust_analyzer"
         },
-      })
+        automatic_installation = true
+      }
     end
   },
   {
@@ -147,7 +152,13 @@ require("lazy").setup({
       lspconfig.lua_ls.setup {
         settings = {
           Lua = {
-            diagnostics = { globals = { "vim" } }
+            diagnostics = {
+              globals = { "vim" }
+            },
+            workspace = {
+              library = vim.api.nvim_get_runtime_file("", true),
+              checkThirdParty = false
+            }
           }
         }
       }
@@ -224,6 +235,15 @@ require("lazy").setup({
     end
   },
   {
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        "~/nixos-config/common/nvim"
+      }
+    }
+  },
+  {
     "Saghen/blink.cmp",
     dependencies = {
       'rafamadriz/friendly-snippets',
@@ -241,12 +261,17 @@ require("lazy").setup({
           ["<A-y>"] = require("minuet").make_blink_map()
         },
         sources = {
-          default = { "minuet", "lsp", "path", "buffer", "snippets" }, -- Put minuet first for priority
+          default = { "minuet", "lazydev", "lsp", "path", "buffer", "snippets" },
           providers = {
             minuet = {
               name = "minuet",
               module = "minuet.blink",
               score_offset = 8
+            },
+            lazydev = {
+              name = "LazyDev",
+              module = "lazydev.integrations.blink",
+              score_offset = 10
             }
           }
         },
