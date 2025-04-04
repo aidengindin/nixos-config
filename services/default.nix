@@ -14,6 +14,7 @@
     ./restic.nix
     ./searxng.nix
     ./tandoor.nix
+    ./withings-sync.nix
   ];
 }
 

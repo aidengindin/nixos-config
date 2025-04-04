@@ -3,6 +3,7 @@
   imports = [
     ./homebrew.nix
     ./librewolf.nix
+    ./kitty.nix
     ./nix.nix
     ./yabai.nix
   ];

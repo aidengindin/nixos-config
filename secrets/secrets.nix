@@ -23,5 +23,7 @@ in
   "immich-db-password.age".publicKeys = [ lorienHost lorienUser ];
   "openwebui-env.age".publicKeys = [ lorienHost lorienUser ];
   "searxng-secret-key.age".publicKeys = [ lorienHost lorienUser ];
+  "aiden-garmin-password.age".publicKeys = [ lorienHost lorienUser ];
+  "ally-garmin-password.age".publicKeys = [ lorienHost lorienUser ];
   "codecompanion-anthropic-key.age".publicKeys = [ lorienUser shadowfaxUser ];
 }

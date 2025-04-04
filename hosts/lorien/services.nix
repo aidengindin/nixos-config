@@ -1,7 +1,29 @@
-{config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [ ../../services ];
+
+  # create users needed for services
+  users = {
+    users = {
+      aiden-withings-sync = {
+        isSystemUser = true;
+        group = "aiden-withings-sync";
+        home = "/var/lib/withings-sync/aiden";
+        createHome = true;
+      };
+      ally-withings-sync = {
+        isSystemUser = true;
+        group = "ally-withings-sync";
+        home = "/var/lib/withings-sync/ally";
+        createHome = true;
+      };
+    };
+    groups = {
+      aiden-withings-sync = {};
+      ally-withings-sync = {};
+    };
+  };
 
   age.secrets = {
     restic-password = {
@@ -9,6 +31,20 @@
       owner = "root";
       group = "keys";
       mode = "0440";
+    };
+
+    aiden-garmin-password = {
+      file = ../../secrets/aiden-garmin-password.age;
+      owner = "aiden-withings-sync";
+      group = "aiden-withings-sync";
+      mode = "0400";
+    };
+
+    ally-garmin-password = {
+      file = ../../secrets/ally-garmin-password.age;
+      owner = "ally-withings-sync";
+      group = "ally-withings-sync";
+      mode = "0400";
     };
   };
 
@@ -43,5 +79,29 @@
     openwebui.enable = true;
     searxng.enable = true;
     tandoor.enable = true;
+
+    withings-sync = {
+      enable = true;
+      users = {
+        aiden = {
+          enable = true;
+          garminCredentials = {
+            username = "aiden@aidengindin.com";
+            passwordFile = config.age.secrets.aiden-garmin-password.path;
+          };
+          user = "aiden-withings-sync";
+          group = "aiden-withings-sync";
+        };
+        ally = {
+          enable = true;
+          garminCredentials = {
+            username = "allybgindin@gmail.com";
+            passwordFile = config.age.secrets.ally-garmin-password.path;
+          };
+          user = "ally-withings-sync";
+          group = "ally-withings-sync";
+        };
+      };
+    };
   };
 }

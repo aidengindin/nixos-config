@@ -15,6 +15,7 @@
 
     environment.systemPackages = with pkgs; [
       fzf
+      tree-sitter
     ];
   };
 }

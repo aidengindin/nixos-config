@@ -232,6 +232,11 @@ require("lazy").setup({
     version = "v1.0.0",
     config = function ()
       require("blink-cmp").setup {
+        fuzzy = {
+          prebuilt_binaries = {
+            force_version = "v1.0.0"
+          }
+        },
         keymap = {
           ["<A-y>"] = require("minuet").make_blink_map()
         },
@@ -252,6 +257,22 @@ require("lazy").setup({
         }
       }
     end,
+  },
+  {
+    "codethread/qmk.nvim",
+    config = function ()
+      ---@type qmk.UserConfig
+      local conf = {
+        name = "LAYOUT_split_3x5_3",
+        layout = {
+         "x x x x x _ x x x x x",
+         "x x x x x _ x x x x x",
+         "x x x x x _ x x x x x",
+         "_ _ x x x _ x x x _ _"
+       }
+     }
+     require("qmk").setup(conf)
+   end
   }
 })
 
