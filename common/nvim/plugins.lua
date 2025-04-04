@@ -13,14 +13,6 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   "shaunsingh/nord.nvim",
-  {
-    "nvim-tree/nvim-tree.lua",
-    version = "*",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-      require("nvim-tree").setup {}
-    end,
-  },
   "tpope/vim-surround",
   "folke/which-key.nvim",
   {
@@ -41,16 +33,6 @@ require("lazy").setup({
     config = true
   },
   "mbbill/undotree",
-  {
-    "nvimdev/dashboard-nvim",
-    event = "VimEnter",
-    config = function()
-      require("dashboard").setup {
-        -- config
-      }
-    end,
-    dependencies = { "nvim-tree/nvim-web-devicons" }
-  },
   {
     "akinsho/bufferline.nvim",
     version = "*",
@@ -298,6 +280,33 @@ require("lazy").setup({
      }
      require("qmk").setup(conf)
    end
+  },
+  {
+    "folke/snacks.nvim",
+    priority = 1000,
+    lazy = false,
+    ---@type snacks.Config
+    opts = {
+      bigfile = { enabled = true },
+      dashboard = { enabled = true },
+      explorer = { enabled = true },
+      indent = { enabled = true },
+      input = { enabled = true },
+      picker = { enabled = true },
+      notifier = { enabled = true },
+      quickfile = { enabled = true },
+      scope = { enabled = true },
+      scroll = { enabled = true },
+      statuscolumn = { enabled = true },
+      words = { enabled = true }
+    }
+  },
+  {
+    "mikavilpas/yazi.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "folke/snacks.nvim"
+    }
   }
 })
 

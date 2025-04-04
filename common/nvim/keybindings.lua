@@ -15,11 +15,9 @@ wk.setup({
 })
 
 wk.add({
-  { "<leader>a", desc = "ai", mode = "n" },
-  { "<leader>ac", "<cmd>CodeCompanionChat Toggle<cr>", desc = "chat" },
 
 
-  { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "explorer" },
+  { "<leader>e", "<cmd>Yazi<cr>", desc = "yazi" },
 
   { "<leader>g", desc = "git", mode = "n" },
   { "<leader>gg", "<cmd>Neogit<cr>", desc = "neogit" },
