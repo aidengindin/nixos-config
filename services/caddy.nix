@@ -46,10 +46,6 @@ in
             cd cmd/caddy
             go build -trimpath -mod=vendor -o $out/bin/caddy
           '';
-
-          meta = oldAttrs.meta // {
-            description = oldAttrs.meta.description + " (with Cloudflare DNS plugin)";
-          };
         };
       })
         # let
