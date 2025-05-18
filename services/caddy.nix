@@ -33,7 +33,7 @@ in
     # based on https://noah.masu.rs/posts/caddy-cloudflare-dns/
     nixpkgs.overlays = [
       (final: prev: {
-        caddy-cloudflare = prev.caddy.overrideAttrs (oldAttrs: rec {
+        caddy-cloudflare = prev.caddy.override {
           vendorOverrides = {
             "github.com/caddy-dns/cloudflare" = {
               type = "lockfile";
@@ -50,7 +50,8 @@ in
           meta = oldAttrs.meta // {
             description = oldAttrs.meta.description + " (with Cloudflare DNS plugin)";
           };
-        });
+        };
+      });
         # let
         #   plugins = [ "github.com/caddy-dns/cloudflare" ];
         #   goImports =
@@ -110,7 +111,6 @@ in
         #     };
         #   };
         # }
-      })
     ];
 
     users.users.caddy = {
