@@ -51,7 +51,7 @@ in
             description = oldAttrs.meta.description + " (with Cloudflare DNS plugin)";
           };
         };
-      });
+      })
         # let
         #   plugins = [ "github.com/caddy-dns/cloudflare" ];
         #   goImports =
