@@ -110,7 +110,7 @@ in
         #     };
         #   };
         # }
-      )}
+      })
     ];
 
     users.users.caddy = {
