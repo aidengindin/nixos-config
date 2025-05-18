@@ -33,7 +33,7 @@ in
     # based on https://noah.masu.rs/posts/caddy-cloudflare-dns/
     nixpkgs.overlays = [
       (final: prev: {
-        caddy-cloudflare = super.caddy.overrideAttrs (oldAttrs: rec {
+        caddy-cloudflare = prev.caddy.overrideAttrs (oldAttrs: rec {
           vendorOverrides = {
             "github.com/caddy-dns/cloudflare" = {
               type = "lockfile";
