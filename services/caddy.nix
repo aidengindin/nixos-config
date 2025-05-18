@@ -32,7 +32,7 @@ in
     # we need to compile a custom build of caddy to include cloudflare dns support
     # based on https://noah.masu.rs/posts/caddy-cloudflare-dns/
     nixpkgs.overlays = [
-      (final: prev:
+      (final: prev: {
         caddy-cloudflare = super.caddy.overrideAttrs (oldAttrs: rec {
           vendorOverrides = {
             "github.com/caddy-dns/cloudflare" = {
@@ -110,7 +110,7 @@ in
         #     };
         #   };
         # }
-      )
+      )}
     ];
 
     users.users.caddy = {
