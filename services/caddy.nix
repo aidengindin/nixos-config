@@ -22,7 +22,7 @@ let
       plugins = [
         "github.com/caddy-dns/cloudflare@v0.2.1"
       ];
-      hash = "sha256-0000000000000000000000000000000000000000000000000000";
+      hash = lib.fakeHash;
     };
   };
 in
