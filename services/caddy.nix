@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, unstablePkgs, ... }:
 let
   cfg = config.agindin.services.caddy;
   inherit (lib) mkIf mkEnableOption mkOption types mkMerge;
@@ -18,7 +18,7 @@ let
   searxng = myServices.searxng;
 
   overlay = final: prev: {
-    caddy-cloudflare = prev.caddy.withPlugins {
+    caddy-cloudflare = unstablePkgs.caddy.withPlugins {
       plugins = [
         "github.com/caddy-dns/cloudflare@v0.2.1"
       ];
