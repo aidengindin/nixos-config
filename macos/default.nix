@@ -13,4 +13,8 @@
   age.identityPaths = [
     "/Users/agindin/.ssh/id_ed25519"
   ];
+
+  system.primaryUser = "agindin";
+
+  ids.gids.nixbld = 30000;
 }

@@ -22,7 +22,6 @@
       fzf
       ldns
       procs
-      rargs
       ripgrep
       ripgrep-all
       sd
