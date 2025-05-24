@@ -156,7 +156,7 @@ require("lazy").setup({
       provider = "claude",
       claude = {
         endpoint = "https://api.anthropic.com",
-        model = "claude-3-7-sonnet-latest",
+        model = "claude-sonnet-4-0",
         timeout = 30000,
         temperature = 0,
         max_tokens = 4096,
@@ -205,7 +205,7 @@ require("lazy").setup({
         provider = "claude",
         claude = {
           api_key = vim.env.ANTHROPIC_API_KEY,
-          model = "claude-3-7-sonnet-latest",
+          model = "claude-sonnet-4-0",
           temperature = 0.2,
           max_tokens = 1024,
         },
