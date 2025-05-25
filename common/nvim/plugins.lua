@@ -307,6 +307,16 @@ require("lazy").setup({
     dependencies = {
       "folke/snacks.nvim"
     }
+  },
+  {
+    "m4xshen/autoclose.nvim",
+    config = function ()
+      require("autoclose").setup({
+        options = {
+          pair_spaces = true,
+        }
+      })
+    end
   }
 })
 
