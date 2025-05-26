@@ -148,74 +148,74 @@ require("lazy").setup({
       lspconfig.rust_analyzer.setup {}
     end
   },
-  {
-    "yetone/avante.nvim",
-    event = "VeryLazy",
-    version = false,
-    opts = {
-      provider = "claude",
-      claude = {
-        endpoint = "https://api.anthropic.com",
-        model = "claude-sonnet-4-0",
-        timeout = 30000,
-        temperature = 0,
-        max_tokens = 4096,
-        disable_tools = false
-      }
-    },
-    build = "make",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "stevearc/dressing.nvim",
-      "MunifTanjim/nui.nvim",
-      "echasnovski/mini.pick",
-      "nvim-telescope/telescope.nvim",
-      "hrsh7th/nvim-cmp",
-      "ibhagwan/fzf-lua",
-      {
-        "HakonHarnes/img-clip.nvim",
-        event = "VeryLazy",
-        opts = {
-          default = {
-            embed_image_as_base64 = false,
-            prompt_for_file_name = false,
-            drag_and_drop = {
-              insert_mode = true,
-            },
-            use_absolute_path = true,
-          },
-        },
-      },
-      {
-        'MeanderingProgrammer/render-markdown.nvim',
-        opts = {
-          file_types = { "markdown", "Avante" },
-        },
-        ft = { "markdown", "Avante" },
-      }
-    }
-  },
-  {
-    "milanglacier/minuet-ai.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    config = function()
-      require("minuet").setup {
-        provider = "claude",
-        claude = {
-          api_key = vim.env.ANTHROPIC_API_KEY,
-          model = "claude-sonnet-4-0",
-          temperature = 0.2,
-          max_tokens = 1024,
-        },
-        blink = {
-          enabled = true,
-          score_offset = 8,
-        },
-      }
-    end
-  },
+  -- {
+  --   "yetone/avante.nvim",
+  --   event = "VeryLazy",
+  --   version = false,
+  --   opts = {
+  --     provider = "claude",
+  --     claude = {
+  --       endpoint = "https://api.anthropic.com",
+  --       model = "claude-sonnet-4-0",
+  --       timeout = 30000,
+  --       temperature = 0,
+  --       max_tokens = 4096,
+  --       disable_tools = false
+  --     }
+  --   },
+  --   build = "make",
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter",
+  --     "stevearc/dressing.nvim",
+  --     "MunifTanjim/nui.nvim",
+  --     "echasnovski/mini.pick",
+  --     "nvim-telescope/telescope.nvim",
+  --     "hrsh7th/nvim-cmp",
+  --     "ibhagwan/fzf-lua",
+  --     {
+  --       "HakonHarnes/img-clip.nvim",
+  --       event = "VeryLazy",
+  --       opts = {
+  --         default = {
+  --           embed_image_as_base64 = false,
+  --           prompt_for_file_name = false,
+  --           drag_and_drop = {
+  --             insert_mode = true,
+  --           },
+  --           use_absolute_path = true,
+  --         },
+  --       },
+  --     },
+  --     {
+  --       'MeanderingProgrammer/render-markdown.nvim',
+  --       opts = {
+  --         file_types = { "markdown", "Avante" },
+  --       },
+  --       ft = { "markdown", "Avante" },
+  --     }
+  --   }
+  -- },
+  -- {
+  --   "milanglacier/minuet-ai.nvim",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --   },
+  --   config = function()
+  --     require("minuet").setup {
+  --       provider = "claude",
+  --       claude = {
+  --         api_key = vim.env.ANTHROPIC_API_KEY,
+  --         model = "claude-sonnet-4-0",
+  --         temperature = 0.2,
+  --         max_tokens = 1024,
+  --       },
+  --       blink = {
+  --         enabled = true,
+  --         score_offset = 8,
+  --       },
+  --     }
+  --   end
+  -- },
   {
     "folke/lazydev.nvim",
     ft = "lua",
@@ -239,17 +239,17 @@ require("lazy").setup({
             force_version = "v1.0.0"
           }
         },
-        keymap = {
-          ["<A-y>"] = require("minuet").make_blink_map()
-        },
+        -- keymap = {
+        --   ["<A-y>"] = require("minuet").make_blink_map()
+        -- },
         sources = {
-          default = { "minuet", "lazydev", "lsp", "path", "buffer", "snippets" },
+          default = { "lazydev", "lsp", "path", "buffer", "snippets" },
           providers = {
-            minuet = {
-              name = "minuet",
-              module = "minuet.blink",
-              score_offset = 8
-            },
+            -- minuet = {
+            --   name = "minuet",
+            --   module = "minuet.blink",
+            --   score_offset = 8
+            -- },
             lazydev = {
               name = "LazyDev",
               module = "lazydev.integrations.blink",
@@ -317,6 +317,18 @@ require("lazy").setup({
         }
       })
     end
+  },
+  {
+    "greggh/claude-code.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    config = function ()
+      require("claude-code").setup()
+    end
+  },
+  {
+    "github/copilot.vim"
   }
 })
 

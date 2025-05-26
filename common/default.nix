@@ -4,6 +4,7 @@
     ./agenix.nix
     ./bash.nix
     ./bitwarden.nix
+    ./claude-code.nix
     ./cli.nix
     ./dev.nix
     ./direnv.nix
