@@ -1,3 +1,5 @@
 *.~undo-tree~
 *#
 
+
+**/.claude/settings.local.json
