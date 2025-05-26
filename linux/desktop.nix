@@ -9,8 +9,13 @@ in
   };
 
   config = mkIf cfg.enable {
-    # Desktop environment
-    services.xserver.desktopManager.gnome.enable = true;
+    programs.hyprland = {
+      enable = true;
+      withUWSM = true;
+    }
+
+    programs.hyprlock.enable = true;
+    programs.hypridle.enable = true;
 
     # Enable sound
     sound.enable = true;
@@ -23,39 +28,46 @@ in
       pulse.enable = true;
     };
 
-    home-manager.users.agindin.dconf = {
-      enable = true;
-      settings = {
-        "org/gnome/shell" = {
-          enabled-extensions = [
-	          "gsconnect@andyholmes.github.io"
-	        ];
+    home-manager = {
+      users.agindin.dconf = {
+        enable = true;
+        settings = {
+          "org/gnome/shell" = {
+            enabled-extensions = [
+              "gsconnect@andyholmes.github.io"
+            ];
+          };
+          "org/gnome/desktop/interface" = {
+            color-scheme = "prefer-dark";
+            enable-hot-corners = false;
+            show-battery-percentage = true;
+          };
+          "org/gnome/desktop/session" = {
+            idle-delay = "uint32 900";
+          };
+          "org/gnome/desktop/screensaver" = {
+            lock-enabled = true;
+          };
+          "org/gnome/mutter" = {
+            edge-tiling = true;
+          };
+          "org/gnome/settings-daemon/plugins/power" = {
+            idle-dim = true;
+          };
         };
-	      "org/gnome/desktop/interface" = {
-	        color-scheme = "prefer-dark";
-	        enable-hot-corners = false;
-	        show-battery-percentage = true;
-	      };
-	      "org/gnome/desktop/session" = {
-	        idle-delay = "uint32 900";
-	      };
-	      "org/gnome/desktop/screensaver" = {
-	        lock-enabled = true;
-	      };
-	      "org/gnome/mutter" = {
-	        edge-tiling = true;
-	      };
-	      "org/gnome/settings-daemon/plugins/power" = {
-	        idle-dim = true;
-	      };
       };
     };
 
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
+      iwgtk
+      overskride
+      waybar
+
       bitwarden
       discord
       element-desktop
+      kitty
       spotify
       thunderbird
       ungoogled-chromium
@@ -63,7 +75,7 @@ in
       whatsapp-for-linux
       zoom-us
 
-      gnomeExtensions.gsconnect
+      # gnomeExtensions.gsconnect
     ];
   };
 }

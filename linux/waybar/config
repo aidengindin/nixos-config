@@ -1,0 +1,82 @@
+// vim: ft=json:
+
+[
+  {
+    "name": "top_bar",
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+    "spacing": 4,
+    "modules-left": ["hyprland/workspaces", "hyprland/submap"],
+    "modules-center": ["clock"],
+    "modules-right": ["bluetooth", "network"],
+
+    "hyprland/workspaces": {
+      "on-click": "activate",
+      "format": "{icon}",
+      "format-icons": {
+          "1": "󰲠",
+          "2": "󰲢",
+          "3": "󰲤",
+          "4": "󰲦",
+          "5": "󰲨",
+          "6": "󰲪",
+          "7": "󰲬",
+          "8": "󰲮",
+          "9": "󰲰",
+          "10": "󰿬",
+          "special": ""
+
+          // "active": "",
+          // "default": "",
+          // "empty": ""
+      },
+      "show-special": true,
+      "persistent-workspaces": {
+          "*": 10,  
+      },
+    },
+
+    "hyprland/submap": {
+      "format": "<span color='#a6da95'>Mode:</span> {}",
+      "tooltip": false,
+    },
+
+    "clock": {
+      "interval": 1,
+      "format": "%a %d %I:%M:%S %p",
+      "timezone": "America/New_York",
+    },
+
+    "bluetooth": {
+      "format": "󰂯",
+      "format-disabled": "󰂲",
+      "format-connected": "󰂱 {device_alias}",
+      "format-connected-battery": "󰂱 {device_alias} (󰥉 {device_battery_percentage}%)",
+      "tooltip-format": "{controller_alias}\t{controller_address} ({status})\n\n{num_connections} connected",
+      "tooltip-format-disabled": "bluetooth off",
+      "tooltip-format-connected": "{controller_alias}\t{controller_address} ({status})\n\n{num_connections} connected\n\n{device_enumerate}",
+      "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+      "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t({device_battery_percentage}%)",
+      "max-length": 35,
+      "on-click": "overskride",
+    },
+
+
+    "network": {
+      "format": "󰤭",
+      "format-wifi": "{icon}({signalStrength}%){essid}",
+      "format-icons": [ "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" ],
+      "format-disconnected": "󰤫 Disconnected",
+      "tooltip-format": "wifi <span color='#ee99a0'>off</span>",
+      "tooltip-format-wifi":"SSID: {essid}({signalStrength}%), {frequency} MHz\nInterface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
+      "tooltip-format-disconnected": "<span color='#ed8796'>disconnected</span>",
+      "format-ethernet": "󰈀 {ipaddr}/{cidr}",
+      "format-linked": "󰈀 {ifname} (No IP)",
+      "tooltip-format-ethernet":"Interface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\nNetmask: {netmask}\nCIDR: {cidr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
+      "max-length": 35,
+      "on-click": "bash -c wifi_toggle",
+      "on-click-right": "iwgtk",
+    },
+  }
+]
