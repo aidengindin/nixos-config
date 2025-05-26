@@ -13,6 +13,11 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    nixos-hardware = {
+      url = "github:nixos/nixos-hardware/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # macos configurations
     darwin = {
       url = "github:lnl7/nix-darwin/nix-darwin-25.05";
@@ -31,7 +36,7 @@
     };
  };
 
-  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, darwin, agenix, wallabag-client }:
+  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, nixos-hardware, darwin, agenix, wallabag-client }:
     let
 
       # standard modules shared by all NixOS systems,
@@ -58,6 +63,16 @@
           specialArgs = standardSpecialArgs;
           modules = (standardNixosModules false) ++ [
             ./hosts/lorien
+          ];
+        };
+
+        # my main laptop
+        khazad-dum = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = standardSpecialArgs;
+          modules = (standardNixosModules false) ++ [
+            nixos-hardware.nixosModules.framework-amd-ai-300-series
+            ./hosts/khazad-dum
           ];
         };
       };
