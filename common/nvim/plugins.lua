@@ -234,7 +234,16 @@ require("lazy").setup({
       "nvim-lua/plenary.nvim",
     },
     config = function ()
-      require("claude-code").setup()
+      require("claude-code").setup({
+        keymaps = {
+          toggle = {
+            variants = {
+              continue = false,  -- Disable <leader>cC
+              verbose = false    -- Disable <leader>cV
+            }
+          }
+        }
+      })
     end
   },
   {
