@@ -7,34 +7,15 @@
     "position": "top",
     "height": 36,
     "spacing": 4,
-    "modules-left": ["hyprland/workspaces", "hyprland/submap"],
+    "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["bluetooth", "network"],
+    "modules-right": ["idle_inhibitor", "privacy", "wireplumber", "mpris", "hyprland/language", "bluetooth", "network", "battery"],
 
     "hyprland/workspaces": {
-      "on-click": "activate",
-      "format": "{icon}",
-      "format-icons": {
-          "1": "󰲠",
-          "2": "󰲢",
-          "3": "󰲤",
-          "4": "󰲦",
-          "5": "󰲨",
-          "6": "󰲪",
-          "7": "󰲬",
-          "8": "󰲮",
-          "9": "󰲰",
-          "10": "󰿬",
-          "special": ""
-
-          // "active": "",
-          // "default": "",
-          // "empty": ""
-      },
-      "show-special": true,
-      "persistent-workspaces": {
-          "*": 10,  
-      },
+      "format": "{name}",
+      "active-only": true,
+      "all-outputs": true,
+      "show-special": false
     },
 
     "hyprland/submap": {
@@ -62,21 +43,108 @@
       "on-click": "overskride",
     },
 
-
     "network": {
       "format": "󰤭",
-      "format-wifi": "{icon}({signalStrength}%){essid}",
+      "format-wifi": "{icon}",
       "format-icons": [ "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" ],
-      "format-disconnected": "󰤫 Disconnected",
+      "format-disconnected": "󰤫 ",
       "tooltip-format": "wifi <span color='#ee99a0'>off</span>",
-      "tooltip-format-wifi":"SSID: {essid}({signalStrength}%), {frequency} MHz\nInterface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
+      "tooltip-format-wifi":"SSID: {essid}({signalStrength}%), {frequency} MHz\nInterface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
       "tooltip-format-disconnected": "<span color='#ed8796'>disconnected</span>",
-      "format-ethernet": "󰈀 {ipaddr}/{cidr}",
-      "format-linked": "󰈀 {ifname} (No IP)",
-      "tooltip-format-ethernet":"Interface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\nNetmask: {netmask}\nCIDR: {cidr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
+      "format-ethernet": "󰈀 ",
+      "format-linked": "󰈀 ",
+      "tooltip-format-ethernet":"Interface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\nNetmask: {netmask}\nCIDR: {cidr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
       "max-length": 35,
-      "on-click": "bash -c wifi_toggle",
-      "on-click-right": "iwgtk",
+      "on-click": "iwgtk",
     },
+
+    "battery": {
+      "interval": 60,
+      "states": {
+        "warning": 30,
+        "critical": 15
+      },
+      "format": "{icon} {capacity}%",
+      "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+      "format-charging": "󰂄 {capacity}%",
+      "format-plugged": "󰚥 {capacity}%",
+      "tooltip-format": "{capacity}% - {timeTo}",
+      "max-length": 25
+    },
+
+    "hyprland/window": {
+      "format": "{}",
+      "max-length": 50,
+      "separate-outputs": true,
+      "rewrite": {
+        "(.*) - Mozilla Firefox": "󰈹 $1",
+        "(.*) - VS Code": "󰨞 $1",
+        "kitty(.*)": "󰞷 $1"
+      }
+    },
+
+    "hyprland/language": {
+      "format": "󰌌 {}",
+      "format-en": "US",
+      "format-he": "HE",
+      "keyboard-name": "at-translated-set-2-keyboard"
+    },
+
+    "idle_inhibitor": {
+      "format": "{icon}",
+      "format-icons": {
+        "activated": "󰅶",
+        "deactivated": "󰾪"
+      },
+      "tooltip": true,
+      "tooltip-format-activated": "Idle inhibitor active",
+      "tooltip-format-deactivated": "Idle inhibitor inactive"
+    },
+
+    "privacy": {
+      "icon-spacing": 4,
+      "icon-size": 18,
+      "transition-duration": 250,
+      "modules": [
+        {
+          "type": "screenshare",
+          "tooltip": true,
+          "tooltip-icon-size": 24
+        },
+        {
+          "type": "audio-out",
+          "tooltip": true,
+          "tooltip-icon-size": 24
+        },
+        {
+          "type": "audio-in",
+          "tooltip": true,
+          "tooltip-icon-size": 24
+        }
+      ]
+    },
+
+    "wireplumber": {
+      "format": "{icon} {volume}%",
+      "format-muted": "󰝟",
+      "format-icons": ["󰕿", "󰖀", "󰕾"],
+      "on-click": "pavucontrol",
+      "max-volume": 150
+    },
+
+    "mpris": {
+      "format": "{player_icon} {dynamic}",
+      "format-paused": "{status_icon} {dynamic}",
+      "player-icons": {
+        "default": "▶",
+        "spotify": "󰓇",
+        "mpv": "󰎁"
+      },
+      "status-icons": {
+        "paused": "⏸"
+      },
+      "ignored-players": ["firefox"],
+      "max-length": 40
+    }
   }
 ]
