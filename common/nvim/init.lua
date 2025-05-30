@@ -41,6 +41,12 @@ o.clipboard = "unnamedplus"
 
 o.updatetime = 500
 
+vim.diagnostic.config({
+  virtual_lines = {
+    current_line = true,  -- show diagnostics only for the current line
+  }
+})
+
 require("plugins")
 require("keybindings")
 
