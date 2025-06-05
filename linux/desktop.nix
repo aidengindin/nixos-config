@@ -60,6 +60,7 @@ in
 
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
+      hyprshot
       iwgtk
       overskride
       waybar
