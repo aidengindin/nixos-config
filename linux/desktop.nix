@@ -63,6 +63,7 @@ in
       hyprshot
       iwgtk
       overskride
+      rofi-wayland
       waybar
 
       bitwarden
