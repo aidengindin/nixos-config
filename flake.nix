@@ -17,6 +17,11 @@
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nixos-hardware = {
       url = "github:nixos/nixos-hardware/master";
@@ -41,7 +46,19 @@
     };
  };
 
-  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, disko, nixos-hardware, darwin, agenix, wallabag-client }:
+  outputs = {
+    self,
+    nixpkgs,
+    unstable,
+    home-manager,
+    hm-unstable,
+    disko,
+    impermanence,
+    nixos-hardware,
+    darwin,
+    agenix,
+    wallabag-client
+    }:
     let
 
       # standard modules shared by all NixOS systems,
@@ -78,6 +95,7 @@
           modules = (standardNixosModules false) ++ [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
+            impermanence.nixosModules.impermanence
             ./hosts/khazad-dum
           ];
         };
