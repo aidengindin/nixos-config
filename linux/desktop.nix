@@ -14,6 +14,25 @@ in
       withUWSM = true;
     }
 
+    services.greetd = {
+      enable = true;
+      settings = rec {
+        default_session = {
+          command = "Hyprland &> /dev/null";
+          user = config.user.name;
+        };
+        initial_session = default_session;
+      }
+    };
+    
+    xdg.portal = {
+      enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-gtk
+        xdg-desktop-portal-hyprland
+      ]
+    };
+
     programs.hyprlock.enable = true;
     programs.hypridle.enable = true;
 

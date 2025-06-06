@@ -40,6 +40,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    catpuccin = {
+      url = "github:catppuccin/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     wallabag-client = {
       url = "github:artur-shaik/wallabag-client";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -96,6 +101,7 @@
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
+            catpuccin.nixosModules.catppuccin
             ./hosts/khazad-dum
           ];
         };
