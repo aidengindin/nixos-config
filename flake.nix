@@ -12,6 +12,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "unstable";
     };
+    
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     disko = {
       url = "github:nix-community/disko/latest";
@@ -57,6 +62,7 @@
     unstable,
     home-manager,
     hm-unstable,
+    nur,
     disko,
     impermanence,
     nixos-hardware,

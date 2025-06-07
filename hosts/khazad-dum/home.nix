@@ -7,6 +7,7 @@
   agindin = {
     kitty.enable = true;
     latex.enable = true;
+    librewolf.enable = true;
     mpv.enable = true;
     spotify.enable = true;
   }

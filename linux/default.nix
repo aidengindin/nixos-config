@@ -5,6 +5,7 @@
     ./desktop.nix
     ./firefox.nix
     ./gamingOptimizations.nix
+    ./librewolf.nix
     ./locale.nix
     ./network.nix
     ./nix.nix
