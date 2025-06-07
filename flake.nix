@@ -62,6 +62,7 @@
     nixos-hardware,
     darwin,
     agenix,
+    catpuccin,
     wallabag-client
     }:
     let
