@@ -13,7 +13,39 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   -- Appearance
-  "shaunsingh/nord.nvim",
+  {
+
+    "catppuccin/nvim",
+    name = "catppuccin",
+    priority = 1000,
+    config = function()
+      require("catppuccin").setup({
+        flavour = "mocha",
+        transparent_background = true,
+        term_colors = true,
+        styles = {
+          comments = { "italic" },
+          functions = { "bold" },
+          keywords = { "italic" },
+          strings = { "underline" },
+          variables = { "italic" }
+        },
+        integrations = {
+          cmp = true,
+          gitsigns = true,
+          lsp_trouble = true,
+          lsp_saga = true,
+          mason = true,
+          neogit = true,
+          nvimtree = true,
+          telescope = true,
+          treesitter = true,
+          which_key = true
+        }
+      })
+      vim.cmd.colorscheme "catppuccin"
+    end
+  },
   {
     "nvim-lualine/lualine.nvim",
     config = function()
@@ -25,7 +57,69 @@ require("lazy").setup({
   {
     "akinsho/bufferline.nvim",
     version = "*",
-    dependencies = { "nvim-tree/nvim-web-devicons" }
+      dependencies = { "nvim-tree/nvim-web-devicons" },
+      config = function()
+        require("bufferline").setup({
+          options = {
+            mode = "tabs", -- Can be "buffers" or "tabs"
+            show_buffer_close_icons = true,
+            show_close_icon = true,
+            show_tab_indicators = true,
+            separator_style = "thin",
+            always_show_bufferline = true,
+            diagnostics = "nvim_lsp",
+            diagnostics_update_in_insert = false,
+            offsets = {
+              {
+                filetype = "NvimTree",
+                text = "File Explorer",
+                text_align = "left",
+                separator = true
+              }
+            },
+            -- Show tab number when using tabs
+            numbers = function(opts)
+              return string.format('%s·%s', opts.raise(opts.id), opts.lower(opts.ordinal))
+            end,
+            -- Custom tab name function
+            name_formatter = function(buf)
+              -- Show tab info if multiple tabs exist
+              if vim.fn.tabpagenr('$') > 1 then
+                return string.format("T%d: %s", vim.fn.tabpagenr(), buf.name)
+              end
+              return buf.name
+            end,
+          }
+        })
+        highlights = {
+          buffer_selected = {
+            bg = '#313244',  -- Slightly darker background for active tab
+            bold = true,
+            italic = false,
+          },
+          buffer_visible = {
+            bg = '#181825',  -- Different background for visible tabs
+          },
+          background = {
+            bg = '#11111b',  -- Even darker for inactive tabs
+          },
+          tab = {
+            bg = '#11111b',
+          },
+          tab_selected = {
+            bg = '#313244',
+            bold = true,
+          },
+          separator = {
+            fg = '#45475a',
+            bg = '#11111b',
+          },
+          separator_selected = {
+            fg = '#45475a',
+            bg = '#313244',
+          },
+        }
+      end
   },
   {
     "lukas-reineke/indent-blankline.nvim",
@@ -82,6 +176,18 @@ require("lazy").setup({
       "nvim-treesitter/nvim-treesitter",
       "nvim-tree/nvim-web-devicons"
     }
+  },
+  {
+    "LukasPietzschmann/telescope-tabs",
+    dependencies = { "nvim-telescope/telescope.nvim" },
+    config = function()
+      require("telescope").load_extension("telescope-tabs")
+      require("telescope-tabs").setup({
+        show_preview = false,
+        close_tab_shortcut_i = "<C-d>", -- Close tab in insert mode
+        close_tab_shortcut_n = "dd",    -- Close tab in normal mode
+      })
+    end
   },
 
   -- Git integration
@@ -152,6 +258,10 @@ require("lazy").setup({
     "vim-pandoc/vim-pandoc",
     dependencies = { "vim-pandoc/vim-pandoc-syntax" }
   },
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown", "codecompanion" }
+  },
 
   -- LSP and completion
   {
@@ -219,10 +329,16 @@ require("lazy").setup({
           }
         },
         completion = {
+          menu = {
+            draw = {
+              columns = { { "label", "label_description", gap = 1 },
+               { "kind_icon", gap = 1, "kind", gap = 1, "source_name"} },
+            },
+          },
           trigger = {
             prefetch_on_insert = true
-          }
-        }
+          },
+        },
       }
     end,
   },
@@ -247,7 +363,24 @@ require("lazy").setup({
     end
   },
   {
-    "github/copilot.vim"
+    "olimorris/codecompanion.nvim",
+    opts = {},
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function ()
+      require("codecompanion").setup({
+        strategies = {
+          chat = {
+            adapter = "anthropic",
+          },
+          inline = {
+            adapter = "anthropic",
+          },
+        },
+      })
+    end
   },
 
   -- Development tools
@@ -274,11 +407,17 @@ require("lazy").setup({
      }
      require("qmk").setup(conf)
    end
+  },
+  {
+    "echasnovski/mini.diff",
+    config = function ()
+      local diff = require("mini.diff")
+      diff.setup({})
+    end
   }
 })
 
 vim.opt.termguicolors = true
-vim.cmd[[colorscheme nord]]
 
 vim.diagnostic.config({
   virtual_text = true,

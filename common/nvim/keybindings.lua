@@ -14,12 +14,21 @@ wk.setup({
   }
 })
 
+-- Additional tab navigation (outside of which-key for more direct access)
+vim.keymap.set('n', 'gt', '<cmd>tabnext<cr>', { noremap = true, silent = true, desc = "Next tab" })
+vim.keymap.set('n', 'gT', '<cmd>tabprevious<cr>', { noremap = true, silent = true, desc = "Previous tab" })
+vim.keymap.set('n', '<C-t>', '<cmd>tabnew<cr>', { noremap = true, silent = true, desc = "New tab" })
+
+-- Quick tab switching (Alt + number)
+vim.keymap.set('n', '<M-1>', '<cmd>1tabnext<cr>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-2>', '<cmd>2tabnext<cr>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-3>', '<cmd>3tabnext<cr>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-4>', '<cmd>4tabnext<cr>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-5>', '<cmd>5tabnext<cr>', { noremap = true, silent = true })
 wk.add({
 
   { "<leader>a",  desc = "AI",                                    mode = "n" },
-  { "<leader>aa", "<cmd>ClaudeCode<cr>",                          desc = "Claude Code" },
-  { "<leader>ac", "<cmd>ClaudeCodeContinue<cr>",                  desc = "Continue Claude Code" },
-  { "<leader>ar", "<cmd>ClaudeCodeResume<cr>",                    desc = "Resume Claude Code" },
+  { "<leader>aa", "<cmd>CodeCompanionChat<cr>",                   desc = "chat" },
 
   { "<leader>b",  desc = "buffer",                                mode = "n" },
   { "<leader>bb", "<cmd>Telescope buffers<cr>",                   desc = "list buffers" },
@@ -71,10 +80,24 @@ wk.add({
   { "<leader>sr", "<cmd>Telescope registers<cr>",                 desc = "registers" },
   { "<leader>sk", "<cmd>Telescope keymaps<cr>",                   desc = "keymaps" },
 
-  { "<leader>t",  desc = "terminal",                              mode = "n" },
-  { "<leader>tt", "<cmd>terminal<cr>",                            desc = "open terminal" },
-  { "<leader>tv", "<cmd>vsplit | terminal<cr>",                   desc = "terminal in vsplit" },
-  { "<leader>ts", "<cmd>split | terminal<cr>",                    desc = "terminal in split" },
+  { "<leader>T",  desc = "terminal",                              mode = "n" },
+  { "<leader>Tt", "<cmd>terminal<cr>",                            desc = "open terminal" },
+  { "<leader>Tv", "<cmd>vsplit | terminal<cr>",                   desc = "terminal in vsplit" },
+  { "<leader>Ts", "<cmd>split | terminal<cr>",                    desc = "terminal in split" },
+
+  { "<leader>t",  desc = "tabs",                                  mode = "n" },
+  { "<leader>tn", "<cmd>tabnew<cr>",                              desc = "new tab" },
+  { "<leader>tc", "<cmd>tabclose<cr>",                            desc = "close tab" },
+  { "<leader>to", "<cmd>tabonly<cr>",                             desc = "close other tabs" },
+  { "<leader>tt", "<cmd>Telescope telescope-tabs list_tabs<cr>",   desc = "list tabs" },
+  { "<leader>t1", "<cmd>1tabnext<cr>",                            desc = "go to tab 1" },
+  { "<leader>t2", "<cmd>2tabnext<cr>",                            desc = "go to tab 2" },
+  { "<leader>t3", "<cmd>3tabnext<cr>",                            desc = "go to tab 3" },
+  { "<leader>t4", "<cmd>4tabnext<cr>",                            desc = "go to tab 4" },
+  { "<leader>t5", "<cmd>5tabnext<cr>",                            desc = "go to tab 5" },
+  { "<leader>tl", "<cmd>tabnext<cr>",                             desc = "next tab" },
+  { "<leader>tj", "<cmd>tabprevious<cr>",                         desc = "previous tab" },
+  { "<leader>tm", "<cmd>tabmove<cr>",                             desc = "move tab" },
 
   { "<leader>u",  "<cmd>UndotreeToggle<cr>",                      desc = "undotree" },
 
@@ -82,9 +105,9 @@ wk.add({
   { "<leader>ws", "<cmd>split<cr>",                               desc = "horizontal split" },
   { "<leader>wv", "<cmd>vsplit<cr>",                              desc = "vertical split" },
   { "<leader>wj", "<cmd>wincmd h<cr>",                            desc = "move left" },
-  { "<leader>wk", "<cmd>wincmd k<cr>",                            desc = "move down" },
-  { "<leader>wl", "<cmd>wincmd l<cr>",                            desc = "move up" },
-  { "<leader>w;", "<cmd>wincmd ;<cr>",                            desc = "move right" },
+  { "<leader>wk", "<cmd>wincmd j<cr>",                            desc = "move down" },
+  { "<leader>wl", "<cmd>wincmd k<cr>",                            desc = "move up" },
+  { "<leader>w;", "<cmd>wincmd l<cr>",                            desc = "move right" },
   { "<leader>wc", "<cmd>close<cr>",                               desc = "close window" },
   { "<leader>wo", "<cmd>only<cr>",                                desc = "close other windows" },
   { "<leader>w=", "<cmd>wincmd =<cr>",                            desc = "equal size" },
@@ -100,4 +123,3 @@ wk.add({
   { "<leader>xs", ":%s///gc<Left><Left><Left><Left>",             desc = "search & replace" },
   { "<leader>x/", "<cmd>nohlsearch<cr>",                          desc = "clear search highlight" }
 })
-
