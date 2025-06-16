@@ -1,4 +1,4 @@
-{ config, pkgs, catpuccin, ... }:
+{ config, pkgs, inputs, ... }:
 let
   accentColor = "blue";
 in
@@ -6,7 +6,7 @@ in
   imports =
     [
       ../../linux
-      catpuccin.homeManagerModules.catppuccin
+      inputs.catppuccin.nixosModules.catppuccin
     ];
 
   # Do not allow external SSH access
@@ -27,7 +27,7 @@ in
 
   services.fwupd.enable = true;
   
-  catpuccin = {
+  catppuccin = {
     enable = true;
     accent = "blue";
     cache.enable = true;
@@ -37,7 +37,7 @@ in
     };
   };
 
-  home-manager.users.agindin.catpuccin = {
+  home-manager.users.agindin.catppuccin = {
     enable = true;
     accent = accentColor;
     cache.enable = true;

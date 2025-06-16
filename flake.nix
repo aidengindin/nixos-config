@@ -45,7 +45,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    catpuccin = {
+    catppuccin = {
       url = "github:catppuccin/nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -68,7 +68,7 @@
     nixos-hardware,
     darwin,
     agenix,
-    catpuccin,
+    catppuccin,
     wallabag-client
     }:
     let
@@ -108,7 +108,7 @@
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
-            catpuccin.nixosModules.catppuccin
+            catppuccin.nixosModules.catppuccin
             ./hosts/khazad-dum
           ];
         };
