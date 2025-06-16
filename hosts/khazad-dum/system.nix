@@ -34,7 +34,7 @@ in
     sddm = {
       background = "";  # TODO: set a background image
       font = "Noto Sans";
-    }
+    };
   };
 
   home-manager.users.agindin.catpuccin = {
