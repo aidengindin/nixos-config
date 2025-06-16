@@ -34,7 +34,7 @@ in
     };
 
     programs.hyprlock.enable = true;
-    programs.hypridle.enable = true;
+    services.hypridle.enable = true;
 
     # Enable sound
     sound.enable = true;
