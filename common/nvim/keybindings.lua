@@ -45,7 +45,9 @@ wk.add({
   { "<leader>ci", "<cmd>Telescope lsp_implementations<cr>",       desc = "implementations" },
   { "<leader>ct", "<cmd>Telescope lsp_type_definitions<cr>",      desc = "type definitions" },
   { "<leader>cs", "<cmd>Telescope lsp_document_symbols<cr>",      desc = "document symbols" },
+  { "<leader>cS", "<cmd>Trouble symbols toggle focus=false<cr>",  desc = "symbols (trouble)" },
   { "<leader>cw", "<cmd>Telescope lsp_workspace_symbols<cr>",     desc = "workspace symbols" },
+  { "<leader>cx", "<cmd>Trouble diagnostics toggle<cr>",          desc = "diagnostics" },
 
   { "<leader>d",  desc = "diagnostics",                           mode = "n" },
   { "<leader>dd", "<cmd>Telescope diagnostics<cr>",               desc = "list diagnostics" },
@@ -89,7 +91,7 @@ wk.add({
   { "<leader>tn", "<cmd>tabnew<cr>",                              desc = "new tab" },
   { "<leader>tc", "<cmd>tabclose<cr>",                            desc = "close tab" },
   { "<leader>to", "<cmd>tabonly<cr>",                             desc = "close other tabs" },
-  { "<leader>tt", "<cmd>Telescope telescope-tabs list_tabs<cr>",   desc = "list tabs" },
+  { "<leader>tt", "<cmd>Telescope telescope-tabs list_tabs<cr>",  desc = "list tabs" },
   { "<leader>t1", "<cmd>1tabnext<cr>",                            desc = "go to tab 1" },
   { "<leader>t2", "<cmd>2tabnext<cr>",                            desc = "go to tab 2" },
   { "<leader>t3", "<cmd>3tabnext<cr>",                            desc = "go to tab 3" },

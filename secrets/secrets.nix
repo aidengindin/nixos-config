@@ -26,4 +26,5 @@ in
   "aiden-garmin-password.age".publicKeys = [ lorienHost lorienUser ];
   "ally-garmin-password.age".publicKeys = [ lorienHost lorienUser ];
   "codecompanion-anthropic-key.age".publicKeys = [ lorienUser shadowfaxUser ];
+  "codecompanion-gemini-key.age".publicKeys = [ lorienUser shadowfaxUser ];
 }

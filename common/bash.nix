@@ -11,6 +11,11 @@
         owner = "agindin";
         mode = "0400";
       };
+      codecompanion-gemini-key = {
+        file = ../secrets/codecompanion-gemini-key.age;
+        owner = "agindin";
+        mode = "0400";
+      };
     };
 
     programs.bash = {
@@ -36,6 +41,7 @@
         eval "$(${pkgs.starship}/bin/starship init bash)"
         eval "$(${pkgs.atuin}/bin/atuin init bash)"
         export ANTHROPIC_API_KEY="$(cat ${config.age.secrets.codecompanion-anthropic-key.path})"
+        export GEMINI_API_KEY="$(cat ${config.age.secrets.codecompanion-gemini-key.path})"
       '';
     };
 
@@ -52,6 +58,9 @@
       ll = "eza -lah --group-directories-first";
 
       cat = "bat";
+
+      v = "nvim";
+      vim = "nvim";
     };
   };
 }
