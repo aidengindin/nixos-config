@@ -37,7 +37,7 @@ in
     services.hypridle.enable = true;
 
     # Enable sound
-    sound.enable = true;
+    # sound.enable = true; # This option is deprecated
     hardware.pulseaudio.enable = false;
     security.rtkit.enable = true;
     services.pipewire = {

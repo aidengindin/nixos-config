@@ -5,11 +5,15 @@
       programs.neovim = {
         enable = true;
         defaultEditor = true;
+        
+        # Move config from home.file to neovim module to avoid conflicts
+        extraLuaConfig = builtins.readFile ./nvim/init.lua;
       };
-      home.file = {
-        ".config/nvim/init.lua".source = ./nvim/init.lua;
-        ".config/nvim/lua/plugins.lua".source = ./nvim/plugins.lua;
-        ".config/nvim/lua/keybindings.lua".source = ./nvim/keybindings.lua;
+      
+      # Use xdg.configFile instead of home.file to manage neovim config files
+      xdg.configFile = {
+        "nvim/lua/plugins.lua".source = ./nvim/plugins.lua;
+        "nvim/lua/keybindings.lua".source = ./nvim/keybindings.lua;
       };
     };
 

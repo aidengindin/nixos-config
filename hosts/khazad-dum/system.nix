@@ -20,6 +20,9 @@ in
 
   networking.hostName = "khazad-dum";
 
+  # Age identity path for agenix
+  age.identityPaths = [ "/home/agindin/.ssh/id_ed25519" ];
+
   boot.kernel.sysctl = {
     "vm.max_map_count" = 262144; 
   };
