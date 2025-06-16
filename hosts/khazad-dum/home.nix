@@ -1,8 +1,7 @@
-{ config, lib, pkgs, catppuccin, ... }:
+{ config, lib, pkgs, ... }:
 {
   imports = [
     ../../common
-    catppuccin.homeModules.catppuccin
   ];
 
   agindin = {

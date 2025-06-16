@@ -109,6 +109,11 @@
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
             catppuccin.nixosModules.catppuccin
+            {
+              home-manager.users.agindin.imports = [
+                catppuccin.homeModules.catppuccin
+              ];
+            }
             ./hosts/khazad-dum
           ];
         };
