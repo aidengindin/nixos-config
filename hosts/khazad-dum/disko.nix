@@ -3,7 +3,7 @@
   disko.devices = {
     disk = {
       nvme0n1 = {
-        device = "/dev/disk/by-diskseq/1";
+        device = "/dev/nvme0n1"; # TODO: Replace with by-id path when available
         type = "disk";
         content = {
           type = "gpt";
