@@ -1,5 +1,18 @@
 { config, pkgs, ... }:
 {
+  # Fix home directory permissions on boot
+  systemd.services.fix-home-permissions = {
+    description = "Fix home directory permissions";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "local-fs.target" ];
+    before = [ "display-manager.service" ];
+    
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.coreutils}/bin/chown -R agindin:users /home/agindin'";
+    };
+  };
+  
   environment.persistence."/persist" = {
     enable = true;
     hideMounts = true;
@@ -35,7 +48,7 @@
         ".config"
         ".local/share"
         ".local/state"
-        ".cache/nix"
+        ".cache"
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; }
       ];
