@@ -19,7 +19,7 @@ in
       settings = rec {
         default_session = {
           command = "Hyprland &> /dev/null";
-          user = config.user.name;
+          user = "agindin";
         };
         initial_session = default_session;
       };
