@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config ? {}, pkgs ? import <nixpkgs> {}, ... }:
 {
   disko.devices = {
     disk = {
