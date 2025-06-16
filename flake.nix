@@ -84,7 +84,7 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix catppuccin nur;
+        inherit agenix catppuccin;
         unstablePkgs = unstable.legacyPackages.x86_64-linux;
       };
     in
@@ -114,6 +114,7 @@
                 catppuccin.homeModules.catppuccin
               ];
             }
+            nur.modules.nixos.default
             ./hosts/khazad-dum
           ];
         };
