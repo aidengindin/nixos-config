@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, catppuccin, ... }:
 let
   accentColor = "blue";
 in
@@ -6,7 +6,6 @@ in
   imports =
     [
       ../../linux
-      inputs.catppuccin.nixosModules.catppuccin
     ];
 
   # Do not allow external SSH access
