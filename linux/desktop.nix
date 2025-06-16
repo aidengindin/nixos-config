@@ -12,7 +12,7 @@ in
     programs.hyprland = {
       enable = true;
       withUWSM = true;
-    }
+    };
 
     services.greetd = {
       enable = true;
@@ -22,7 +22,7 @@ in
           user = config.user.name;
         };
         initial_session = default_session;
-      }
+      };
     };
     
     xdg.portal = {
@@ -30,7 +30,7 @@ in
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
         xdg-desktop-portal-hyprland
-      ]
+      ];
     };
 
     programs.hyprlock.enable = true;
