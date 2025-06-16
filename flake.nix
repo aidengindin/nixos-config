@@ -109,7 +109,6 @@
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
             catppuccin.nixosModules.catppuccin
-            catppuccin.homeManagerModules.catppuccin
             ./hosts/khazad-dum
           ];
         };
