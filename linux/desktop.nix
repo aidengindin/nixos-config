@@ -103,6 +103,16 @@ in
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "waybar/config".source = ./waybar/config;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
+          "swaync/config.json".source = ./swaync/config.json;
+          "swaync/style.css".source = ./swaync/style.css;
+          "hypr/scripts/volume.sh" = {
+            source = ./hypr/scripts/volume.sh;
+            executable = true;
+          };
+          "hypr/scripts/brightness.sh" = {
+            source = ./hypr/scripts/brightness.sh;
+            executable = true;
+          };
         };
       };
     };

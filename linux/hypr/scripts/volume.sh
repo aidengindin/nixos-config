@@ -2,12 +2,19 @@
 
 # Get current volume
 get_volume() {
-    pamixer --get-volume
+    # wpctl output format: "Volume: 0.45" or "Volume: 0.45 [MUTED]"
+    # Extract percentage (0.45 = 45%)
+    wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}'
 }
 
 # Get mute status
 get_mute() {
-    pamixer --get-mute
+    # Check if output contains [MUTED]
+    if wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q '\[MUTED\]'; then
+        echo "true"
+    else
+        echo "false"
+    fi
 }
 
 # Send notification
@@ -26,17 +33,17 @@ notify_volume() {
 # Main
 case "$1" in
     up)
-        pamixer -u  # Unmute first
-        pamixer -i 5
+        wpctl set-mute @DEFAULT_AUDIO_SINK@ 0  # Unmute first
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
         notify_volume
         ;;
     down)
-        pamixer -u  # Unmute first
-        pamixer -d 5
+        wpctl set-mute @DEFAULT_AUDIO_SINK@ 0  # Unmute first
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
         notify_volume
         ;;
     mute)
-        pamixer -t  # Toggle mute
+        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle  # Toggle mute
         notify_volume
         ;;
     *)
