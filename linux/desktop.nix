@@ -114,12 +114,16 @@ in
             executable = true;
           };
         };
+        home.file = {
+          "Pictures/wallpapers/nixos.png".source = ./wallpapers/nixos.png;
+        };
       };
     };
 
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       brightnessctl
+      hyprpaper
       hyprshot
       iwgtk
       libnotify
