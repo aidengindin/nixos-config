@@ -136,10 +136,12 @@ in
 
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
+      brightnessctl
       hyprshot
       iwgtk
       overskride
       rofi-wayland
+      swaynotificationcenter
       waybar
 
       bitwarden
