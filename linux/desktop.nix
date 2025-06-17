@@ -101,10 +101,14 @@ in
       users.agindin = {
         xdg.configFile = {
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
-          "waybar/config".source = ./waybar/config;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
+
           "swaync/config.json".source = ./swaync/config.json;
           "swaync/style.css".source = ./swaync/style.css;
+
+          "waybar/config".source = ./waybar/config;
+          "waybar/style.css".source = ./waybar/style.css;
+
           "hypr/scripts/volume.sh" = {
             source = ./hypr/scripts/volume.sh;
             executable = true;
@@ -119,6 +123,10 @@ in
         };
       };
     };
+
+    fonts.packages = with pkgs; [
+      nerd-fonts.hasklug
+    ];
 
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
