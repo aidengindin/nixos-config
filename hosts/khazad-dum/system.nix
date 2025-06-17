@@ -13,6 +13,9 @@ in
     "amd_pstate=active"
     "amd_runpm=0"
     "processor.max_cstate=1"
+    "pcie_aspm=off"
+    "amd_iommu=on"
+    "iommu=pt"
   ];
 
   # Do not allow external SSH access
