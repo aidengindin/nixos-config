@@ -53,6 +53,48 @@ in
       lidSwitchDocked = "ignore";
     };
 
+    systemd.user.services.lock-on-suspend = {
+      description = "Lock screen before suspend";
+      before = [ "sleep.target" ];
+      wantedBy = [ "sleep.target" ];
+      serviceConfig = {
+        Type = "forking";
+        ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
+        TimeoutSec = "infinity";
+        Environment = [
+          "WAYLAND_DISPLAY=wayland-1"
+          "XDG_SESSION_TYPE=wayland"
+          "XDG_CURRENT_DESKTOP=Hyprland"
+        ];
+        
+        # Security hardening
+        MemoryMax = "256M";
+        TasksMax = 50;
+        NoNewPrivileges = true;
+        RestrictRealtime = true;
+        RestrictSUIDGUID = true;
+        ProtectSystem = "strict";
+        ProtectHome = false;
+        ReadWritePaths = [
+          "/dev/input"
+          "/sys/class/backlight"
+        ];
+        PrivateNetwork = true;
+        RestrictNamespaces = true;
+        LockPersonality = true;
+        RestrictAddressFamilies = [ "AF_UNIX" ];
+        SystemCallArchitectures = "native";
+        SystemCallFilter = [
+          "@system-service"
+          "~@privileged"
+          "~@resources"
+          "~@mount"
+        ];
+        CapabilityBoundingSet = "";
+        AmbientCapabilities = "";
+      };
+    };
+
     home-manager = {
       users.agindin = {
         xdg.configFile = {
