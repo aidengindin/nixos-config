@@ -1,4 +1,4 @@
-{ config, pkgs, catppuccin, ... }:
+{ config, pkgs, unstablePkgs, catppuccin, ... }:
 let
   accentColor = "blue";
 in
@@ -8,16 +8,20 @@ in
       ../../linux
     ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_15;
+  boot.kernelPackages = unstablePkgs.linuxPackages_6_15;
   boot.kernelParams = [
     "amd_pstate=active"
     "amdgpu.runpm=0"
-    "amdgpu.dc=0"
-    "amdgpu.dpm=0"
     "processor.max_cstate=1"
     "pcie_aspm=off"
     "amd_iommu=on"
     "iommu=pt"
+  ];
+
+  hardware.graphics.package = unstablePkgs.mesa;
+  
+  environment.systemPackages = with unstablePkgs; [
+    libinput
   ];
 
   # Do not allow external SSH access
