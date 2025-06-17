@@ -9,6 +9,11 @@ in
     ];
 
   boot.kernelPackages = pkgs.linuxPackages_6_15;
+  boot.kernelParams = [
+    "amd_pstate=active"
+    "amd_runpm=0"
+    "processor.max_cstate=1"
+  ];
 
   # Do not allow external SSH access
   agindin.ssh = {
