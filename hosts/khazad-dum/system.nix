@@ -11,7 +11,9 @@ in
   boot.kernelPackages = pkgs.linuxPackages_6_15;
   boot.kernelParams = [
     "amd_pstate=active"
-    "amd_runpm=0"
+    "amdgpu.runpm=0"
+    "amdgpu.dc=0"
+    "amdgpu.dpm=0"
     "processor.max_cstate=1"
     "pcie_aspm=off"
     "amd_iommu=on"
