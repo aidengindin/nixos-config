@@ -71,27 +71,27 @@ in
         MemoryMax = "256M";
         TasksMax = 50;
         NoNewPrivileges = true;
-        RestrictRealtime = true;
-        RestrictSUIDGUID = true;
-        ProtectSystem = "strict";
-        ProtectHome = false;
-        ReadWritePaths = [
-          "/dev/input"
-          "/sys/class/backlight"
-        ];
+        # RestrictRealtime = true;
+        # RestrictSUIDGUID = true;
+        # ProtectSystem = "strict";
+        # ProtectHome = false;
+        # ReadWritePaths = [
+        #   "/dev/input"
+        #   "/sys/class/backlight"
+        # ];
         PrivateNetwork = true;
-        RestrictNamespaces = true;
-        LockPersonality = true;
-        RestrictAddressFamilies = [ "AF_UNIX" ];
-        SystemCallArchitectures = "native";
-        SystemCallFilter = [
-          "@system-service"
-          "~@privileged"
-          "~@resources"
-          "~@mount"
-        ];
-        CapabilityBoundingSet = "";
-        AmbientCapabilities = "";
+        # RestrictNamespaces = true;
+        # LockPersonality = true;
+        # RestrictAddressFamilies = [ "AF_UNIX" ];
+        # SystemCallArchitectures = "native";
+        # SystemCallFilter = [
+        #   "@system-service"
+        #   "~@privileged"
+        #   "~@resources"
+        #   "~@mount"
+        # ];
+        # CapabilityBoundingSet = "";
+        # AmbientCapabilities = "";
       };
     };
 
