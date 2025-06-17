@@ -11,21 +11,163 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Model configuration
+local AI_MODELS = {
+  claude_opus = "claude-opus-4-20250514",
+  gemini_flash = "gemini-2.5-flash-preview-05-20",
+}
+
 require("lazy").setup({
   -- Appearance
-  "shaunsingh/nord.nvim",
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    priority = 1000,
+    config = function()
+      require("catppuccin").setup({
+        flavour = "mocha",
+        transparent_background = true,
+        term_colors = true,
+        styles = {
+          comments = { "italic" },
+          functions = { "bold" },
+          keywords = { "italic" },
+          variables = { "italic" }
+        },
+        integrations = {
+          blink_cmp = {
+            style = "bordered",
+          },
+          gitgutter = true,
+          gitsigns = true,
+          lsp_trouble = true,
+          lsp_saga = true,
+          mason = true,
+          neogit = true,
+          nvimtree = true,
+          render_markdown = true,
+          snacks = {
+            enabled = true,
+            indent_scope_color = "text",
+          },
+          telescope = true,
+          treesitter = true,
+          which_key = true
+        }
+      })
+      vim.cmd.colorscheme "catppuccin"
+    end
+  },
   {
     "nvim-lualine/lualine.nvim",
     config = function()
+      local colors = require("catppuccin.palettes").get_palette()
+
+      -- Define static section styles to reuse across all modes
+      local static_sections = {
+        b = { bg = colors.surface0, fg = colors.text },
+        c = { bg = colors.mantle, fg = colors.text },
+        x = { bg = colors.mantle, fg = colors.text },
+        y = { bg = colors.surface0, fg = colors.text },
+        z = { bg = colors.overlay0, fg = colors.text },
+      }
+
+      -- Create a function to generate mode-specific highlights
+      local function mode_highlight(mode_color)
+        return {
+          a = { bg = mode_color, fg = colors.mantle, gui = "bold" },
+          b = static_sections.b,
+          c = static_sections.c,
+          x = static_sections.x,
+          y = static_sections.y,
+          z = static_sections.z,
+        }
+      end
+
       require("lualine").setup {
-        theme = "nord"
+        options = {
+          theme = "catppuccin",
+          component_separators = { left = '', right = '' },
+          section_separators = { left = '', right = '' },
+          disabled_filetypes = {
+            statusline = {},
+            winbar = {},
+          },
+          ignore_focus = {},
+          always_divide_middle = true,
+          globalstatus = false,
+          refresh = {
+            statusline = 1000,
+            tabline = 1000,
+            winbar = 1000,
+          },
+        },
+        sections = {
+          lualine_a = { "mode" },
+          lualine_b = { "branch", "diff", "diagnostics", "lsp_status" },
+          lualine_c = { "filename" },
+          lualine_x = { require "minuet.lualine" },
+          lualine_y = { "encoding", "fileformat", "filetype" },
+          lualine_z = { "location" },
+        },
+        inactive_sections = {
+          lualine_a = {},
+          lualine_b = {},
+          lualine_c = { "filename" },
+          lualine_x = { "location" },
+          lualine_y = {},
+          lualine_z = {},
+        },
+        -- Define highlights for all modes
+        highlights = {
+          normal = mode_highlight(colors.blue),
+          insert = mode_highlight(colors.green),
+          visual = mode_highlight(colors.mauve),
+          replace = mode_highlight(colors.red),
+          command = mode_highlight(colors.peach),
+        },
       }
     end,
   },
   {
     "akinsho/bufferline.nvim",
     version = "*",
-    dependencies = { "nvim-tree/nvim-web-devicons" }
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("bufferline").setup({
+        highlights = require("catppuccin.groups.integrations.bufferline").get(),
+        options = {
+          mode = "tabs",
+          show_buffer_close_icons = true,
+          show_close_icon = true,
+          show_tab_indicators = true,
+          separator_style = "thin",
+          always_show_bufferline = true,
+          diagnostics = "nvim_lsp",
+          diagnostics_update_in_insert = false,
+          offsets = {
+            {
+              filetype = "NvimTree",
+              text = "File Explorer",
+              text_align = "left",
+              separator = true
+            }
+          },
+          -- Show tab number when using tabs
+          numbers = function(opts)
+            return string.format('%s·%s', opts.raise(opts.id), opts.lower(opts.ordinal))
+          end,
+          -- Custom tab name function
+          name_formatter = function(buf)
+            -- Show tab info if multiple tabs exist
+            if vim.fn.tabpagenr('$') > 1 then
+              return string.format("T%d: %s", vim.fn.tabpagenr(), buf.name)
+            end
+            return buf.name
+          end,
+        }
+      })
+    end
   },
   {
     "lukas-reineke/indent-blankline.nvim",
@@ -39,7 +181,7 @@ require("lazy").setup({
   "mbbill/undotree",
   {
     "m4xshen/autoclose.nvim",
-    config = function ()
+    config = function()
       require("autoclose").setup({
         options = {
           pair_spaces = true,
@@ -83,6 +225,24 @@ require("lazy").setup({
       "nvim-tree/nvim-web-devicons"
     }
   },
+  {
+    "LukasPietzschmann/telescope-tabs",
+    dependencies = { "nvim-telescope/telescope.nvim" },
+    config = function()
+      require("telescope").load_extension("telescope-tabs")
+      require("telescope-tabs").setup({
+        show_preview = false,
+        close_tab_shortcut_i = "<C-d>", -- Close tab in insert mode
+        close_tab_shortcut_n = "dd",    -- Close tab in normal mode
+      })
+    end
+  },
+  {
+    -- TODO: setup keybindings
+    "folke/flash.nvim",
+    event = "VeryLazy",
+    opts = {},
+  },
 
   -- Git integration
   {
@@ -95,6 +255,16 @@ require("lazy").setup({
     config = true
   },
   "airblade/vim-gitgutter",
+  {
+    "f-person/git-blame.nvim",
+    event = "VeryLazy",
+    opts = {
+      enabled = true,
+      message_template = " <summary> • <date> • <author> • <<sha>>",
+      date_format = "%Y-%m-%d %H:%M:%S",
+      virtual_text_column = 1,
+    },
+  },
 
   -- Syntax and language support
   {
@@ -102,7 +272,7 @@ require("lazy").setup({
     config = function()
       require("nvim-treesitter.configs").setup {
         highlight = {
-          enable = true;
+          enable = true,
         },
         ensure_installed = {
           "bash",
@@ -151,6 +321,10 @@ require("lazy").setup({
   {
     "vim-pandoc/vim-pandoc",
     dependencies = { "vim-pandoc/vim-pandoc-syntax" }
+  },
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown", "codecompanion" }
   },
 
   -- LSP and completion
@@ -201,7 +375,7 @@ require("lazy").setup({
       "milanglacier/minuet-ai.nvim",
     },
     version = "v1.0.0",
-    config = function ()
+    config = function()
       require("blink-cmp").setup {
         fuzzy = {
           prebuilt_binaries = {
@@ -209,20 +383,36 @@ require("lazy").setup({
           }
         },
         sources = {
-          default = { "lazydev", "lsp", "path", "buffer", "snippets" },
+          default = { "minuet", "lazydev", "lsp", "path", "buffer", "snippets" },
+          per_filetype = {
+            codecompanion = { "lsp", "path", "buffer", "snippets" }
+          },
           providers = {
             lazydev = {
               name = "LazyDev",
               module = "lazydev.integrations.blink",
               score_offset = 10
+            },
+            minuet = {
+              name = "minuet",
+              module = "minuet.blink",
+              async = true,
+              timeout_ms = 3000,
+              score_offset = 50,
             }
-          }
+          },
         },
         completion = {
+          menu = {
+            draw = {
+              columns = { { "label", "label_description", gap = 1 },
+                { "kind_icon", gap = 1,             "kind", gap = 1, "source_name" } },
+            },
+          },
           trigger = {
             prefetch_on_insert = true
-          }
-        }
+          },
+        },
       }
     end,
   },
@@ -233,13 +423,13 @@ require("lazy").setup({
     dependencies = {
       "nvim-lua/plenary.nvim",
     },
-    config = function ()
+    config = function()
       require("claude-code").setup({
         keymaps = {
           toggle = {
             variants = {
-              continue = false,  -- Disable <leader>cC
-              verbose = false    -- Disable <leader>cV
+              continue = false, -- Disable <leader>cC
+              verbose = false   -- Disable <leader>cV
             }
           }
         }
@@ -247,7 +437,69 @@ require("lazy").setup({
     end
   },
   {
-    "github/copilot.vim"
+    "olimorris/codecompanion.nvim",
+    opts = {},
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("codecompanion").setup({
+        adapters = {
+          anthropic = function()
+            return require("codecompanion.adapters").extend("anthropic", {
+              env = {
+                api_key = "ANTHROPIC_API_KEY",
+              },
+              schema = {
+                model = {
+                  default = AI_MODELS.claude_opus,
+                },
+                extended_output = {
+                  default = true,
+                },
+              },
+            })
+          end,
+        },
+        strategies = {
+          chat = {
+            adapter = {
+              name = "anthropic",
+              model = AI_MODELS.claude_opus,
+            },
+          },
+          inline = {
+            adapter = {
+              name = "anthropic",
+              model = AI_MODELS.claude_opus,
+            },
+          },
+        },
+        log_level = "DEBUG",   -- Enable debug logging to see more details
+      })
+    end
+  },
+  {
+    "milanglacier/minuet-ai.nvim",
+    config = function()
+      require("minuet").setup({
+        provider = "gemini",
+        provider_options = {
+          gemini = {
+            model = AI_MODELS.gemini_flash,
+            optional = {
+              generationConfig = {
+                maxOutputTokens = 256,
+                thinkingConfig = {
+                  thinkingBudget = 0,
+                },
+              },
+            },
+          },
+        },
+      })
+    end
   },
 
   -- Development tools
@@ -262,23 +514,75 @@ require("lazy").setup({
   },
   {
     "codethread/qmk.nvim",
-    config = function ()
+    config = function()
       local conf = {
         name = "LAYOUT_split_3x5_3",
         layout = {
-         "x x x x x _ x x x x x",
-         "x x x x x _ x x x x x",
-         "x x x x x _ x x x x x",
-         "_ _ x x x _ x x x _ _"
-       }
-     }
-     require("qmk").setup(conf)
-   end
-  }
+          "x x x x x _ x x x x x",
+          "x x x x x _ x x x x x",
+          "x x x x x _ x x x x x",
+          "_ _ x x x _ x x x _ _"
+        }
+      }
+      require("qmk").setup(conf)
+    end
+  },
+  {
+    "echasnovski/mini.diff",
+    config = function()
+      local diff = require("mini.diff")
+      diff.setup({})
+    end
+  },
+  "mfussenegger/nvim-dap",
+  {
+    "rcarriga/nvim-dap-ui",
+    dependencies = {
+      "mfussenegger/nvim-dap",
+      "nvim-neotest/nvim-nio",
+    },
+  },
+  {
+    "folke/trouble.nvim",
+    opts = {},
+    cmd = "Trouble",
+  },
+  {
+    -- TODO: add keybindings
+    "ThePrimeagen/refactoring.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-telescope/telescope.nvim",
+    },
+    lazy = false,
+    config = function ()
+      require("telescope").load_extension("refactoring")
+    end,
+    opts = {
+      show_success_message = true,
+    },
+  },
+  {
+    "rest-nvim/rest.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      opts = function (_, opts)
+        opts.ensure_installed = opts.ensure_installed or {}
+        table.insert(opts.ensure_installed, "http")
+      end,
+    },
+  },
+  {
+    "numToStr/Comment.nvim",
+    opts = {},
+    config = function ()
+      require("Comment").setup()
+    end
+  },
 })
 
 vim.opt.termguicolors = true
-vim.cmd[[colorscheme nord]]
 
 vim.diagnostic.config({
   virtual_text = true,
