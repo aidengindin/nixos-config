@@ -65,7 +65,9 @@ in
           "WAYLAND_DISPLAY=wayland-1"
           "XDG_SESSION_TYPE=wayland"
           "XDG_CURRENT_DESKTOP=Hyprland"
+          "XDG_RUNTIME_DIR=/run/user/1000"
         ];
+        PAMName = "login";
         
         # Security hardening
         MemoryMax = "256M";
