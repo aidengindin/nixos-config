@@ -47,11 +47,18 @@ in
       pulse.enable = true;
     };
 
+    services.logind = {
+      lidSwitch = "suspend";
+      lidSwitchExternalPower = "suspend";
+      lidSwitchDocked = "ignore";
+    };
+
     home-manager = {
       users.agindin = {
         xdg.configFile = {
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "waybar/config".source = ./waybar/config;
+          "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
         };
         dconf = {
           enable = true;
