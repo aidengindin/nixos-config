@@ -8,6 +8,8 @@ in
       ../../linux
     ];
 
+  boot.kernelPackages = pkgs.linuxPackages_6_15;
+
   # Do not allow external SSH access
   agindin.ssh = {
     enable = false;
