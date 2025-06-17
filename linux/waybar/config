@@ -8,14 +8,14 @@
     "height": 36,
     "spacing": 4,
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
-    "modules-center": ["clock"],
-    "modules-right": ["idle_inhibitor", "privacy", "wireplumber", "mpris", "hyprland/language", "bluetooth", "network", "battery"],
+    "modules-right": ["idle_inhibitor", "privacy", "wireplumber", "mpris", "hyprland/language", "bluetooth", "network", "battery", "clock", "custom/power"],
 
     "hyprland/workspaces": {
-      "format": "{name}",
-      "active-only": true,
-      "all-outputs": true,
-      "show-special": false
+      "sort-by": "name",
+      "format": " {icon} ",
+      "format-icons": {
+        "default": "",
+      },
     },
 
     "hyprland/submap": {
@@ -26,6 +26,8 @@
     "clock": {
       "interval": 1,
       "format": "%a %d %I:%M:%S %p",
+      "format": "⏲ {:%H:%M:%S}"
+      "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
       "timezone": "America/New_York",
     },
 
@@ -78,6 +80,7 @@
       "separate-outputs": true,
       "rewrite": {
         "(.*) - Mozilla Firefox": "󰈹 $1",
+        "(.*) - LibreWolf": "󰈹 $1",
         "(.*) - VS Code": "󰨞 $1",
         "kitty(.*)": "󰞷 $1"
       }
@@ -129,7 +132,7 @@
       "format-muted": "󰝟",
       "format-icons": ["󰕿", "󰖀", "󰕾"],
       "on-click": "pavucontrol",
-      "max-volume": 150
+      "max-volume": 100
     },
 
     "mpris": {
@@ -145,6 +148,12 @@
       },
       "ignored-players": ["firefox"],
       "max-length": 40
+    },
+
+    "custom/power": {
+      "tooltip": false,
+      "on-click": "wlogout &",
+      "format": "󰍃"
     }
   }
 ]
