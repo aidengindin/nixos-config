@@ -39,11 +39,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    catppuccin = {
-      url = "github:catppuccin/nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     wallabag-client = {
       url = "github:artur-shaik/wallabag-client";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -61,7 +56,6 @@
     nixos-hardware,
     darwin,
     agenix,
-    catppuccin,
     wallabag-client
     }:
     let
@@ -77,7 +71,7 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix catppuccin;
+        inherit agenix;
         unstablePkgs = unstable.legacyPackages.x86_64-linux;
       };
     in
@@ -101,12 +95,6 @@
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
-            catppuccin.nixosModules.catppuccin
-            {
-              home-manager.users.agindin.imports = [
-                catppuccin.homeModules.catppuccin
-              ];
-            }
             ./hosts/khazad-dum
           ];
         };

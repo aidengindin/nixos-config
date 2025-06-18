@@ -1,4 +1,4 @@
-{ config, pkgs, unstablePkgs, catppuccin, ... }:
+{ config, pkgs, unstablePkgs, ... }:
 let
   accentColor = "blue";
 in
@@ -45,37 +45,6 @@ in
 
   services.fwupd.enable = true;
   
-  catppuccin = {
-    enable = true;
-    accent = "blue";
-    cache.enable = true;
-    sddm = {
-      background = "";  # TODO: set a background image
-      font = "Noto Sans";
-    };
-  };
-
-  home-manager.users.agindin.catppuccin = {
-    enable = true;
-    accent = accentColor;
-    cache.enable = true;
-    cursors = {
-      enable = true;
-      accent = accentColor;
-    };
-    gtk = {
-      enable = true;
-      accent = accentColor;
-      icon.enable = false;
-      size = "compact";
-    };
-    atuin.accent = accentColor;
-    fzf.accent = accentColor;
-    hyprland.accent = accentColor;
-    hyprlock.accent = accentColor;
-    mpv.accent = accentColor;
-    # wezterm.apply = true;
-  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ 9001 3000 5580 10400 ];

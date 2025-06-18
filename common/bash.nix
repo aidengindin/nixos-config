@@ -42,12 +42,24 @@
         eval "$(${pkgs.atuin}/bin/atuin init bash)"
         export ANTHROPIC_API_KEY="$(cat ${config.age.secrets.codecompanion-anthropic-key.path})"
         export GEMINI_API_KEY="$(cat ${config.age.secrets.codecompanion-gemini-key.path})"
+
+        # Set catppuccin theme for fzf
+        export FZF_DEFAULT_OPTS=" \
+        --color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
+        --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
+        --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8 \
+        --color=selected-bg:#45475A \
+        --color=border:#313244,label:#CDD6F4"
       '';
     };
 
     # allow home manager to manage bash
     home-manager.users.agindin = {
       programs.bash.enable = true;
+      xdg.configFile = {
+        "atuin/config.toml".source = ./atuin/config.toml;
+        "atuin/themes/catppuccin-mocha-blue.toml".source = ./atuin/themes/catppuccin-mocha-blue.toml;
+      };
     };
 
     environment.shellAliases = {

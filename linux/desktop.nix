@@ -95,11 +95,44 @@ in
       };
     };
 
+    environment.variables = {
+      XCURSOR_THEME = "Catppuccin-Mocha-Dark-Cursors";
+      XCURSOR_SIZE = "24";
+      GTK_THEME = "catppuccin-mocha-blue";;
+    };
+
     home-manager = {
       users.agindin = {
+        gtk = {
+          enable = true;
+          cursorTheme = {
+            name = "Catppuccin-Mocha-Dark-Cursors";
+            package = pkgs.catppuccin-cursors.mochaDark;
+            size = 24;
+          };
+          theme = {
+            name = "catppuccin-mocha-blue";
+            package = pkgs.catppuccin-gtk;
+          };
+          font = {
+            name = "Noto Sans";
+            package = pkgs.noto-fonts;
+            size = 12;
+          };
+        };
+
+        qt = {
+          enable = true;
+          style = {
+            name = "catppuccin-mocha-blue";
+            package = pkgs.catppuccin-qt5ct;
+          };
+        };
+
         xdg.configFile = {
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
+          "hypr/mocha.conf".source = ./hypr/mocha.conf;
 
           "swaync/config.json".source = ./swaync/config.json;
           "swaync/style.css".source = ./swaync/style.css;
@@ -119,6 +152,7 @@ in
           "rofi/config.rasi".source = ./rofi/config.rasi;
           "rofi/catppuccin-mocha.rasi".source = ./rofi/catppuccin-mocha.rasi;
         };
+
         home.file = {
           "Pictures/wallpapers/nixos.png".source = ./wallpapers/nixos.png;
         };
@@ -132,6 +166,7 @@ in
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       brightnessctl
+      catppuccin-cursors.mochaDark
       hyprpaper
       hyprshot
       iwgtk
