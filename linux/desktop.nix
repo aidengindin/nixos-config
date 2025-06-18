@@ -115,6 +115,9 @@ in
             source = ./hypr/scripts/brightness.sh;
             executable = true;
           };
+
+          "rofi/config.rasi".source = ./rofi/config.rasi;
+          "rofi/catppuccin-mocha.rasi".source = ./rofi/catppuccin-mocha.rasi;
         };
         home.file = {
           "Pictures/wallpapers/nixos.png".source = ./wallpapers/nixos.png;
