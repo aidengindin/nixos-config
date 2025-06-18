@@ -2,6 +2,79 @@
 let
   cfg = config.agindin.librewolf;
   inherit (lib) mkIf mkEnableOption;
+
+  userstyleSites = [
+    "advent-of-code"
+    "alternativeto"
+    "arch-wiki"
+    "brave-search"
+    "chatgpt"
+    "codeberg"
+    "crates.io"
+    "docs.rs"
+    "duckduckgo"
+    "freedesktop.org"
+    "github"
+    "google"
+    "google-drive"
+    "hackage"
+    "hacker-news"
+    "instagram"
+    "lichess"
+    "linkedin"
+    "mdn"
+    "nixos-manual"
+    "nixos-search"
+    "npm"
+    "paste.rs"
+    "pypi"
+    "reddit"
+    "react.dev"
+    "substack"
+    "twitter"
+    "vercel"
+    "wiki.nixos.org"
+    "wikipedia"
+    "youtube";
+  ];
+
+  lightFlavor = "latte";
+  darkFlavor = "mocha";
+  accentColor = "blue";
+
+  catppuccinUserstyles = pkgs.stdenv.mkderivation {
+    name = "catppuccin-userstyles";
+    version = "unstable";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "catppuccin";
+      repo = "userstyles";
+      rev = "714b153c7022c362a37ab8530286a87e4484a828";
+      hash = "1ax46dh3g9fdsm30bv8irwrlcbrgjp2dhi2v9lnm6pz0hy5kzgjq";
+    };
+
+    nativeBuildInputs = [ pkgs.lessc ];
+
+    buildPhase = ''
+      mkdir -p $out
+
+      for site in ${pkgs.lib.concatStringsSep " " userstyleSites}; do
+        if [ -d "styles/${site}" ] && [ -f "styles/${site}/catppuccin.user.less" ]; then
+          echo "Compiling ${site}..."
+          lessc \
+            --modify-var="lightFlavor=${lightFlavor}" \
+            --modify-var="darkFlavor=${darkFlavor}" \
+            --modify-var="accentColor=${accentColor}" \
+            "styles/${site}/catppuccin.user.less" \
+            "$out/${site}.css"
+        else
+          echo "Warning: ${site} not found or missing less file"
+        fi
+      done
+    '';
+
+    installPhase = "true";
+  };
 in
 {
   options.agindin.librewolf = {
@@ -19,6 +92,10 @@ in
         profiles.default = {
           isDefault = true;
           userChrome = builtins.readFile ./firefox/user-chrome.css;
+          # Disabled for now
+          # userContent = pkgs.lib.concatMapStringsSep "\n\n"
+          #   (site: builtins.readFile "${catppuccinUserstyles}/${site}.css")
+          #   userstyleSites;
         };
         policies = {
           ExtensionSettings = {
