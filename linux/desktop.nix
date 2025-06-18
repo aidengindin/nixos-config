@@ -151,6 +151,13 @@ in
 
           "rofi/config.rasi".source = ./rofi/config.rasi;
           "rofi/catppuccin-mocha.rasi".source = ./rofi/catppuccin-mocha.rasi;
+
+          "wlogout/style.css".source = ./wlogout/style.css;
+          "wlogout/lock.svg".source = ./wlogout/lock.svg;
+          "wlogout/suspend.svg".source = ./wlogout/suspend.svg;
+          "wlogout/hibernate.svg".source = ./wlogout/logout.svg;
+          "wlogout/shutdown.svg".source = ./wlogout/shutdown.svg;
+          "wlogout/reboot.svg".source = ./wlogout/reboot.svg;
         };
 
         home.file = {
