@@ -139,6 +139,13 @@ in
 
             "reader.color_scheme" = "dark";
 
+            # Dark mode settings
+            "ui.systemUsesDarkTheme"
+            "browser.in-content.dark-mode" = true;
+            "layout.css.prefers-color-scheme.content-override" = 0;
+            "browser.theme.content-theme" = 0;
+            "browser.theme.toolbar-theme" = 0;
+
             # Download behavior
             "browser.download.useDownloadDir" = true; # Always ask where to save
             
