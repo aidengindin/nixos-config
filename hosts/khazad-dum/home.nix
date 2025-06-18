@@ -9,6 +9,7 @@
     latex.enable = true;
     librewolf.enable = true;
     mpv.enable = true;
+    neomutt.enable = true;
     spotify.enable = true;
   };
 

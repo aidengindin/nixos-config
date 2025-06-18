@@ -14,6 +14,7 @@
     ./kitty.nix
     ./latex.nix
     ./mpv.nix
+    ./neomutt.nix
     ./nix.nix
     ./node.nix
     ./nvim.nix
