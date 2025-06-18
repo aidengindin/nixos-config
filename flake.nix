@@ -12,12 +12,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "unstable";
     };
-    
-    nur = {
-      url = "github:nix-community/NUR";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     disko = {
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -62,7 +56,6 @@
     unstable,
     home-manager,
     hm-unstable,
-    nur,
     disko,
     impermanence,
     nixos-hardware,
@@ -114,7 +107,6 @@
                 catppuccin.homeModules.catppuccin
               ];
             }
-            nur.modules.nixos.default
             ./hosts/khazad-dum
           ];
         };

@@ -142,6 +142,7 @@ in
       waybar
       wlogout
 
+      anki
       bitwarden
       discord
       element-desktop
