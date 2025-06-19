@@ -3,7 +3,7 @@ let
   cfg = config.agindin.services.pocket-id;
   inherit (lib) mkIf mkOption mkEnableOption types;
 
-  containerLib = import ../../lib/container.nix { inherit lib pkgs; };
+  containerLib = import ../lib/container.nix { inherit lib pkgs; };
 
   dataDir = "/var/lib/pocket-id";
 in {
