@@ -82,6 +82,7 @@
     openwebui.enable = true;
     searxng.enable = true;
     tandoor.enable = true;
+    pocket-id.enable = true;
 
     withings-sync = {
       enable = true;

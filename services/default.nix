@@ -11,6 +11,7 @@
     ./miniflux.nix
     ./ollama.nix
     ./openwebui.nix
+    ./pocket-id.nix
     ./restic.nix
     ./searxng.nix
     ./tandoor.nix

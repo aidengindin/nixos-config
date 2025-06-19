@@ -16,6 +16,7 @@ let
   memos = myServices.memos;
   openwebui = myServices.openwebui;
   searxng = myServices.searxng;
+  pocket-id = myServices.pocket-id;
 
   overlay = final: prev: {
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
@@ -127,6 +128,13 @@ in
           ${mkStrIf searxng.enable ''
           ${searxng.host} {
             reverse_proxy 127.0.0.1:8888
+            ${tlsSetup}
+          }
+          ''}
+
+          ${mkStrIf pocket-id.enable ''
+          ${pocket-id.host} {
+            reverse_proxy 192.168.103.11:80
             ${tlsSetup}
           }
           ''}
