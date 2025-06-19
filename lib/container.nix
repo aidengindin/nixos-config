@@ -27,7 +27,7 @@ in {
     networking.nat = {
       enable = true;
       internalInterfaces = [ "ve-${name}" ];
-      externalInterfaces = interface;
+      externalInterface = interface;
     };
 
     networking.firewall.extraCommands = ''
