@@ -68,7 +68,10 @@
 
     blocky = {
       enable = true;
-      adsAllowedClients = [ "100.106.161.106" "fd7a:115c:a1e0::4e01:a16b" ];
+      adsAllowedClients = [
+        "100.126.51.78"
+        "fd7a:115c:a1e0::a701:3353"
+      ];
     };
 
     caddy.enable = true;
