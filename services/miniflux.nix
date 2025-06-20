@@ -2,66 +2,75 @@
 let
   cfg = config.agindin.services.miniflux;
   inherit (lib) mkIf mkEnableOption mkOption types;
+
+  containerLib = import ../lib/container.nix { inherit lib pkgs; };
 in {
   options.agindin.services.miniflux = {
-    enable = mkEnableOption "Whether to enable Miniflux feed reader";
+    enable = mkEnableOption "miniflux";
+    host = mkOption {
+      type = types.str;
+      default = "rss.gindin.xyz";
+    };
     interface = mkOption {
       type = types.str;
       default = "enp1s0";
       description = "Host network interface to use for NAT";
     };
-    host = mkOption {
+    oauth2ClientIdFile = mkOption {
+      type = types.path;
+      description = "File containing client ID configured in OIDC provider";
+    };
+    oauth2ClientSecretFile = mkOption {
+      type = types.path;
+      description = "File containing client secret configured in OIDC provider";
+    };
+    oidcHost = mkOption {
       type = types.str;
-      default = "miniflux.gindin.xyz";
+      default = "auth.gindin.xyz";
+      description = "Host of OIDC provider";
+    };
+    stateVersion = mkOption {
+      type = types.str;
+      default = "25.05";
     };
   };
 
-  config = mkIf cfg.enable {
-    age.secrets = {
-      miniflux-credentials.file = ../secrets/miniflux-credentials.age;
-    };
+  config = mkIf cfg.enable (containerLib.makeContainer {
+    name = "miniflux";
+    subnet = "192.168.102.0/24";
+    hostAddress = "192.168.102.10";
+    localAddress = "192.168.102.11";
+    stateVersion = cfg.stateVersion;
 
-    networking.nat = {
-      enable = true;
-      internalInterfaces = [ "ve-miniflux" ];
-      externalInterface = cfg.interface;
-    };
-
-    networking.firewall.extraCommands = ''
-      iptables -t nat -A POSTROUTING -s 192.168.102.0/24 -o ${cfg.interface} -j MASQUERADE
-      iptables -A FORWARD -i ${cfg.interface} -o ve-miniflux -m state --state RELATED,ESTABLISHED -j ACCEPT
-      iptables -A FORWARD -i ve-miniflux -o ${cfg.interface} -j ACCEPT
-    '';
-
-    containers.miniflux = {
-      autoStart = true;
-      ephemeral = true;
-
-      privateNetwork = true;
-      hostAddress = "192.168.102.10";
-      localAddress = "192.168.102.11";
-
-      bindMounts = {
-        "/var/miniflux-credentials.txt" = {
-          hostPath = "${config.age.secrets.miniflux-credentials.path}";
-          isReadOnly = true;
-        };
+    bindMounts = {
+      "/secrets/client_id" = {
+        hostPath = "${cfg.oauth2ClientIdFile.path}";
+        isReadOnly = true;
       };
+      "/secrets/client_secret" = {
+        hostPath = "${cfg.oauth2ClientSecretFile.path}";
+        isReadOnly = true;
+      };
+    };
 
-      config = { config, lib, pkgs, ... }: {
-        services.timesyncd.enable = true;
-        system.stateVersion = "24.05";
+    openPorts = [ 80 ];
 
-        services.miniflux = {
-          enable = true;
-          createDatabaseLocally = true;
-          adminCredentialsFile = /var/miniflux-credentials.txt;
-          config = {
-            LISTEN_ADDR = "localhost:8080";
-            BASE_URL = "https://${cfg.host}";
-          };
+    extraConfig = {
+      services.miniflux = {
+        enable = true;
+        config = {
+          PORT = 80;
+          OAUTH2_PROVIDER = "oidc";
+          OAUTH2_CLIENT_ID_FILE = "/secrets/client_id";
+          OAUTH2_CLIENT_SECRET = "/secrets/client_secret";
+          OAUTH2_REDIRECT_URL = "https://${cfg.host}/oauth2/oidc/callback";
+          OAUTH2_OIDC_DISCOVERY_ENDPOINT = "https://${cfg.oidcHost}";
+          OAUTH2_OIDC_PROVIDER_NAME = "PocketID";
+          OAUTH2_USER_CREATION = "1";
+          DISABLE_LOCAL_AUTH = "1";
         };
       };
     };
-  };
+  });
 }
+
