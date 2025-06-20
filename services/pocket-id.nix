@@ -46,6 +46,7 @@ in {
         dataDir = "${dataDir}";
         settings = {
           APP_URL = "https://${cfg.host}";
+          PUBLIC_APP_URL = "https://${cfg.host}";
           PORT = 1411;
           TRUST_PROXY = true;
         };
