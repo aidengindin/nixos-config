@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, unstablePkgs, ... }:
 let
   cfg = config.agindin.services.pocket-id;
   inherit (lib) mkIf mkOption mkEnableOption types;
@@ -43,6 +43,7 @@ in {
     extraConfig = {
       services.pocket-id = {
         enable = true;
+        package = unstablePkgs.pocket-id;
         dataDir = "${dataDir}";
         settings = {
           APP_URL = "https://${cfg.host}";
