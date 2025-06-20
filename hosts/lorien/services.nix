@@ -46,6 +46,18 @@
       group = "ally-withings-sync";
       mode = "0400";
     };
+
+    miniflux-client-id = {
+      file = ../../secrets/miniflux-client-id.age;
+      owner = "root";
+      mode = "0400";
+    };
+
+    miniflux-client-secret = {
+      file = ../../secrets/miniflux-client-secret.age;
+      owner = "root";
+      mode = "0400";
+    };
   };
 
   agindin.services = {
@@ -82,6 +94,13 @@
     openwebui.enable = true;
     searxng.enable = true;
     tandoor.enable = true;
+    pocket-id.enable = true;
+
+    miniflux = {
+      enable = true;
+      oauth2ClientIdFile = config.age.secrets.miniflux-client-id.path;
+      oauth2ClientSecretFile = config.age.secrets.miniflux-client-secret.path;
+    };
 
     withings-sync = {
       enable = true;

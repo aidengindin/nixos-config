@@ -16,13 +16,14 @@ let
   memos = myServices.memos;
   openwebui = myServices.openwebui;
   searxng = myServices.searxng;
+  pocket-id = myServices.pocket-id;
 
   overlay = final: prev: {
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
       plugins = [
         "github.com/caddy-dns/cloudflare@v0.2.1"
       ];
-      hash = "sha256-Gsuo+ripJSgKSYOM9/yl6Kt/6BFCA6BuTDvPdteinAI=";
+      hash = "sha256-2D7dnG50CwtCho+U+iHmSj2w14zllQXPjmTHr6lJZ/A=";
     };
   };
 in
@@ -80,7 +81,7 @@ in
   
           ${mkStrIf miniflux.enable ''
           ${miniflux.host} {
-            reverse_proxy 192.168.102.11:80
+            reverse_proxy 192.168.102.11:8080
             ${tlsSetup}
           }
           ''}
@@ -127,6 +128,19 @@ in
           ${mkStrIf searxng.enable ''
           ${searxng.host} {
             reverse_proxy 127.0.0.1:8888
+            ${tlsSetup}
+          }
+          ''}
+
+          ${mkStrIf pocket-id.enable ''
+          ${pocket-id.host} {
+            reverse_proxy 192.168.103.11:1411 {
+              header_up Host {host}
+              header_up X-Real-IP {remote_host}
+              header_up X-Forwarded-For {remote_host}
+              header_up X-Forwarded-Proto {scheme}
+              header_up X-Forwarded-Host {host}
+            }
             ${tlsSetup}
           }
           ''}
