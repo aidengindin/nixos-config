@@ -56,14 +56,30 @@ in {
     openPorts = [ 8080 ];
 
     extraConfig = {
+      systemd.services.copy-miniflux-secrets = {
+        description = "Copy miniflux secrets with correct ownership";
+        wantedBy = [ "miniflux.service" ];
+        before = [ "miniflux.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+        };
+        script = ''
+          mkdir -p /var/lib/miniflux/secrets
+          cp /secrets/client_id /var/lib/miniflux/secrets/client_id
+          cp /secrets/client_secret /var/lib/miniflux/secrets/client_secret
+          chown miniflux:miniflux /var/lib/miniflux/secrets/client_*
+          chmod 400 /var/lib/miniflux/secrets/client_*
+        '';
+      };
       services.miniflux = {
         enable = true;
         config = {
           PORT = 8080;
           CREATE_ADMIN = 0;
           OAUTH2_PROVIDER = "oidc";
-          OAUTH2_CLIENT_ID_FILE = "/secrets/client_id";
-          OAUTH2_CLIENT_SECRET = "/secrets/client_secret";
+          OAUTH2_CLIENT_ID_FILE = "/var/lib/miniflux/secrets/client_id";
+          OAUTH2_CLIENT_SECRET = "/var/lib/miniflux/secrets/client_secret";
           OAUTH2_REDIRECT_URL = "https://${cfg.host}/oauth2/oidc/callback";
           OAUTH2_OIDC_DISCOVERY_ENDPOINT = "https://${cfg.oidcHost}";
           OAUTH2_OIDC_PROVIDER_NAME = "PocketID";
