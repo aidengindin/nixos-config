@@ -47,6 +47,7 @@ in {
         settings = {
           APP_URL = "https://${cfg.host}";
           PUBLIC_APP_URL = "https://${cfg.host}";
+          INTERNAL_BACKEND_URL = "http://localhost:8080";
           PORT = 1411;
           TRUST_PROXY = true;
         };
