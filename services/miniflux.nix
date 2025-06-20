@@ -56,10 +56,18 @@ in {
     openPorts = [ 8080 ];
 
     extraConfig = {
+      users.users.miniflux = {
+        enable = true;
+        isSystemUser = true;
+        group = "miniflux";
+      };
+      users.groups.miniflux = {};
+
       systemd.services.copy-miniflux-secrets = {
         description = "Copy miniflux secrets with correct ownership";
         wantedBy = [ "miniflux.service" ];
         before = [ "miniflux.service" ];
+        after = [ "users.target" ];
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
@@ -68,10 +76,11 @@ in {
           mkdir -p /var/lib/miniflux/secrets
           cp /secrets/client_id /var/lib/miniflux/secrets/client_id
           cp /secrets/client_secret /var/lib/miniflux/secrets/client_secret
-          chown miniflux:miniflux /var/lib/miniflux/secrets/client_*
+          chown -R miniflux:miniflux /var/lib/miniflux
           chmod 400 /var/lib/miniflux/secrets/client_*
         '';
       };
+
       services.miniflux = {
         enable = true;
         config = {
