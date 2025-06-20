@@ -19,7 +19,7 @@ in {
     extraPackages ? [],
     systemdServices ? {},
     systemdTimers ? {},
-    nixpkgs ? pkgs,
+    nixpkgs ? pkgs.path,
   }: {
     systemd.tmpfiles.rules = lib.mapAttrsToList (name: mount:
       "d ${mount.hostPath} 0755 root root -"
