@@ -94,6 +94,7 @@ in {
           OAUTH2_OIDC_PROVIDER_NAME = "PocketID";
           OAUTH2_USER_CREATION = 1;
           DISABLE_LOCAL_AUTH = 1;
+          LOG_LEVEL = "debug";
         };
       };
     };
