@@ -31,7 +31,6 @@ in {
     localAddress = "192.168.103.11";
     stateVersion = cfg.stateVersion;
     nixpkgs = unstablePkgs;
-    nixosModules = [ unstablePkgs.path + "/nixos/modules/services/security/pocket-id.nix" ];
 
     bindMounts = {
       "${dataDir}" = {
