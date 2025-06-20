@@ -21,6 +21,7 @@ in {
     systemdTimers ? {},
     nixpkgs ? pkgs.path,
   }: {
+    # TODO: this is a potential security issue; separate secret & non-secret mounts
     systemd.tmpfiles.rules = lib.mapAttrsToList (name: mount:
       "d ${mount.hostPath} 0755 root root -"
     ) bindMounts;

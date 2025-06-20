@@ -43,6 +43,10 @@ in {
     stateVersion = cfg.stateVersion;
 
     bindMounts = {
+      "/var/lib/postgresql" = {
+        hostPath = "/var/lib/containers/miniflux/postgresql";
+        isReadOnly = false;
+      }
       "/secrets/client_id" = {
         hostPath = "${cfg.oauth2ClientIdFile}";
         isReadOnly = true;
