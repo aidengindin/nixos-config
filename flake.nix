@@ -17,15 +17,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     
-    impermanence = {
-      url = "github:nix-community/impermanence";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    impermanence.url = "github:nix-community/impermanence";
 
-    nixos-hardware = {
-      url = "github:nixos/nixos-hardware/master";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixos-hardware.url = "github:nixos/nixos-hardware/master"
 
     # macos configurations
     darwin = {
