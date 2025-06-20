@@ -53,13 +53,13 @@ in {
       };
     };
 
-    openPorts = [ 80 ];
+    openPorts = [ 8080 ];
 
     extraConfig = {
       services.miniflux = {
         enable = true;
         config = {
-          PORT = 80;
+          PORT = 8080;
           CREATE_ADMIN = 0;
           OAUTH2_PROVIDER = "oidc";
           OAUTH2_CLIENT_ID_FILE = "/secrets/client_id";

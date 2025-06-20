@@ -81,7 +81,7 @@ in
   
           ${mkStrIf miniflux.enable ''
           ${miniflux.host} {
-            reverse_proxy 192.168.102.11:80
+            reverse_proxy 192.168.102.11:8080
             ${tlsSetup}
           }
           ''}
