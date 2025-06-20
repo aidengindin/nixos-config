@@ -38,7 +38,7 @@ in {
       };
     };
 
-    openPorts = [ 80 ];
+    openPorts = [ 8080 ];
 
     extraConfig = {
       services.pocket-id = {
@@ -46,7 +46,7 @@ in {
         dataDir = "${dataDir}";
         settings = {
           APP_URL = "https://${cfg.host}";
-          PORT = 80;
+          PORT = 8080;
           TRUST_PROXY = true;
         };
       };

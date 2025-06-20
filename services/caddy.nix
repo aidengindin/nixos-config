@@ -134,7 +134,7 @@ in
 
           ${mkStrIf pocket-id.enable ''
           ${pocket-id.host} {
-            reverse_proxy 192.168.103.11:80
+            reverse_proxy 192.168.103.11:8080
             ${tlsSetup}
           }
           ''}
