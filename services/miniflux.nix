@@ -92,7 +92,7 @@ in {
           CREATE_ADMIN = 0;
           OAUTH2_PROVIDER = "oidc";
           OAUTH2_CLIENT_ID_FILE = "/var/lib/miniflux/secrets/client_id";
-          OAUTH2_CLIENT_SECRET = "/var/lib/miniflux/secrets/client_secret";
+          OAUTH2_CLIENT_SECRET_FILE = "/var/lib/miniflux/secrets/client_secret";
           OAUTH2_REDIRECT_URL = "https://${cfg.host}/oauth2/oidc/callback";
           OAUTH2_OIDC_DISCOVERY_ENDPOINT = "https://${cfg.oidcHost}";
           OAUTH2_OIDC_PROVIDER_NAME = "PocketID";
