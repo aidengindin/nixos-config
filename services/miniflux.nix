@@ -74,8 +74,8 @@ in {
         };
         script = ''
           mkdir -p /var/lib/miniflux/secrets
-          cp /secrets/client_id /var/lib/miniflux/secrets/client_id
-          cp /secrets/client_secret /var/lib/miniflux/secrets/client_secret
+          tr -d '\n' < /secrets/client_id > /var/lib/miniflux/secrets/client_id
+          tr -d '\n' < /secrets/client_secret > /var/lib/miniflux/secrets/client_secret
           chown -R miniflux:miniflux /var/lib/miniflux
           chmod 400 /var/lib/miniflux/secrets/client_*
         '';
