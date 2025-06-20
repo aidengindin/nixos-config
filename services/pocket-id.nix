@@ -30,7 +30,7 @@ in {
     hostAddress = "192.168.103.10";
     localAddress = "192.168.103.11";
     stateVersion = cfg.stateVersion;
-    nixpkgs = unstablePkgs;
+    nixpkgs = unstablePkgs.path;
 
     bindMounts = {
       "${dataDir}" = {
