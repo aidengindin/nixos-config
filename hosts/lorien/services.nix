@@ -100,7 +100,7 @@
       enable = true;
       oauth2ClientIdFile = config.age.secrets.miniflux-client-id.path;
       oauth2ClientSecretFile = config.age.secrets.miniflux-client-secret.path;
-    }
+    };
 
     withings-sync = {
       enable = true;
