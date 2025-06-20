@@ -44,11 +44,11 @@ in {
 
     bindMounts = {
       "/secrets/client_id" = {
-        hostPath = "${cfg.oauth2ClientIdFile.path}";
+        hostPath = "${cfg.oauth2ClientIdFile}";
         isReadOnly = true;
       };
       "/secrets/client_secret" = {
-        hostPath = "${cfg.oauth2ClientSecretFile.path}";
+        hostPath = "${cfg.oauth2ClientSecretFile}";
         isReadOnly = true;
       };
     };
@@ -60,6 +60,7 @@ in {
         enable = true;
         config = {
           PORT = 80;
+          CREATE_ADMIN = "0";
           OAUTH2_PROVIDER = "oidc";
           OAUTH2_CLIENT_ID_FILE = "/secrets/client_id";
           OAUTH2_CLIENT_SECRET = "/secrets/client_secret";
