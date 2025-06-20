@@ -20,6 +20,7 @@ in {
     systemdServices ? {},
     systemdTimers ? {},
     nixpkgs ? null,
+    nixosModules ? null,
   }: {
     systemd.tmpfiles.rules = lib.mapAttrsToList (name: mount:
       "d ${mount.hostPath} 0755 root root -"
@@ -46,6 +47,9 @@ in {
       config = { config, lib, pkgs, ... }: lib.mkMerge [
         (mkIf (nixpkgs != null) {
           nixpkgs.pkgs = nixpkgs;
+        })
+        (mkIf (nixosModules != null) {
+          imports = nixosModules;
         })
         {
           services.timesyncd.enable = true;
