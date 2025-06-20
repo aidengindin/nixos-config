@@ -19,6 +19,7 @@ in {
     extraPackages ? [],
     systemdServices ? {},
     systemdTimers ? {},
+    nixpkgs ? null,
   }: {
     systemd.tmpfiles.rules = lib.mapAttrsToList (name: mount:
       "d ${mount.hostPath} 0755 root root -"
@@ -43,6 +44,9 @@ in {
       inherit hostAddress localAddress;
 
       config = { config, lib, pkgs, ... }: lib.mkMerge [
+        (mkIf (nixpkgs != null) {
+          nixpkgs.pkgs = nixpkgs;
+        })
         {
           services.timesyncd.enable = true;
           system.stateVersion = stateVersion;

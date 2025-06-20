@@ -30,6 +30,7 @@ in {
     hostAddress = "192.168.103.10";
     localAddress = "192.168.103.11";
     stateVersion = cfg.stateVersion;
+    nixpkgs = unstablePkgs;
 
     bindMounts = {
       "${dataDir}" = {
@@ -43,7 +44,6 @@ in {
     extraConfig = {
       services.pocket-id = {
         enable = true;
-        package = unstablePkgs.pocket-id;
         dataDir = "${dataDir}";
         settings = {
           APP_URL = "https://${cfg.host}";
