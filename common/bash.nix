@@ -43,6 +43,8 @@
         export ANTHROPIC_API_KEY="$(cat ${config.age.secrets.codecompanion-anthropic-key.path})"
         export GEMINI_API_KEY="$(cat ${config.age.secrets.codecompanion-gemini-key.path})"
 
+        bind -s 'set completion-ignore-case on'
+
         # Set catppuccin theme for fzf
         export FZF_DEFAULT_OPTS=" \
         --color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
