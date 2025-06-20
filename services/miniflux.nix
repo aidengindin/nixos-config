@@ -60,15 +60,15 @@ in {
         enable = true;
         config = {
           PORT = 80;
-          CREATE_ADMIN = "0";
+          CREATE_ADMIN = 0;
           OAUTH2_PROVIDER = "oidc";
           OAUTH2_CLIENT_ID_FILE = "/secrets/client_id";
           OAUTH2_CLIENT_SECRET = "/secrets/client_secret";
           OAUTH2_REDIRECT_URL = "https://${cfg.host}/oauth2/oidc/callback";
           OAUTH2_OIDC_DISCOVERY_ENDPOINT = "https://${cfg.oidcHost}";
           OAUTH2_OIDC_PROVIDER_NAME = "PocketID";
-          OAUTH2_USER_CREATION = "1";
-          DISABLE_LOCAL_AUTH = "1";
+          OAUTH2_USER_CREATION = 1;
+          DISABLE_LOCAL_AUTH = 1;
         };
       };
     };
