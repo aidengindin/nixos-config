@@ -26,7 +26,7 @@
     "clock": {
       "interval": 1,
       "format": "%a %d %I:%M:%S %p",
-      "format": "⏲ {:%H:%M:%S}"
+      "format": "⏲ {:%H:%M:%S}",
       "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
       "timezone": "America/New_York",
     },

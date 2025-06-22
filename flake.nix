@@ -19,7 +19,7 @@
     
     impermanence.url = "github:nix-community/impermanence";
 
-    nixos-hardware.url = "github:nixos/nixos-hardware/master"
+    nixos-hardware.url = "github:nixos/nixos-hardware/master";
 
     # macos configurations
     darwin = {

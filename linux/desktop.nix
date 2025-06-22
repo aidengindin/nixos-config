@@ -98,7 +98,7 @@ in
     environment.variables = {
       XCURSOR_THEME = "Catppuccin-Mocha-Dark-Cursors";
       XCURSOR_SIZE = "24";
-      GTK_THEME = "catppuccin-mocha-blue";;
+      GTK_THEME = "catppuccin-mocha-blue";
     };
 
     home-manager = {

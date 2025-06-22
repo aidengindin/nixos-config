@@ -1,6 +1,6 @@
 @import "catppuccin-mocha"
 
 configuration {
-  font: "Hasklug Nerd Font 12"
+  font: "Hasklug Nerd Font 12";
 }
 

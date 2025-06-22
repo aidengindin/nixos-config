@@ -35,7 +35,7 @@ let
     "vercel"
     "wiki.nixos.org"
     "wikipedia"
-    "youtube";
+    "youtube"
   ];
 
   lightFlavor = "latte";
@@ -59,16 +59,16 @@ let
       mkdir -p $out
 
       for site in ${pkgs.lib.concatStringsSep " " userstyleSites}; do
-        if [ -d "styles/${site}" ] && [ -f "styles/${site}/catppuccin.user.less" ]; then
-          echo "Compiling ${site}..."
+        if [ -d "styles/$site" ] && [ -f "styles/$site/catppuccin.user.less" ]; then
+          echo "Compiling $site..."
           lessc \
             --modify-var="lightFlavor=${lightFlavor}" \
             --modify-var="darkFlavor=${darkFlavor}" \
             --modify-var="accentColor=${accentColor}" \
-            "styles/${site}/catppuccin.user.less" \
-            "$out/${site}.css"
+            "styles/$site/catppuccin.user.less" \
+            "$out/$site.css"
         else
-          echo "Warning: ${site} not found or missing less file"
+          echo "Warning: $site not found or missing less file"
         fi
       done
     '';
@@ -140,7 +140,7 @@ in
             "reader.color_scheme" = "dark";
 
             # Dark mode settings
-            "ui.systemUsesDarkTheme"
+            "ui.systemUsesDarkTheme" = true;
             "browser.in-content.dark-mode" = true;
             "layout.css.prefers-color-scheme.content-override" = 0;
             "browser.theme.content-theme" = 0;

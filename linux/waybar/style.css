@@ -61,7 +61,7 @@
 #privacy,
 #wireplumber,
 #mpris,
-#hyprland/language,
+#layout,
 #bluetooth,
 #network,
 #battery,
@@ -70,6 +70,7 @@
   background-color: @surface0;
   padding: 0.5rem 1rem;
   margin: 5px 0;
+  border-radius: 1rem;
 }
 
 #battery {
@@ -80,7 +81,7 @@
   color: @green;
 }
 
-@battery.warning:not(.charging) {
+#battery.warning:not(.charging) {
   color: @red;
 }
 
