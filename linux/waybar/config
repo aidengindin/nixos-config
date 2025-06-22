@@ -5,7 +5,7 @@
     "name": "top_bar",
     "layer": "top",
     "position": "top",
-    "height": 36,
+    "height": 24,
     "spacing": 4,
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
     "modules-right": ["idle_inhibitor", "privacy", "wireplumber", "mpris", "hyprland/language", "bluetooth", "network", "battery", "clock", "custom/power"],

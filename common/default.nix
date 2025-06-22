@@ -26,11 +26,10 @@
   ];
 
   config = {
-    users.users.agindin = {
-      name = "agindin";
-    };
     environment.systemPackages = with pkgs; [
       jq
     ];
+
+    home-manager.users.agindin.programs.home-manager.enable = true;
   };
 }

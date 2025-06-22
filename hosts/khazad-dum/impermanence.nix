@@ -1,16 +1,30 @@
 { config, pkgs, ... }:
 {
   # Fix home directory permissions on boot
-  systemd.services.fix-home-permissions = {
-    description = "Fix home directory permissions";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "local-fs.target" ];
-    before = [ "display-manager.service" ];
-    
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.coreutils}/bin/chown -R agindin:users /home/agindin'";
+  systemd.services = {
+    fix-home-permissions = {
+      description = "Fix home directory permissions";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "local-fs.target" ];
+      before = [ "display-manager.service" ];
+      
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.coreutils}/bin/chown -R agindin:users /home/agindin'";
+      };
     };
+
+    # home-manager-activate = {
+    #   description = "Set up Home Manager for agindin on boot";
+    #   wantedBy = [ "multi-user.target" ];
+    #   after = [ "local-fs.target" "persist-home-agindin-.local-state.mount" ];
+    #   before = [ "display-manager.service" ];
+    #   serviceConfig = {
+    #     Type = "oneshot";
+    #     User = "agindin";
+    #     ExecStart = "${pkgs.bash}/bin/bash -c 'cd /home/agindin && ${config.home-manager.users.agindin.home.activationPackage}/activate'";
+    #   };
+    # };
   };
   
   environment.persistence."/persist" = {
@@ -27,11 +41,6 @@
     ];
     files = [
       "/etc/machine-id"
-      "/etc/passwd"
-      "/etc/group"
-      "/etc/shadow"
-      "/etc/subuid"
-      "/etc/subgid"
       "/etc/adjtime"
       "/etc/ssh/ssh_host_ed25519_key"
       "/etc/ssh/ssh_host_ed25519_key.pub"
@@ -49,6 +58,8 @@
         ".local/share"
         ".local/state"
         ".cache"
+        ".mozilla"
+        ".claude"
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; }
       ];

@@ -33,6 +33,13 @@ in
       ];
     };
 
+    services.libinput = {
+      enable = true;
+      touchpad = {
+        naturalScrolling = true;
+      };
+    };
+
     programs.hyprlock.enable = true;
     services.hypridle.enable = true;
 
@@ -132,6 +139,7 @@ in
         xdg.configFile = {
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
+          "hypr/hyprpaper.conf".source = ./hypr/hyprpaper.conf;
           "hypr/mocha.conf".source = ./hypr/mocha.conf;
 
           "swaync/config.json".source = ./swaync/config.json;
@@ -151,6 +159,7 @@ in
 
           "rofi/config.rasi".source = ./rofi/config.rasi;
           "rofi/catppuccin-mocha.rasi".source = ./rofi/catppuccin-mocha.rasi;
+          "rofi/catppuccin-default.rasi".source = ./rofi/catppuccin-default.rasi;
 
           "wlogout/style.css".source = ./wlogout/style.css;
           "wlogout/lock.svg".source = ./wlogout/lock.svg;
@@ -183,6 +192,9 @@ in
       swaynotificationcenter
       waybar
       wlogout
+      wl-clipboard
+
+      glib
 
       anki
       bitwarden

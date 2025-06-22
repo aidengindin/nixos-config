@@ -9,14 +9,6 @@ in
     ];
 
   boot.kernelPackages = unstablePkgs.linuxPackages_6_15;
-  boot.kernelParams = [
-    "amd_pstate=active"
-    "amdgpu.runpm=0"
-    "processor.max_cstate=1"
-    "pcie_aspm=off"
-    "amd_iommu=on"
-    "iommu=pt"
-  ];
 
   hardware.graphics.package = unstablePkgs.mesa;
   
