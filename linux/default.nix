@@ -1,8 +1,10 @@
 { config, pkgs, agenix, ... }:
 {
   imports = [
+    ./bluetooth.nix
     ./containers.nix
     ./desktop.nix
+    ./fingerprint.nix
     ./firefox.nix
     ./gamingOptimizations.nix
     ./librewolf.nix
@@ -30,6 +32,10 @@
         };
       };
     };
+
+    environment.systemPackages = with pkgs; [
+      lm_sensors
+    ];
   };
 }
 

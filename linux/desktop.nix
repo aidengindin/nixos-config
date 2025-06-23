@@ -58,58 +58,8 @@ in
       lidSwitchDocked = "ignore";
     };
 
-    systemd.user.services.lock-on-suspend = {
-      description = "Lock screen before suspend";
-      before = [ "sleep.target" ];
-      wantedBy = [ "sleep.target" ];
-      serviceConfig = {
-        Type = "forking";
-        ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
-        TimeoutSec = "infinity";
-        Environment = [
-          "WAYLAND_DISPLAY=wayland-1"
-          "XDG_SESSION_TYPE=wayland"
-          "XDG_CURRENT_DESKTOP=Hyprland"
-          "XDG_RUNTIME_DIR=/run/user/1000"
-        ];
-        PAMName = "login";
-        
-        # Security hardening
-        MemoryMax = "256M";
-        TasksMax = 50;
-        NoNewPrivileges = true;
-        # RestrictRealtime = true;
-        # RestrictSUIDGUID = true;
-        # ProtectSystem = "strict";
-        # ProtectHome = false;
-        # ReadWritePaths = [
-        #   "/dev/input"
-        #   "/sys/class/backlight"
-        # ];
-        PrivateNetwork = true;
-        # RestrictNamespaces = true;
-        # LockPersonality = true;
-        # RestrictAddressFamilies = [ "AF_UNIX" ];
-        # SystemCallArchitectures = "native";
-        # SystemCallFilter = [
-        #   "@system-service"
-        #   "~@privileged"
-        #   "~@resources"
-        #   "~@mount"
-        # ];
-        # CapabilityBoundingSet = "";
-        # AmbientCapabilities = "";
-      };
-    };
-
     programs.dconf.enable = true;
     services.dbus.enable = true;
-
-    # environment.variables = {
-    #   XCURSOR_THEME = "Catppuccin-Mocha-Dark-Cursors";
-    #   XCURSOR_SIZE = "24";
-    #   GTK_THEME = "catppuccin-mocha-blue-compact";
-    # };
 
     home-manager = {
       users.agindin = {
@@ -160,6 +110,7 @@ in
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
           "hypr/hyprpaper.conf".source = ./hypr/hyprpaper.conf;
+          "hypr/hyprlock.conf".source = ./hypr/hyprlock.conf;
           "hypr/mocha.conf".source = ./hypr/mocha.conf;
 
           "swaync/config.json".source = ./swaync/config.json;

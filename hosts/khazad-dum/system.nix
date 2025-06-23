@@ -22,6 +22,8 @@ in
   };
 
   agindin.desktop.enable = true;
+  agindin.bluetooth.enable = true;
+  agindin.fingerprint.enable = true;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
