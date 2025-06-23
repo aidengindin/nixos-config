@@ -7,6 +7,7 @@
     ./fingerprint.nix
     ./firefox.nix
     ./gamingOptimizations.nix
+    ./kanata.nix
     ./librewolf.nix
     ./locale.nix
     ./network.nix

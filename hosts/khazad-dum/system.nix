@@ -25,6 +25,11 @@ in
   agindin.bluetooth.enable = true;
   agindin.fingerprint.enable = true;
 
+  agindin.kanata = {
+    enable = true;
+    keyboardDevices = [ "/dev/input/by-path/platform-i8042-serio-0-event-kbd" ];
+  };
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
