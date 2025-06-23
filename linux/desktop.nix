@@ -102,24 +102,31 @@ in
       };
     };
 
-    environment.variables = {
-      XCURSOR_THEME = "Catppuccin-Mocha-Dark-Cursors";
-      XCURSOR_SIZE = "24";
-      GTK_THEME = "catppuccin-mocha-blue";
-    };
+    programs.dconf.enable = true;
+    services.dbus.enable = true;
+
+    # environment.variables = {
+    #   XCURSOR_THEME = "Catppuccin-Mocha-Dark-Cursors";
+    #   XCURSOR_SIZE = "24";
+    #   GTK_THEME = "catppuccin-mocha-blue-compact";
+    # };
 
     home-manager = {
       users.agindin = {
         gtk = {
           enable = true;
-          cursorTheme = {
-            name = "Catppuccin-Mocha-Dark-Cursors";
-            package = pkgs.catppuccin-cursors.mochaDark;
-            size = 24;
-          };
+          # cursorTheme = {
+          #   name = "Catppuccin-Mocha-Dark-Cursors";
+          #   package = pkgs.catppuccin-cursors.mochaDark;
+          #   size = 24;
+          # };
           theme = {
-            name = "catppuccin-mocha-blue";
-            package = pkgs.catppuccin-gtk;
+            name = "catppuccin-mocha-blue-compact";
+            package = pkgs.catppuccin-gtk.override {
+              variant = "mocha";
+              accents = [ "blue" ];
+              size = "compact";
+            };
           };
           font = {
             name = "Noto Sans";
@@ -134,6 +141,19 @@ in
             name = "catppuccin-mocha-blue";
             package = pkgs.catppuccin-qt5ct;
           };
+        };
+
+        home.pointerCursor = {
+          enable = true;
+          name = "catppuccin-mocha-dark-cursors";
+          package = pkgs.catppuccin-cursors.mochaDark;
+          size = 24;
+          hyprcursor = {
+            enable = true;
+            size = 24;
+          };
+          gtk.enable = true;
+          x11.enable = true;
         };
 
         xdg.configFile = {
@@ -182,7 +202,7 @@ in
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       brightnessctl
-      catppuccin-cursors.mochaDark
+      # catppuccin-cursors.mochaDark
       hyprpaper
       hyprshot
       iwgtk
@@ -195,6 +215,7 @@ in
       wl-clipboard
 
       glib
+      gsettings-desktop-schemas
 
       anki
       bitwarden

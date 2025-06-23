@@ -14,6 +14,12 @@
       };
     };
 
+    # Ensure Home Manager activates after filesystem mounts
+    home-manager-agindin = {
+      after = [ "local-fs.target" "fix-home-permissions.service" ];
+      wants = [ "fix-home-permissions.service" ];
+    };
+
     # home-manager-activate = {
     #   description = "Set up Home Manager for agindin on boot";
     #   wantedBy = [ "multi-user.target" ];
