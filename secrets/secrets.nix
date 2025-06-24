@@ -28,8 +28,8 @@ in
   "searxng-secret-key.age".publicKeys = [ lorienHost lorienUser ];
   "aiden-garmin-password.age".publicKeys = [ lorienHost lorienUser ];
   "ally-garmin-password.age".publicKeys = [ lorienHost lorienUser ];
-  "codecompanion-anthropic-key.age".publicKeys = [ lorienUser shadowfaxUser ];
-  "codecompanion-gemini-key.age".publicKeys = [ lorienUser shadowfaxUser ];
+  "codecompanion-anthropic-key.age".publicKeys = [ lorienUser shadowfaxUser khazad-dumUser ];
+  "codecompanion-gemini-key.age".publicKeys = [ lorienUser shadowfaxUser khazad-dumUser ];
   "miniflux-client-id.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
   "miniflux-client-secret.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
 }
