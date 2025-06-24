@@ -156,6 +156,7 @@ in
       # catppuccin-cursors.mochaDark
       hyprpaper
       hyprshot
+      hyprsunset
       iwgtk
       libnotify
       overskride

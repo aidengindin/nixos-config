@@ -188,78 +188,19 @@ in
               installation_mode = "force_installed";
               install_url = "https://addons.mozilla.org/firefox/downloads/latest/wallabagger/latest.xpi";
             };
-            # Catppuccin theme - shouldn't be needed with custom user chrome
-            "{2adf0361-e6d8-4b74-b3bc-3f450e8ebb69}" = {
+            # uBlock Origin
+            "uBlock0@raymondhill.net" = {
               installation_mode = "force_installed";
-              install_url = "https://addons.mozilla.org/firefox/downloads/latest/catppuccin-mocha-blue-git/latest.xpi";
+              install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
             };
           };
-          # Preferences = {
-          #   # Enable custom user chrome - crucial for userChrome.css
-          #   "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
-          #   
-          #   # Force enable CSS customization
-          #   "devtools.chrome.enabled" = true;
-          #   "browser.devedition.theme.enabled" = true;
-          #   "legacy.preprocessor.enabled" = true;
-
-          #   # Soften built-in privacy protections for better usability
-          #   "webgl.disabled" = false;
-          #   "privacy.clearOnShutdown.history" = false;
-          #   "privacy.clearOnShutdown.cookies" = false;
-          #   "privacy.resistFingerprinting" = false;
-          #   "privacy.fingerprintingProtection" = true;
-          #   "privacy.fingerprintingProtection.overrides" = "+AllTargets,-CSSPrefersColorScheme,-JSDateTimeUTC";
-
-          #   "reader.color_scheme" = "dark";
-
-          #   # Dark mode settings
-          #   "ui.systemUsesDarkTheme" = 1; # Use integer instead of boolean
-          #   "browser.in-content.dark-mode" = true;
-          #   "layout.css.prefers-color-scheme.content-override" = 0;
-          #   "browser.theme.content-theme" = 0;
-          #   "browser.theme.toolbar-theme" = 0;
-
-          #   # Download behavior
-          #   "browser.download.useDownloadDir" = true; # Always ask where to save
-          #   
-          #   # New tab and homepage
-          #   "browser.startup.page" = 3; # Restore previous session
-          #   "browser.newtabpage.enabled" = false; # Blank new tab
-          #   "browser.newtabpage.activity-stream.showSponsored" = false;
-          #   "browser.newtabpage.activity-stream.showSponsoredTopSites" = false;
-          #   
-          #   # Search suggestions
-          #   "browser.search.suggest.enabled" = true;
-          #   "browser.urlbar.suggest.searches" = true;
-          #   
-          #   # Disable autofill and passwords
-          #   "signon.rememberSignons" = false;
-          #   "signon.autofillForms" = false;
-          #   "signon.generation.enabled" = false;
-          #   
-          #   # Performance
-          #   "gfx.webrender.all" = true; # Force WebRender
-          #   "layers.acceleration.force-enabled" = true;
-          #   
-          #   # Disable annoying features
-          #   "browser.aboutConfig.showWarning" = false;
-          #   "browser.shell.checkDefaultBrowser" = false;
-          #   "browser.disableResetPrompt" = true;
-
-          #   # Enable DRM
-          #   "media.eme.enabled" = true;
-          # };
         };
       };
 
       xdg.configFile = {
         "tridactyl/tridactylrc".source = ./firefox/tridactyl/tridactylrc;
-        "tridactyl/themes/catppuccin/mocha.css".source = ./firefox/tridactyl/mocha.css;
+        "tridactyl/themes/mocha/mocha.css".source = ./firefox/tridactyl/mocha.css;
       };
-      
-      # Try adding the userChrome.css to the Firefox installation directory as well
-      home.file.".local/share/firefox/chrome/userChrome.css".source = ./firefox/user-chrome.css;
     };
   };
 }
