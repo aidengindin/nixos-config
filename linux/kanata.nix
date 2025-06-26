@@ -18,19 +18,7 @@ in {
       keyboards = {
         laptop = {
           devices = cfg.keyboardDevices;
-          config = ''
-            (defsrc
-              caps a s d f j k l ;
-            )
-
-            (deflayer base
-              @cap a s d f j k l ;
-            )
-
-            (defalias
-              cap (tap-hold 200 200 esc lctl)
-            )
-          '';
+          config = builtins.readFile ./kanata/config.kbd;
         };
       };
     };
