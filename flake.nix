@@ -37,6 +37,11 @@
       url = "github:artur-shaik/wallabag-client";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    zwift = {
+      url = "github:netbrain/zwift";
+      inputs.nixpkgs.follows = "unstable";
+    };
  };
 
   outputs = {
@@ -50,7 +55,8 @@
     nixos-hardware,
     darwin,
     agenix,
-    wallabag-client
+    wallabag-client,
+    zwift
     }:
     let
 
@@ -89,6 +95,7 @@
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
+            zwift.nixosModules.zwift
             ./hosts/khazad-dum
           ];
         };

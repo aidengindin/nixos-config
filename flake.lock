@@ -225,7 +225,8 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
         "unstable": "unstable",
-        "wallabag-client": "wallabag-client"
+        "wallabag-client": "wallabag-client",
+        "zwift": "zwift"
       }
     },
     "systems": {
@@ -292,6 +293,26 @@
       "original": {
         "owner": "artur-shaik",
         "repo": "wallabag-client",
+        "type": "github"
+      }
+    },
+    "zwift": {
+      "inputs": {
+        "nixpkgs": [
+          "unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1750582313,
+        "narHash": "sha256-VBSV8gDfDlp3Wuxqekg7AJRijuUsxzUjDK5heEWK+o8=",
+        "owner": "netbrain",
+        "repo": "zwift",
+        "rev": "a2f051b640d07ded48a3fe662adc6a84c07b3d29",
+        "type": "github"
+      },
+      "original": {
+        "owner": "netbrain",
+        "repo": "zwift",
         "type": "github"
       }
     }

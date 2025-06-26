@@ -13,6 +13,7 @@
     ./network.nix
     ./nix.nix
     ./ssh.nix
+    ./zwift.nix
   ];
 
   config = {

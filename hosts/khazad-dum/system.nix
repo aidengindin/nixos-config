@@ -48,6 +48,7 @@ in
 
   services.fwupd.enable = true;
   
+  agindin.zwift.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ 9001 3000 5580 10400 ];
