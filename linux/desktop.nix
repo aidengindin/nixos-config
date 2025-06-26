@@ -154,12 +154,12 @@ in
     environment.systemPackages = with pkgs; [
       brightnessctl
       # catppuccin-cursors.mochaDark
+      cliphist
       hyprpaper
       hyprshot
       hyprsunset
-      iwgtk
       libnotify
-      overskride
+      playerctl
       rofi-wayland
       swaynotificationcenter
       waybar
