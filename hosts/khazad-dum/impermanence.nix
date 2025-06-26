@@ -19,18 +19,6 @@
       after = [ "local-fs.target" "fix-home-permissions.service" ];
       wants = [ "fix-home-permissions.service" ];
     };
-
-    # home-manager-activate = {
-    #   description = "Set up Home Manager for agindin on boot";
-    #   wantedBy = [ "multi-user.target" ];
-    #   after = [ "local-fs.target" "persist-home-agindin-.local-state.mount" ];
-    #   before = [ "display-manager.service" ];
-    #   serviceConfig = {
-    #     Type = "oneshot";
-    #     User = "agindin";
-    #     ExecStart = "${pkgs.bash}/bin/bash -c 'cd /home/agindin && ${config.home-manager.users.agindin.home.activationPackage}/activate'";
-    #   };
-    # };
   };
   
   environment.persistence."/persist" = {
@@ -86,5 +74,10 @@
     btrfs subvolume create /mnt/home
     umount /mnt
   '';
+
+  age.identityPaths = [
+    "/persist/etc/ssh/ssh_host_ed25519_key"
+    "/persist/home/agindin/.ssh/id_ed25519"
+  ];
 }
 
