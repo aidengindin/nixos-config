@@ -67,10 +67,10 @@
 #battery,
 #clock,
 #custom-power {
-  background-color: @surface0;
+  /* background-color: @surface0; */
   padding: 0.5rem 1rem;
   margin: 5px 0;
-  border-radius: 1rem;
+  /* border-radius: 1rem; */
 }
 
 #battery {
