@@ -9,7 +9,6 @@
     ./gamingOptimizations.nix
     ./hyprsunset.nix
     ./kanata.nix
-    ./librewolf.nix
     ./locale.nix
     ./network.nix
     ./nix.nix

@@ -7,7 +7,7 @@
   agindin = {
     kitty.enable = true;
     latex.enable = true;
-    librewolf.enable = true;
+    firefox.enable = true;
     mpv.enable = true;
     neomutt.enable = true;
     spotify.enable = true;
