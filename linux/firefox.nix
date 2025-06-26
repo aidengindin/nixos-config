@@ -13,14 +13,14 @@ let
     "crates.io"
     "docs.rs"
     "duckduckgo"
-    "freedesktop.org"
+    # "freedesktop.org"
     "github"
     "google"
     "google-drive"
     "hackage"
     "hacker-news"
     "instagram"
-    "lichess"
+    # "lichess"
     "linkedin"
     "mdn"
     "nixos-manual"
@@ -31,18 +31,18 @@ let
     "reddit"
     "react.dev"
     "substack"
-    "twitter"
+    # "twitter"
     "vercel"
-    "wiki.nixos.org"
+    # "wiki.nixos.org"
     "wikipedia"
-    "youtube"
+    # "youtube"
   ];
 
   lightFlavor = "latte";
   darkFlavor = "mocha";
   accentColor = "blue";
 
-  catppuccinUserstyles = pkgs.stdenv.mkderivation {
+  catppuccinUserstyles = pkgs.stdenv.mkDerivation {
     name = "catppuccin-userstyles";
     version = "unstable";
 
@@ -50,7 +50,7 @@ let
       owner = "catppuccin";
       repo = "userstyles";
       rev = "714b153c7022c362a37ab8530286a87e4484a828";
-      hash = "1ax46dh3g9fdsm30bv8irwrlcbrgjp2dhi2v9lnm6pz0hy5kzgjq";
+      hash = "sha256-lftRs+pfcOrqHDtDWX/Vd/CQvDJguCRxlhI/aIkIB/k=";
     };
 
     nativeBuildInputs = [ pkgs.lessc ];
@@ -94,9 +94,9 @@ in
           isDefault = true;
           userChrome = builtins.readFile ./firefox/user-chrome.css;
           # Disabled for now
-          # userContent = pkgs.lib.concatMapStringsSep "\n\n"
-          #   (site: builtins.readFile "${catppuccinUserstyles}/${site}.css")
-          #   userstyleSites;
+          userContent = pkgs.lib.concatMapStringsSep "\n\n"
+            (site: builtins.readFile "${catppuccinUserstyles}/${site}.css")
+            userstyleSites;
           
           # Moving preferences from policies.Preferences to profile settings
           settings = {
