@@ -131,7 +131,6 @@
       "format": "{icon} {volume}%",
       "format-muted": "󰝟",
       "format-icons": ["󰕿", "󰖀", "󰕾"],
-      "on-click": "pavucontrol",
       "max-volume": 100
     },
 

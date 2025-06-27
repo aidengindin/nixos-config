@@ -30,11 +30,17 @@ notify_volume() {
     fi
 }
 
+increase_volume() {
+  if [[ "$(get_volume)" -lt "100" ]]; then
+    wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+  fi
+}
+
 # Main
 case "$1" in
     up)
         wpctl set-mute @DEFAULT_AUDIO_SINK@ 0  # Unmute first
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+        increase_volume
         notify_volume
         ;;
     down)
