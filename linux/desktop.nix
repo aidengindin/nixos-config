@@ -106,6 +106,44 @@ in
           x11.enable = true;
         };
 
+        services.swaync = {
+          enable = true;
+          style = builtins.readFile ./swaync/style.css;
+          settings = {
+            notification-icon-size =  48;
+            notification-body-image-height =  100;
+            notification-body-image-width =  200;
+            timeout =  2;
+            timeout-low =  2;
+            timeout-critical =  0;
+            notification-window-width =  300;
+            keyboard-shortcuts =  true;
+            image-visibility =  "when-available";
+            transition-time =  200;
+            hide-on-clear =  true;
+            hide-on-action =  true;
+            widgets =  [
+              "title"
+              "dnd"
+              "notifications"
+            ];
+            widget-config =  {
+              title =  {
+                text =  "Notifications";
+                clear-all-button =  true;
+                button-text =  "Clear All";
+              };
+              dnd =  {
+                text =  "Do Not Disturb";
+              };
+              mpris =  {
+                image-size =  96;
+                blur =  true;
+              };
+            };
+          };
+        };
+
         xdg.configFile = {
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
@@ -113,8 +151,8 @@ in
           "hypr/hyprlock.conf".source = ./hypr/hyprlock.conf;
           "hypr/mocha.conf".source = ./hypr/mocha.conf;
 
-          "swaync/config.json".source = ./swaync/config.json;
-          "swaync/style.css".source = ./swaync/style.css;
+          # "swaync/config.json".source = ./swaync/config.json;
+          # "swaync/style.css".source = ./swaync/style.css;
 
           "waybar/config".source = ./waybar/config;
           "waybar/style.css".source = ./waybar/style.css;
