@@ -37,7 +37,13 @@
 
     environment.systemPackages = with pkgs; [
       lm_sensors
+      (lib.hiPrio pkgs.uutils-coreutils-noprefix)
     ];
+
+    security.sudo-rs = {
+      enable = true;
+      execWheelOnly = true;
+    };
   };
 }
 
