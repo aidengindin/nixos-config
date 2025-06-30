@@ -28,9 +28,11 @@
       "/var/log"
       "/var/lib/bluetooth"
       "/var/lib/systemd/coredump"
-      "/var/lib/nixos"
       "/var/lib/systemd/timers"
+      "/var/lib/systemd/catalog"
+      "/var/lib/nixos"
       "/var/lib/fprint"
+      "/var/lib/tailscale"
       "/etc/NetworkManager/system-connections"
     ];
     files = [
@@ -48,30 +50,58 @@
         "Documents"
         "Videos"
         "code"
-        ".config"
-        ".local/share"
-        ".local/state"
-        ".cache"
+        ".config/Bitwarden"
+        ".config/chromium"
+        ".config/qt5ct"
+        ".config/qt6ct"
+        ".config/kdeconnect"
+        ".local/share/Anki2"
+        ".local/share/atuin"
+        ".local/share/flatpak"
+        ".local/share/nvim"
+        ".local/share/zoxide"
+        ".local/share/containers"
+        ".local/state/nvim"
+        ".local/state/wireplumber"
+        ".cache/nix"
         ".mozilla"
         ".claude"
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; }
       ];
-      files = [];
+      files = [
+        ".cache/spotify-player/credentials.json"
+        ".config/nvim/lazy-lock.json"
+      ];
     };
   };
 
   boot.initrd.postDeviceCommands = ''
     mkdir -p /mnt
     mount -o subvol=/ /dev/mapper/cryptroot /mnt
+
+    # Unmount nested subvolumes
+    for dir in home nix persist; do
+      umount "/mnt/root/$dir" 2>/dev/null || true
+    done
+
+    # Delete automatically created nested subvolumes
+    for subvol in srv var/lib/portables var/lib/machines tmp var/tmp; do
+      btrfs subvolume delete --commit-after "/mnt/root/$subvol" 2>/dev/null || true
+    done
+
+    # Delete subvolumes
     if [ -e /mnt/root ]; then
-      btrfs subvolume delete /mnt/root
+      btrfs subvolume delete --commit-after /mnt/root
     fi
     if [ -e /mnt/home ]; then
-      btrfs subvolume delete /mnt/home
+      btrfs subvolume delete --commit-after /mnt/home
     fi
+
+    # Create empty subvolumes
     btrfs subvolume create /mnt/root
     btrfs subvolume create /mnt/home
+
     umount /mnt
   '';
 
