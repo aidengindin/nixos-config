@@ -5,7 +5,7 @@
     "name": "top_bar",
     "layer": "top",
     "position": "top",
-    "height": 12,
+    "height": 44,
     "spacing": 4,
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
     "modules-right": ["privacy", "mpris", "idle_inhibitor", "wireplumber", "hyprland/language", "cpu", "memory", "bluetooth", "network", "custom/weather", "battery", "clock"],
@@ -26,7 +26,7 @@
     "clock": {
       "interval": 1,
       "format": "%a %d %I:%M:%S %p",
-      "format": "⏲ {:%H:%M:%S}",
+      "format": " {:%I:%H:%S %p}",
       "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
       "timezone": "America/New_York",
       "on-click": "swaync-client -t",
@@ -47,7 +47,7 @@
     },
 
     "network": {
-      "format": "󰤭",
+      "format": "󰤮",
       "format-wifi": "{icon}",
       "format-icons": [ "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" ],
       "format-disconnected": "󰤫 ",
@@ -80,10 +80,11 @@
       "max-length": 50,
       "separate-outputs": true,
       "rewrite": {
-        "(.*) - Mozilla Firefox": "󰈹 $1",
-        "(.*) - LibreWolf": "󰈹 $1",
-        "(.*) - VS Code": "󰨞 $1",
-        "kitty(.*)": "󰞷 $1"
+        "(.*) — Mozilla Firefox": "󰈹 $1",
+        "(.*) — Chromium": " $1",
+        "(.*) — mpv": " $1",
+        "kitty": " ",
+        "spotify_player": " ",
       }
     },
 
