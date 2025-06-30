@@ -61,6 +61,8 @@ in
     programs.dconf.enable = true;
     services.dbus.enable = true;
 
+    programs.kdeconnect.enable = true;
+
     home-manager = {
       users.agindin = {
         gtk = {
@@ -87,10 +89,7 @@ in
 
         qt = {
           enable = true;
-          style = {
-            name = "catppuccin-mocha-blue";
-            package = pkgs.catppuccin-qt5ct;
-          };
+          platformTheme.name = "qtct";
         };
 
         home.pointerCursor = {
@@ -144,7 +143,9 @@ in
           };
         };
 
-        xdg.configFile = {
+        xdg.configFile = let
+          catppuccinQtColors = "${pkgs.catppuccin-qt5ct}/share/qt5ct/colors";
+        in {
           "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
           "hypr/hyprpaper.conf".source = ./hypr/hyprpaper.conf;
@@ -176,6 +177,15 @@ in
           "wlogout/hibernate.svg".source = ./wlogout/logout.svg;
           "wlogout/shutdown.svg".source = ./wlogout/shutdown.svg;
           "wlogout/reboot.svg".source = ./wlogout/reboot.svg;
+
+          "qt5ct/colors" = {
+            source = catppuccinQtColors;
+            recursive = true;
+          };
+          "qt6ct/colors" = {
+            source = catppuccinQtColors;
+            recursive = true;
+          };
         };
 
         home.file = {
@@ -203,9 +213,14 @@ in
       waybar
       wlogout
       wl-clipboard
+      wttrbar
 
       glib
       gsettings-desktop-schemas
+
+      catppuccin-qt5ct
+      libsForQt5.qt5ct
+      kdePackages.qt6ct
 
       anki
       bitwarden

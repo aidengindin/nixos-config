@@ -27,12 +27,19 @@
 
 * {
   font-family: "Hasklug Nerd Font";
+  font-size: 14px;
 }
 
 #waybar {
   background: transparent;
   color: @text;
   margin: 5px 5px;
+}
+
+tooltip {
+  border-radius: 1rem;
+  background-color: @base;
+  color: @text;
 }
 
 #workspaces {
@@ -57,6 +64,25 @@
   border-radius: 1rem;
 }
 
+#submap {
+  color: @base;
+  border-radius: 1rem;
+  margin: 5px;
+  padding: 0.5rem 1rem;
+}
+
+#submap.screenshot {
+  background-color: @maroon;
+}
+
+#submap.move {
+  background-color: @teal;
+}
+
+#submap.resize {
+  background-color: @lavender;
+}
+
 #idle_inhibitor,
 #privacy,
 #wireplumber,
@@ -66,11 +92,14 @@
 #network,
 #battery,
 #clock,
-#custom-power {
-  /* background-color: @surface0; */
+#cpu,
+#memory,
+#language,
+#custom-weather {
+  background-color: @surface0;
   padding: 0.5rem 1rem;
   margin: 5px 0;
-  /* border-radius: 1rem; */
+  border-radius: 1rem;
 }
 
 #battery {
