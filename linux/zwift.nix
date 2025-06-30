@@ -12,6 +12,7 @@ in {
       enable = true;
       containerTool = "docker";
       wineExperimentalWayland = true;
+      networking = "host";
     };
   };
 }
