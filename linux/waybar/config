@@ -8,7 +8,7 @@
     "height": 44,
     "spacing": 4,
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
-    "modules-right": ["privacy", "mpris", "idle_inhibitor", "wireplumber", "hyprland/language", "cpu", "memory", "bluetooth", "network", "custom/weather", "battery", "clock"],
+    "modules-right": ["privacy", "mpris", "idle_inhibitor", "wireplumber", "hyprland/language", "temperature", "cpu", "memory", "bluetooth", "network", "custom/weather", "battery", "clock"],
 
     "hyprland/workspaces": {
       "sort-by": "name",
@@ -25,8 +25,7 @@
 
     "clock": {
       "interval": 1,
-      "format": "%a %d %I:%M:%S %p",
-      "format": " {:%I:%H:%S %p}",
+      "format": " {:%I:%M:%S %p}",
       "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
       "timezone": "America/New_York",
       "on-click": "swaync-client -t",
@@ -71,7 +70,7 @@
       "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
       "format-charging": "󰂄 {capacity}%",
       "format-plugged": "󰚥 {capacity}%",
-      "tooltip-format": "{capacity}% - {timeTo}",
+      "tooltip-format": "{capacity}% - {timeTo}\nPower draw: {power:0.1f} W\nHealth: {health}%",
       "max-length": 25
     },
 
@@ -117,11 +116,6 @@
           "tooltip-icon-size": 24
         },
         {
-          "type": "audio-out",
-          "tooltip": true,
-          "tooltip-icon-size": 24
-        },
-        {
           "type": "audio-in",
           "tooltip": true,
           "tooltip-icon-size": 24
@@ -140,15 +134,21 @@
       "format": "{player_icon}",
       "format-paused": "{status_icon}",
       "player-icons": {
-        "default": "▶",
+        "default": "󰐊",
         "spotify_player": "󰓇",
         "mpv": "󰎁"
       },
       "status-icons": {
-        "paused": "⏸"
+        "paused": "󰏤"
       },
       "ignored-players": ["firefox"],
       "max-length": 40
+    },
+
+    "temperature": {
+      "thermal-zone": 3,
+      "critical-threshold": 85,
+      "format": " {temperatureC}°",
     },
 
     "cpu": {

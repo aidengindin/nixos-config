@@ -32,4 +32,5 @@ in
   "codecompanion-gemini-key.age".publicKeys = [ lorienUser shadowfaxUser khazad-dumUser ];
   "miniflux-client-id.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
   "miniflux-client-secret.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
+  "startmail-password.age".publicKeys = [ lorienUser khazad-dumHost khazad-dumUser ];
 }
