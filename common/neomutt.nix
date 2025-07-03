@@ -37,8 +37,8 @@ in {
           folders = {
             inbox = "INBOX";
             drafts = "Drafts";
-            sent = "Sent";
-            trash = "Trash";
+            sent = "Sent Messages";
+            trash = "Deleted Messages";
           };
           neomutt = {
             enable = true;
