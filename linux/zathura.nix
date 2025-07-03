@@ -1,6 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.agindin.desktop;
+  inherit (lib) mkIf;
 in {
   config = mkIf cfg.enable {
     home-manager.users.agindin = {

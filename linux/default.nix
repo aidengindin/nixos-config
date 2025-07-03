@@ -13,6 +13,7 @@
     ./network.nix
     ./nix.nix
     ./ssh.nix
+    ./zathura.nix
     ./zwift.nix
   ];
 
