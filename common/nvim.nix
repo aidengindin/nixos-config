@@ -21,6 +21,9 @@
       fzf
       tree-sitter
       gcc
+      python313
+      lua51Packages.lua
+      lua51Packages.luarocks
     ];
   };
 }
