@@ -67,11 +67,6 @@ in
       users.agindin = {
         gtk = {
           enable = true;
-          # cursorTheme = {
-          #   name = "Catppuccin-Mocha-Dark-Cursors";
-          #   package = pkgs.catppuccin-cursors.mochaDark;
-          #   size = 24;
-          # };
           theme = {
             name = "catppuccin-mocha-blue-compact";
             package = pkgs.catppuccin-gtk.override {
@@ -152,9 +147,6 @@ in
           "hypr/hyprlock.conf".source = ./hypr/hyprlock.conf;
           "hypr/mocha.conf".source = ./hypr/mocha.conf;
 
-          # "swaync/config.json".source = ./swaync/config.json;
-          # "swaync/style.css".source = ./swaync/style.css;
-
           "waybar/config".source = ./waybar/config;
           "waybar/style.css".source = ./waybar/style.css;
 
@@ -170,13 +162,6 @@ in
           "rofi/config.rasi".source = ./rofi/config.rasi;
           "rofi/catppuccin-mocha.rasi".source = ./rofi/catppuccin-mocha.rasi;
           "rofi/catppuccin-default.rasi".source = ./rofi/catppuccin-default.rasi;
-
-          "wlogout/style.css".source = ./wlogout/style.css;
-          "wlogout/lock.svg".source = ./wlogout/lock.svg;
-          "wlogout/suspend.svg".source = ./wlogout/suspend.svg;
-          "wlogout/hibernate.svg".source = ./wlogout/logout.svg;
-          "wlogout/shutdown.svg".source = ./wlogout/shutdown.svg;
-          "wlogout/reboot.svg".source = ./wlogout/reboot.svg;
 
           "qt5ct/colors" = {
             source = catppuccinQtColors;
@@ -201,7 +186,6 @@ in
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       brightnessctl
-      # catppuccin-cursors.mochaDark
       cliphist
       hyprpaper
       hyprshot
@@ -211,7 +195,6 @@ in
       rofi-wayland
       swaynotificationcenter
       waybar
-      wlogout
       wl-clipboard
       wttrbar
 
@@ -224,14 +207,8 @@ in
 
       anki
       bitwarden
-      discord
-      element-desktop
       kitty
-      spotify
-      thunderbird
       ungoogled-chromium
-      vscodium
-      whatsapp-for-linux
       zoom-us
     ];
   };
