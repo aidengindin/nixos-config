@@ -8,7 +8,44 @@ in {
   };
 
   config = mkIf cfg.enable {
+    age.secrets = {
+      "startmail-password" = {
+        file = ../secrets/startmail-password.age;
+        owner = config.users.users.agindin.name;
+        mode = "0400";
+      };
+    };
+
     home-manager.users.agindin = {
+      accounts.email.accounts = {
+        startmail = {
+          primary = true;
+          address = "aiden@aidengindin.com";
+          userName = "aiden@aidengindin.com";
+          realName = "Aiden Gindin";
+          passwordCommand = "${pkgs.coreutils}/bin/cat ${config.age.secrets."startmail-password".path}";
+          imap = {
+            host = "imap.startmail.com";
+            port = 993;
+            tls.enable = true;
+          };
+          smtp = {
+            host = "smtp.startmail.com";
+            port = 465;
+            tls.enable = true;
+          };
+          folders = {
+            inbox = "INBOX";
+            drafts = "Drafts";
+            sent = "Sent";
+            trash = "Trash";
+          };
+          neomutt = {
+            enable = true;
+            mailboxType = "imap";
+          };
+        };
+      };
       programs.neomutt = {
         enable = true;
         vimKeys = true;
