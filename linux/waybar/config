@@ -1,0 +1,170 @@
+// vim: ft=json:
+
+[
+  {
+    "name": "top_bar",
+    "layer": "top",
+    "position": "top",
+    "height": 44,
+    "spacing": 4,
+    "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
+    "modules-right": ["privacy", "mpris", "idle_inhibitor", "wireplumber", "hyprland/language", "temperature", "cpu", "memory", "bluetooth", "network", "custom/weather", "battery", "clock"],
+
+    "hyprland/workspaces": {
+      "sort-by": "name",
+      "format": " {icon} ",
+      "format-icons": {
+        "default": "",
+      },
+    },
+
+    "hyprland/submap": {
+      "format": "{}",
+      "tooltip": false,
+    },
+
+    "clock": {
+      "interval": 1,
+      "format": " {:%I:%M:%S %p}",
+      "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+      "timezone": "America/New_York",
+      "on-click": "swaync-client -t",
+    },
+
+    "bluetooth": {
+      "format": "󰂯",
+      "format-disabled": "󰂲",
+      "format-connected": "󰂱 {device_alias}",
+      "format-connected-battery": "󰂱 {device_alias} (󰥉 {device_battery_percentage}%)",
+      "tooltip-format": "{controller_alias}\t{controller_address} ({status})\n\n{num_connections} connected",
+      "tooltip-format-disabled": "bluetooth off",
+      "tooltip-format-connected": "{controller_alias}\t{controller_address} ({status})\n\n{num_connections} connected\n\n{device_enumerate}",
+      "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+      "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t({device_battery_percentage}%)",
+      "max-length": 35,
+      "on-click": "overskride",
+    },
+
+    "network": {
+      "format": "󰤮",
+      "format-wifi": "{icon}",
+      "format-icons": [ "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" ],
+      "format-disconnected": "󰤫 ",
+      "tooltip-format": "wifi <span color='#ee99a0'>off</span>",
+      "tooltip-format-wifi":"SSID: {essid}({signalStrength}%), {frequency} MHz\nInterface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
+      "tooltip-format-disconnected": "<span color='#ed8796'>disconnected</span>",
+      "format-ethernet": "󰈀 ",
+      "format-linked": "󰈀 ",
+      "tooltip-format-ethernet":"Interface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\nNetmask: {netmask}\nCIDR: {cidr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
+      "max-length": 35,
+      "on-click": "iwgtk",
+    },
+
+    "battery": {
+      "interval": 60,
+      "states": {
+        "warning": 30,
+        "critical": 15
+      },
+      "format": "{icon} {capacity}%",
+      "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+      "format-charging": "󰂄 {capacity}%",
+      "format-plugged": "󰚥 {capacity}%",
+      "tooltip-format": "{capacity}% - {timeTo}\nPower draw: {power:0.1f} W\nHealth: {health}%",
+      "max-length": 25
+    },
+
+    "hyprland/window": {
+      "format": "{}",
+      "max-length": 50,
+      "separate-outputs": true,
+      "rewrite": {
+        "(.*) — Mozilla Firefox": "󰈹 $1",
+        "(.*) — Chromium": " $1",
+        "(.*) — mpv": " $1",
+        "kitty": " ",
+        "spotify_player": " ",
+      }
+    },
+
+    "hyprland/language": {
+      "format": "󰌌 {}",
+      "format-en": "US",
+      "format-he": "HE",
+      "keyboard-name": "at-translated-set-2-keyboard"
+    },
+
+    "idle_inhibitor": {
+      "format": "{icon}",
+      "format-icons": {
+        "activated": "󰅶",
+        "deactivated": "󰾪"
+      },
+      "tooltip": true,
+      "tooltip-format-activated": "Idle inhibitor active",
+      "tooltip-format-deactivated": "Idle inhibitor inactive"
+    },
+
+    "privacy": {
+      "icon-spacing": 4,
+      "icon-size": 18,
+      "transition-duration": 250,
+      "modules": [
+        {
+          "type": "screenshare",
+          "tooltip": true,
+          "tooltip-icon-size": 24
+        },
+        {
+          "type": "audio-in",
+          "tooltip": true,
+          "tooltip-icon-size": 24
+        }
+      ]
+    },
+
+    "wireplumber": {
+      "format": "{icon} {volume}%",
+      "format-muted": "󰝟",
+      "format-icons": ["󰕿", "󰖀", "󰕾"],
+      "max-volume": 100
+    },
+
+    "mpris": {
+      "format": "{player_icon}",
+      "format-paused": "{status_icon}",
+      "player-icons": {
+        "default": "󰐊",
+        "spotify_player": "󰓇",
+        "mpv": "󰎁"
+      },
+      "status-icons": {
+        "paused": "󰏤"
+      },
+      "ignored-players": ["firefox"],
+      "max-length": 40
+    },
+
+    "temperature": {
+      "thermal-zone": 3,
+      "critical-threshold": 85,
+      "format": " {temperatureC}°",
+    },
+
+    "cpu": {
+      "format": " {load:0.1f}%",
+    },
+
+    "memory": {
+      "format": " {used:0.1f}/{total:0.1f}G",
+    },
+
+    "custom/weather": {
+      "format": "{}°",
+      "tooltip": true,
+      "interval": 3600,
+      "exec": "wttrbar --nerd --fahrenheit --mph --ampm",
+      "return-type": "json",
+    },
+  }
+]

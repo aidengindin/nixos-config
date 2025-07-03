@@ -12,6 +12,14 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "unstable";
     };
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    
+    impermanence.url = "github:nix-community/impermanence";
+
+    nixos-hardware.url = "github:nixos/nixos-hardware/master";
 
     # macos configurations
     darwin = {
@@ -29,9 +37,27 @@
       url = "github:artur-shaik/wallabag-client";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    zwift = {
+      url = "github:netbrain/zwift";
+      inputs.nixpkgs.follows = "unstable";
+    };
  };
 
-  outputs = { self, nixpkgs, unstable, home-manager, hm-unstable, darwin, agenix, wallabag-client }:
+  outputs = {
+    self,
+    nixpkgs,
+    unstable,
+    home-manager,
+    hm-unstable,
+    disko,
+    impermanence,
+    nixos-hardware,
+    darwin,
+    agenix,
+    wallabag-client,
+    zwift
+    }:
     let
 
       # standard modules shared by all NixOS systems,
@@ -58,6 +84,19 @@
           specialArgs = standardSpecialArgs;
           modules = (standardNixosModules false) ++ [
             ./hosts/lorien
+          ];
+        };
+
+        # my main laptop
+        khazad-dum = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = standardSpecialArgs;
+          modules = (standardNixosModules false) ++ [
+            nixos-hardware.nixosModules.framework-amd-ai-300-series
+            disko.nixosModules.disko
+            impermanence.nixosModules.impermanence
+            zwift.nixosModules.zwift
+            ./hosts/khazad-dum
           ];
         };
       };

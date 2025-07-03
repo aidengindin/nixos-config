@@ -1,0 +1,6 @@
+@import "catppuccin-default"
+
+configuration {
+  font: "Hasklug Nerd Font 12";
+}
+
