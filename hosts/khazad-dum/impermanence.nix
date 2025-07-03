@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
   # Fix home directory permissions on boot
   systemd.services = {
@@ -19,7 +19,26 @@
       after = [ "local-fs.target" "fix-home-permissions.service" ];
       wants = [ "fix-home-permissions.service" ];
     };
+
+    # create-impermanence-dirs = {
+    #   description = "Create parent directories for file bind mounts";
+    #   wantedBy = [ "multi-user.target" ];
+    #   before = [
+    #     "persist-persist-home-agindin-.cache-spotify\\x2dplayer-credentials.json.service"
+    #     "persist-persist-home-agindin-.config-nvim-lazy\\x2dlock.json.service"
+    #   ];
+    #   serviceConfig = {
+    #     Type = "oneshot";
+    #     User = "agindin";
+    #     ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.coreutils}/bin/mkdir -p /home/agindin/.cache/spotify-player/ /home/agindin/.config/nvim/'";
+    #   };
+    # };
   };
+
+  # systemd.tmpfiles.rules = [
+  #   "d /home/agindin/.cache/spotify-player 0755 agindin users -"
+  #   "d /home/agindin/.config/nvim 0755 agindin users -"
+  # ];
   
   environment.persistence."/persist" = {
     enable = true;
@@ -50,6 +69,7 @@
         "Documents"
         "Videos"
         "code"
+        ".cache/spotify-player"
         ".config/Bitwarden"
         ".config/chromium"
         ".config/qt5ct"
@@ -69,10 +89,10 @@
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; }
       ];
-      files = [
-        ".cache/spotify-player/credentials.json"
-        ".config/nvim/lazy-lock.json"
-      ];
+      # files = [
+      #   ".cache/spotify-player/credentials.json"
+      #   ".config/nvim/lazy-lock.json"
+      # ];
     };
   };
 
