@@ -67,12 +67,16 @@
           then hm-unstable.nixosModules.home-manager
           else home-manager.nixosModules.home-manager)
         agenix.nixosModules.default
+        zwift.nixosModules.default
       ];
 
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix;
-        unstablePkgs = unstable.legacyPackages.x86_64-linux;
+        unstablePkgs = import unstable {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+        };
       };
     in
     {
@@ -95,7 +99,6 @@
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
             impermanence.nixosModules.impermanence
-            zwift.nixosModules.zwift
             ./hosts/khazad-dum
           ];
         };
@@ -126,7 +129,10 @@
           ];
           specialArgs = {
             inherit agenix;
-            unstablePkgs = unstable.legacyPackages.aarch64-darwin;
+            unstablePkgs = import unstable {
+              system = "aarch64-darwin";
+              config.allowUnfree = true;
+            };
           };
         };
       };

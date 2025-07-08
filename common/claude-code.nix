@@ -1,7 +1,7 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, unstablePkgs, ... }:
 {
   config = {
-    environment.systemPackages = with pkgs; [ claude-code ];
+    environment.systemPackages = with unstablePkgs; [ claude-code ];
   };
 }
 
