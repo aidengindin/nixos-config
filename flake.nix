@@ -72,7 +72,10 @@
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix;
-        unstablePkgs = unstable.legacyPackages.x86_64-linux;
+        unstablePkgs = import unstable {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+        };
       };
     in
     {
@@ -126,7 +129,10 @@
           ];
           specialArgs = {
             inherit agenix;
-            unstablePkgs = unstable.legacyPackages.aarch64-darwin;
+            unstablePkgs = import unstable {
+              system = "aarch64-darwin";
+              config.allowUnfree = true;
+            };
           };
         };
       };
