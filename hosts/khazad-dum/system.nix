@@ -24,6 +24,7 @@ in
   agindin.desktop.enable = true;
   agindin.bluetooth.enable = true;
   agindin.fingerprint.enable = true;
+  agindin.avahi.enable = true;
 
   agindin.kanata = {
     enable = true;

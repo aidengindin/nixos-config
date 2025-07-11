@@ -1,6 +1,7 @@
 { config, pkgs, agenix, ... }:
 {
   imports = [
+    ./avahi.nix
     ./bluetooth.nix
     ./containers.nix
     ./desktop.nix
