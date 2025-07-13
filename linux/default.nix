@@ -3,6 +3,7 @@
   imports = [
     ./avahi.nix
     ./bluetooth.nix
+    ./bolt.nix
     ./containers.nix
     ./desktop.nix
     ./fingerprint.nix

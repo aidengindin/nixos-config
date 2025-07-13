@@ -4,7 +4,7 @@
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "thunderbolt" "usb_storage" "sd_mod" ];
   boot.initrd.kernelModules = [];
-  boot.kernelModules = [ "kvm-amd" ];
+  boot.kernelModules = [ "kvm-amd" "thunderbolt" "typec_thunderbolt" ];
   boot.extraModulePackages = [];
 
   networking.useDHCP = lib.mkDefault true;

@@ -33,6 +33,7 @@
       "/var/lib/nixos"
       "/var/lib/fprint"
       "/var/lib/tailscale"
+      "/var/lib/boltd"
       "/etc/NetworkManager/system-connections"
     ];
     files = [
