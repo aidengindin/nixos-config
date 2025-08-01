@@ -9,7 +9,7 @@ in
     tag = mkOption {
       # https://github.com/open-webui/open-webui/releases
       type = types.str;
-      default = "git-b5f4c85";
+      default = "git-5fbfe2b";
       description = "Tag of the openwebui image to use";
     };
     subnet = mkOption {

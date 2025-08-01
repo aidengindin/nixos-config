@@ -9,7 +9,7 @@ in
     version = mkOption {
       # https://hub.docker.com/r/linuxserver/calibre
       type = types.str;
-      default = "8.5.0";
+      default = "4.23.0-v4";
       description = "Calibre version tag to pull";
     };
     host = mkOption {
