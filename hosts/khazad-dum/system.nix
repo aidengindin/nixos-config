@@ -8,11 +8,11 @@ in
       ../../linux
     ];
 
-  boot.kernelPackages = unstablePkgs.linuxPackages_6_15;
+  boot.kernelPackages = pkgs.linuxPackages_6_15;
 
-  hardware.graphics.package = unstablePkgs.mesa;
+  hardware.graphics.package = pkgs.mesa;
   
-  environment.systemPackages = with unstablePkgs; [
+  environment.systemPackages = with pkgs; [
     libinput
   ];
 

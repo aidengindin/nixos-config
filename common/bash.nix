@@ -1,9 +1,11 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, unstablePkgs, ... }:
 
 {
   config = {
-    environment.systemPackages = with pkgs; [ blesh atuin ];
+    environment.systemPackages = with unstablePkgs; [ atuin ];
     environment.shells = with pkgs; [ bash ];
+    
+    programs.bash.blesh.enable = true;
 
     age.secrets = {
       codecompanion-anthropic-key = {
@@ -19,31 +21,41 @@
     };
 
     programs.bash = {
-      interactiveShellInit = lib.mkBefore ''
+      interactiveShellInit = lib.mkAfter ''
         set -o vi
 
-        source ${pkgs.blesh}/share/blesh/ble.sh
+        if [[ $BLE_VERSION ]]; then
+          # Use more ergonomic keys for vi-mode navigation
+          ble-bind -m vi_nmap -f 'j' 'backward-char'
+          ble-bind -m vi_nmap -f 'l' '__atuin_history --shell-up-key-binding --keymap-mode=vim-normal'
+          ble-bind -m vi_nmap -f ';' 'forward-char'
 
-        # Use more ergonomic keys for vi-mode navigation
-        ble-bind -m vi_nmap -f 'j' 'backward-char'
-        ble-bind -m vi_nmap -f 'l' '__atuin_history --shell-up-key-binding --keymap-mode=vim-normal'
-        ble-bind -m vi_nmap -f ';' 'forward-char'
+          # Change cursor shape based on vi mode
+          ble-bind -m vi_nmap --cursor 2
+          ble-bind -m vi_imap --cursor 6
+          ble-bind -m vi_omap --cursor 2
+          ble-bind -m vi_xmap --cursor 2
+          ble-bind -m vi_smap --cursor 4
+          ble-bind -m vi_cmap --cursor 2
 
-        # Change cursor shape based on vi mode
-        ble-bind -m vi_nmap --cursor 2
-        ble-bind -m vi_imap --cursor 6
-        ble-bind -m vi_omap --cursor 2
-        ble-bind -m vi_xmap --cursor 2
-        ble-bind -m vi_smap --cursor 4
-        ble-bind -m vi_cmap --cursor 2
-
-        ble-import -f integration/zoxide
-        eval "$(${pkgs.starship}/bin/starship init bash)"
+          ble-import -f integration/zoxide
+        fi
+        
+        # eval "$(${pkgs.starship}/bin/starship init bash)"
         eval "$(${pkgs.atuin}/bin/atuin init bash)"
         export ANTHROPIC_API_KEY="$(cat ${config.age.secrets.codecompanion-anthropic-key.path})"
         export GEMINI_API_KEY="$(cat ${config.age.secrets.codecompanion-gemini-key.path})"
 
         bind -s 'set completion-ignore-case on'
+        
+        # TODO: TEMPORARY FIX - Remove when nix completion scripts are fixed
+        # Override nix completions with dummy functions to prevent arithmetic expansion errors
+        # The flake update introduced buggy nix completion scripts causing bash arithmetic expansion errors
+        # when typing longer nixos-rebuild commands. Remove these lines and test periodically.
+        _dummy_complete() { return 0; }
+        complete -F _dummy_complete nix
+        complete -F _dummy_complete nix-build  
+        complete -F _dummy_complete nixos-rebuild
 
         # Set catppuccin theme for fzf
         export FZF_DEFAULT_OPTS=" \
