@@ -88,6 +88,7 @@
 
     caddy.enable = true;
 
+    audiobookshelf.enable = true;
     calibre.enable = true;
     freshrss.enable = true;
     immich.enable = true;
