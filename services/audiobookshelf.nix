@@ -5,7 +5,7 @@ let
 
   containerLib = import ../lib/container.nix { inherit lib pkgs; };
 in {
-  options.agindin.services.miniflux = {
+  options.agindin.services.audiobookshelf = {
     enable = mkEnableOption "audiobookshelf";
     host = mkOption {
       type = types.str;
