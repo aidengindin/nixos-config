@@ -41,7 +41,6 @@ in {
     extraConfig = {
       services.audiobookshelf = {
         enable = true;
-        host = cfg.host;
         port = 8000;
         dataDir = "audiobookshelf";  # /var/lib/audiobookshelf
       };
