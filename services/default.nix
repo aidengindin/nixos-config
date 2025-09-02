@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./audiobookshelf.nix
     ./blocky.nix
     ./caddy.nix
     ./calibre.nix
