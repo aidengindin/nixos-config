@@ -17,6 +17,7 @@ let
   openwebui = myServices.openwebui;
   searxng = myServices.searxng;
   pocket-id = myServices.pocket-id;
+  audiobookshelf = myServices.audiobookshelf;
 
   overlay = final: prev: {
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
@@ -141,6 +142,13 @@ in
               header_up X-Forwarded-Proto {scheme}
               header_up X-Forwarded-Host {host}
             }
+            ${tlsSetup}
+          }
+          ''}
+
+          ${mkStrIf audiobookshelf.enable ''
+          ${audiobookshelf.host} {
+            reverse_proxy 192.168.104.11:8000
             ${tlsSetup}
           }
           ''}
