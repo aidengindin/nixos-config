@@ -42,6 +42,11 @@
       url = "github:netbrain/zwift";
       inputs.nixpkgs.follows = "unstable";
     };
+
+    ai-tools = {
+      url = "github:numtide/nix-ai-tools";
+      inputs.nixpkgs.follows = "unstable";
+    };
  };
 
   outputs = {
@@ -56,8 +61,9 @@
     darwin,
     agenix,
     wallabag-client,
-    zwift
-    }:
+    zwift,
+    ai-tools
+  }:
     let
 
       # standard modules shared by all NixOS systems,
@@ -72,14 +78,13 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix;
+        inherit agenix ai-tools;
         unstablePkgs = import unstable {
           system = "x86_64-linux";
           config.allowUnfree = true;
         };
       };
-    in
-    {
+    in {
       nixosConfigurations = {
 
         # a mini pc home server
@@ -128,7 +133,7 @@
             })
           ];
           specialArgs = {
-            inherit agenix;
+            inherit agenix ai-tools;
             unstablePkgs = import unstable {
               system = "aarch64-darwin";
               config.allowUnfree = true;
