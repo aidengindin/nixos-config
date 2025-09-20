@@ -18,6 +18,8 @@ let
   searxng = myServices.searxng;
   pocket-id = myServices.pocket-id;
   audiobookshelf = myServices.audiobookshelf;
+  pinchflat = myServices.pinchflat;
+  jellyfin = myServices.jellyfin;
 
   overlay = final: prev: {
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
@@ -149,6 +151,20 @@ in
           ${mkStrIf audiobookshelf.enable ''
           ${audiobookshelf.host} {
             reverse_proxy 192.168.104.11:8000
+            ${tlsSetup}
+          }
+          ''}
+
+          ${mkStrIf pinchflat.enable ''
+          ${pinchflat.host} {
+            reverse_proxy 192.168.105.11:8000
+            ${tlsSetup}
+          }
+          ''}
+
+          ${mkStrIf jellyfin.enable ''
+          ${jellyfin.host} {
+            reverse_proxy 192.168.106.11:8096
             ${tlsSetup}
           }
           ''}
