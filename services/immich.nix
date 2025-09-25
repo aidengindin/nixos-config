@@ -10,7 +10,7 @@ in
     version = mkOption {
       # https://github.com/immich-app/immich/releases
       type = types.str;
-      default = "v1.140.1";
+      default = "v1.143.1";
       description = "Immich version tag to pull.";
     };
     uploadLocation = mkOption {
