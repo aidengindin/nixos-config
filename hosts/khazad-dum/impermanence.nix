@@ -57,17 +57,20 @@
         ".config/qt5ct"
         ".config/qt6ct"
         ".config/kdeconnect"
+        ".config/unity3d"
         ".local/share/Anki2"
         ".local/share/atuin"
         ".local/share/flatpak"
         ".local/share/nvim"
         ".local/share/zoxide"
         ".local/share/containers"
+        ".local/share/Steam"
         ".local/state/nvim"
         ".local/state/wireplumber"
         ".cache/nix"
         ".mozilla"
         ".claude"
+        ".steam"
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; }
       ];

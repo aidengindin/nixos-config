@@ -15,6 +15,7 @@
     ./network.nix
     ./nix.nix
     ./ssh.nix
+    ./steam.nix
     ./zathura.nix
     ./zwift.nix
   ];

@@ -51,6 +51,8 @@ in
   
   agindin.zwift.enable = true;
 
+  agindin.steam.enable = true;
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ 9001 3000 5580 10400 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
