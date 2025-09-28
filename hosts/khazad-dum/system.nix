@@ -8,7 +8,7 @@ in
       ../../linux
     ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_15;
+  boot.kernelPackages = pkgs.linuxPackages_6_16;
 
   hardware.graphics.package = pkgs.mesa;
   
