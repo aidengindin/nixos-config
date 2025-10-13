@@ -79,6 +79,7 @@ in
           PGID = "1000";
           SECRET_KEY_FILE = "/opt/recipes/secret-key.txt";
           POSTGRES_PASSWORD_FILE = "/opt/recipes/postgres-password.txt";
+          TANDOOR_PORT = "8080";
         };
         volumes = [
           "/docker-volumes/tandoor/staticfiles:/opt/recipes/staticfiles"
