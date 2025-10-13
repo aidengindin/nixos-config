@@ -23,7 +23,7 @@ in {
   };
 
   config = mkIf cfg.enable (containerLib.makeContainer {
-    name = "audiobookshelf";
+    name = "abshelf";
     subnet = "192.168.104.0/24";
     hostAddress = "192.168.104.10";
     localAddress = "192.168.104.11";
