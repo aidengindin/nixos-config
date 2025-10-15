@@ -41,7 +41,6 @@ in
     };
 
     programs.hyprlock.enable = true;
-    services.hypridle.enable = true;
 
     # Enable sound
     security.rtkit.enable = true;
