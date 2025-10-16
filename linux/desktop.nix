@@ -157,6 +157,18 @@ in
             source = ./hypr/scripts/brightness.sh;
             executable = true;
           };
+          "hypr/scripts/bluetooth.sh" = {
+            source = ./hypr/scripts/bluetooth.sh;
+            executable = true;
+          };
+          "hypr/scripts/audio.sh" = {
+            source = ./hypr/scripts/audio.sh;
+            executable = true;
+          };
+          "hypr/scripts/wifi.sh" = {
+            source = ./hypr/scripts/wifi.sh;
+            executable = true;
+          };
 
           "rofi/config.rasi".source = ./rofi/config.rasi;
           "rofi/catppuccin-mocha.rasi".source = ./rofi/catppuccin-mocha.rasi;

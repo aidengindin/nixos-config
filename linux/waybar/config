@@ -42,7 +42,7 @@
       "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
       "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t({device_battery_percentage}%)",
       "max-length": 35,
-      "on-click": "overskride",
+      "on-click": "~/.config/hypr/scripts/bluetooth.sh",
     },
 
     "network": {
@@ -57,7 +57,7 @@
       "format-linked": "󰈀 ",
       "tooltip-format-ethernet":"Interface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\nNetmask: {netmask}\nCIDR: {cidr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
       "max-length": 35,
-      "on-click": "iwgtk",
+      "on-click": "~/.config/hypr/scripts/wifi.sh",
     },
 
     "battery": {
@@ -127,7 +127,8 @@
       "format": "{icon} {volume}%",
       "format-muted": "󰝟",
       "format-icons": ["󰕿", "󰖀", "󰕾"],
-      "max-volume": 100
+      "max-volume": 100,
+      "on-click": "~/.config/hypr/scripts/audio.sh"
     },
 
     "mpris": {
