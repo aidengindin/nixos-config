@@ -92,8 +92,7 @@ in
         profiles.default = {
           id = 0;
           isDefault = true;
-          userChrome = builtins.readFile ./firefox/user-chrome.css;
-          # Disabled for now
+          # userChrome = builtins.readFile ./firefox/user-chrome.css;
           userContent = pkgs.lib.concatMapStringsSep "\n\n"
             (site: builtins.readFile "${catppuccinUserstyles}/${site}.css")
             userstyleSites;
@@ -274,7 +273,7 @@ in
             };
           };
           SearchEngines = {
-            Default = "DuckDuckGo";
+            Default = "Google";
             PreventInstalls = false;
             Remove = [
               "Bing"

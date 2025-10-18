@@ -186,6 +186,7 @@ in
 
         home.file = {
           "Pictures/wallpapers/nixos.png".source = ./wallpapers/nixos.png;
+          "Pictures/wallpapers/stormlight-ultrawide.png".source = ./wallpapers/stormlight-ultrawide.png;
         };
       };
     };
