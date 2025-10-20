@@ -9,7 +9,7 @@ in
     version = mkOption {
       # https://hub.docker.com/r/vabene1111/recipes/tags
       type = types.str;
-      default = "2.3.2";
+      default = "2.3.3";
       description = "Tandoor version tag to pull";
     };
     postgresVersion = mkOption {
