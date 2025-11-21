@@ -271,6 +271,11 @@ in
               installation_mode = "force_installed";
               install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
             };
+            # Augmented Steam
+            "{1be309c5-3e4f-4b99-927d-bb500eb4fa88}" = {
+              installation_mode = "force_installed";
+              install_url = "https://addons.mozilla.org/firefox/downloads/file/4615069/augmented_steam-latest.xpi";
+            };
           };
           SearchEngines = {
             Default = "Google";
