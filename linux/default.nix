@@ -9,7 +9,6 @@
     ./fingerprint.nix
     ./firefox.nix
     ./gamingOptimizations.nix
-    ./hyprsunset.nix
     ./kanata.nix
     ./locale.nix
     ./network.nix
