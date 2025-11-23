@@ -106,7 +106,6 @@ require("lazy").setup({
           lualine_a = { "mode" },
           lualine_b = { "branch", "diff", "diagnostics", "lsp_status" },
           lualine_c = { "filename" },
-          lualine_x = { require "minuet.lualine" },
           lualine_y = { "encoding", "fileformat", "filetype" },
           lualine_z = { "location" },
         },
@@ -372,7 +371,6 @@ require("lazy").setup({
     "Saghen/blink.cmp",
     dependencies = {
       'rafamadriz/friendly-snippets',
-      "milanglacier/minuet-ai.nvim",
     },
     version = "v1.0.0",
     config = function()
@@ -383,7 +381,7 @@ require("lazy").setup({
           }
         },
         sources = {
-          default = { "minuet", "lazydev", "lsp", "path", "buffer", "snippets" },
+          default = { "lazydev", "lsp", "path", "buffer", "snippets" },
           per_filetype = {
             codecompanion = { "lsp", "path", "buffer", "snippets" }
           },
@@ -393,13 +391,6 @@ require("lazy").setup({
               module = "lazydev.integrations.blink",
               score_offset = 10
             },
-            minuet = {
-              name = "minuet",
-              module = "minuet.blink",
-              async = true,
-              timeout_ms = 3000,
-              score_offset = 50,
-            }
           },
         },
         completion = {
@@ -415,91 +406,6 @@ require("lazy").setup({
         },
       }
     end,
-  },
-
-  -- AI assistance
-  {
-    "greggh/claude-code.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    config = function()
-      require("claude-code").setup({
-        keymaps = {
-          toggle = {
-            variants = {
-              continue = false, -- Disable <leader>cC
-              verbose = false   -- Disable <leader>cV
-            }
-          }
-        }
-      })
-    end
-  },
-  {
-    "olimorris/codecompanion.nvim",
-    opts = {},
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
-    },
-    config = function()
-      require("codecompanion").setup({
-        adapters = {
-          anthropic = function()
-            return require("codecompanion.adapters").extend("anthropic", {
-              env = {
-                api_key = "ANTHROPIC_API_KEY",
-              },
-              schema = {
-                model = {
-                  default = AI_MODELS.claude_opus,
-                },
-                extended_output = {
-                  default = true,
-                },
-              },
-            })
-          end,
-        },
-        strategies = {
-          chat = {
-            adapter = {
-              name = "anthropic",
-              model = AI_MODELS.claude_opus,
-            },
-          },
-          inline = {
-            adapter = {
-              name = "anthropic",
-              model = AI_MODELS.claude_opus,
-            },
-          },
-        },
-        log_level = "DEBUG",   -- Enable debug logging to see more details
-      })
-    end
-  },
-  {
-    "milanglacier/minuet-ai.nvim",
-    config = function()
-      require("minuet").setup({
-        provider = "gemini",
-        provider_options = {
-          gemini = {
-            model = AI_MODELS.gemini_flash,
-            optional = {
-              generationConfig = {
-                maxOutputTokens = 256,
-                thinkingConfig = {
-                  thinkingBudget = 0,
-                },
-              },
-            },
-          },
-        },
-      })
-    end
   },
 
   -- Development tools
