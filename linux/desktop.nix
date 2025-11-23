@@ -192,6 +192,9 @@ in
         services.udiskie = {
           enable = true;
           settings = {
+            program_options = [
+              tray = "false";
+            ]
             device_config = [
               {
                 id_vendor = "RPI";
