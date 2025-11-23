@@ -188,6 +188,19 @@ in
           "Pictures/wallpapers/nixos.png".source = ./wallpapers/nixos.png;
           "Pictures/wallpapers/stormlight-ultrawide.png".source = ./wallpapers/stormlight-ultrawide.png;
         };
+
+        services.udiskie = {
+          enable = true;
+          settings = {
+            device_config = [
+              {
+                id_vendor = "RPI";
+                id_model = "RP2";
+                options = [ "uid=1000" "gid=100" "umask=0022" ];
+              }
+            ];
+          };
+        };
       };
     };
 
