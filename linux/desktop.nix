@@ -194,7 +194,7 @@ in
           enable = true;
           settings = {
             program_options = {
-              tray = "false";
+              tray = false;
             };
             device_config = [
               {
