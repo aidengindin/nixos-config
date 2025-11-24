@@ -13,6 +13,7 @@
     ./locale.nix
     ./network.nix
     ./nix.nix
+    ./qmk.nix
     ./ssh.nix
     ./steam.nix
     ./zathura.nix
