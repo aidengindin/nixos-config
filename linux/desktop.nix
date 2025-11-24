@@ -144,6 +144,7 @@ in
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
           "hypr/hyprpaper.conf".source = ./hypr/hyprpaper.conf;
           "hypr/hyprlock.conf".source = ./hypr/hyprlock.conf;
+          "hypr/hyprsunset.conf".source = ./hypr/hyprsunset.conf;
           "hypr/mocha.conf".source = ./hypr/mocha.conf;
 
           "waybar/config".source = ./waybar/config;
@@ -192,9 +193,9 @@ in
         services.udiskie = {
           enable = true;
           settings = {
-            program_options = [
+            program_options = {
               tray = "false";
-            ]
+            };
             device_config = [
               {
                 id_vendor = "RPI";
