@@ -53,6 +53,17 @@ in
 
   agindin.steam.enable = true;
 
+  services.udev.extraRules = ''
+    # Framework 13 AMD Fingerprint Reader Fix
+    # 1. Disable autosuspend (power/control="on") prevents it from turning off while computer is in use.
+    # 2. Enable persistence (power/persist="1") helps it survive system suspend.
+    # 3. Locks the persist file prevent other processes from overwriting it.
+    ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTRS{idVendor}=="27c6", ATTRS{idProduct}=="609c", ATTR{power/persist}="1", ATTR{power/control}="on", RUN+="${pkgs.coreutils}/bin/chmod 444 %S%p/../power/persist"
+
+    # If a USB device supports wakeup, enable it automatically.
+    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/wakeup", ATTR{power/wakeup}="enabled"
+  '';
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ 9001 3000 5580 10400 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
