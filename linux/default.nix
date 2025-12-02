@@ -1,6 +1,7 @@
 { config, pkgs, agenix, ... }:
 {
   imports = [
+    ./3dprint.nix
     ./avahi.nix
     ./bluetooth.nix
     ./bolt.nix

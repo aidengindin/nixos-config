@@ -67,6 +67,9 @@ in
         volumes = [
           "/var/lib/openwebui:/app/backend/data"
         ];
+        environment = {
+          BYPASS_MODEL_ACCESS_CONTROL = "true";
+        };
         environmentFiles = [
           config.age.secrets.openwebui-env.path
         ];

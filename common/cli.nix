@@ -25,6 +25,7 @@
       ripgrep
       ripgrep-all
       sd
+      usbutils
     ]) ++ (with ai-tools.packages.${pkgs.system}; [
       crush
     ]);
