@@ -2,7 +2,7 @@
 let
   cfg = config.agindin.emacs;
   inherit (lib) mkIf mkEnableOption;
-  isDarwin = pkgs.system == "aarch64-darwin";
+  isDarwin = pkgs.stdenv.hostPlatform.system == "aarch64-darwin";
   package = pkgs.emacs-git;
 in
 {

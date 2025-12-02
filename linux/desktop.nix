@@ -51,10 +51,10 @@ in
       pulse.enable = true;
     };
 
-    services.logind = {
-      lidSwitch = "suspend";
-      lidSwitchExternalPower = "suspend";
-      lidSwitchDocked = "ignore";
+    services.logind.settings.Login = {
+      HandleLidSwitch = "suspend";
+      HandleLidSwitchExternalPower = "suspend";
+      HandleLidSwitchDocked = "ignore";
     };
 
     programs.dconf.enable = true;
@@ -221,7 +221,7 @@ in
       hyprsunset
       libnotify
       playerctl
-      rofi-wayland
+      rofi
       swaynotificationcenter
       waybar
       wl-clipboard
@@ -235,7 +235,7 @@ in
       kdePackages.qt6ct
 
       anki
-      bitwarden
+      bitwarden-desktop
       kitty
       ungoogled-chromium
       zoom-us

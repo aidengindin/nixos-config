@@ -12,7 +12,6 @@
         options = "--delete-older-than 30d";
       };
     };
-    system.rebuild.enableNg = true;
   };
 }
 

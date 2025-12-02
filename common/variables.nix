@@ -4,7 +4,7 @@ let
 in
 {
   _module.args = {
-    isLinux = strings.hasInfix "linux" pkgs.system;
-    isDarwin = strings.hasInfix "darwin" pkgs.system;
+    isLinux = strings.hasInfix "linux" pkgs.stdenv.hostPlatform.system;
+    isDarwin = strings.hasInfix "darwin" pkgs.stdenv.hostPlatform.system;
   };
 }
