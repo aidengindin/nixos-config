@@ -24,10 +24,12 @@
       interactiveShellInit = lib.mkAfter ''
         set -o vi
 
-        if [[ $BLE_VERSION ]]; then
-          # Use more ergonomic keys for vi-mode navigation
+        # eval "$(${pkgs.starship}/bin/starship init bash)"
+        eval "$(${pkgs.atuin}/bin/atuin init bash)"
+
+        # Bindings that don't depend on atuin - run immediately
+        if [[ ''${BLE_VERSION-} ]]; then
           ble-bind -m vi_nmap -f 'j' 'backward-char'
-          ble-bind -m vi_nmap -f 'l' '__atuin_history --shell-up-key-binding --keymap-mode=vim-normal'
           ble-bind -m vi_nmap -f ';' 'forward-char'
 
           # Change cursor shape based on vi mode
@@ -40,13 +42,20 @@
 
           ble-import -f integration/zoxide
         fi
-        
-        # eval "$(${pkgs.starship}/bin/starship init bash)"
-        eval "$(${pkgs.atuin}/bin/atuin init bash)"
+
+        # Atuin-dependent binding - defer if ble.sh not yet attached
+        __my_atuin_keybind() {
+          ble-bind -m vi_nmap -f 'l' '__atuin_history --shell-up-key-binding --keymap-mode=vim-normal'
+        }
+        if [[ ''${BLE_ATTACHED-} ]]; then
+          __my_atuin_keybind
+        else
+          BLE_ONLOAD+=(__my_atuin_keybind)
+        fi
         export ANTHROPIC_API_KEY="$(cat ${config.age.secrets.codecompanion-anthropic-key.path})"
         export GEMINI_API_KEY="$(cat ${config.age.secrets.codecompanion-gemini-key.path})"
 
-        bind -s 'set completion-ignore-case on'
+        bind 'set completion-ignore-case on'
         
         # TODO: TEMPORARY FIX - Remove when nix completion scripts are fixed
         # Override nix completions with dummy functions to prevent arithmetic expansion errors
