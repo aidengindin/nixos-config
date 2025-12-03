@@ -24,7 +24,7 @@ let
       plugins = [
         "github.com/caddy-dns/cloudflare@v0.2.1"
       ];
-      hash = "sha256-iRzpN9awuEFsc7hqKzOMNiCFFEv833xhd4LM+VFQedI=";
+      hash = "sha256-Dvifm7rRwFfgXfcYvXcPDNlMaoxKd5h4mHEK6kJ+T4A=";
     };
   };
 in

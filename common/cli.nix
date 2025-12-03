@@ -16,7 +16,7 @@
     environment.systemPackages = (with pkgs; [
       bat
       duf
-      du-dust
+      dust
       fd
       fselect
       fzf
@@ -26,7 +26,7 @@
       ripgrep-all
       sd
       usbutils
-    ]) ++ (with ai-tools.packages.${pkgs.system}; [
+    ]) ++ (with ai-tools.packages.${pkgs.stdenv.hostPlatform.system}; [
       crush
     ]);
   };
