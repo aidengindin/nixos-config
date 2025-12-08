@@ -18,6 +18,7 @@ let
   searxng = myServices.searxng;
   pocket-id = myServices.pocket-id;
   audiobookshelf = myServices.audiobookshelf;
+  grafana = myServices.grafana;
 
   overlay = final: prev: {
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
@@ -149,6 +150,13 @@ in
           ${mkStrIf audiobookshelf.enable ''
           ${audiobookshelf.host} {
             reverse_proxy 192.168.104.11:8000
+            ${tlsSetup}
+          }
+          ''}
+
+          ${mkStrIf grafana.enable ''
+          ${grafana.host} {
+            reverse_proxy 127.0.0.1:10001
             ${tlsSetup}
           }
           ''}

@@ -7,12 +7,15 @@
     ./caddy.nix
     ./calibre.nix
     ./freshrss.nix
+    ./grafana.nix
     ./immich.nix
     ./memos.nix
     ./miniflux.nix
     ./ollama.nix
     ./openwebui.nix
     ./pocket-id.nix
+    ./postgres.nix
+    ./prometheusExporter.nix
     ./restic.nix
     ./searxng.nix
     ./tandoor.nix

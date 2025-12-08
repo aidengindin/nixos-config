@@ -33,4 +33,6 @@ in
   "miniflux-client-id.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
   "miniflux-client-secret.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
   "startmail-password.age".publicKeys = [ lorienUser khazad-dumHost khazad-dumUser ];
+  "grafana-client-id.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
+  "grafana-client-secret.age".publicKeys = [ lorienHost lorienUser shadowfaxUser ];
 }
