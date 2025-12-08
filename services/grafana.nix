@@ -96,7 +96,7 @@ in {
           client_secret = "$__file{${config.age.secrets.grafanaClientSecret.path}}";
           scopes = "openid profile email";
           auth_url = "https://${cfg.oidcHost}/authorize";
-          token_url = "https://${cfg.oidcHost}/token";
+          token_url = "https://${cfg.oidcHost}/api/oidc/token";
           api_url = "https://${cfg.oidcHost}/api/oidc/userinfo";
           use_pkce = true;
           allow_sign_up = true;
