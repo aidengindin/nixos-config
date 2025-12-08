@@ -94,6 +94,7 @@ in {
           client_id = "$__file{${config.age.secrets.grafanaClientId.path}}";
           client_secret = "$__file{${config.age.secrets.grafanaClientSecret.path}}";
           scopes = "openid profile email";
+          root_url = "https://${cfg.oidcHost}";
           auth_url = "https://${cfg.oidcHost}/authorize";
           token_url = "https://${cfg.oidcHost}/token";
           api_url = "https://${cfg.oidcHost}/userinfo";
