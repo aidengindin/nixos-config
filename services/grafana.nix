@@ -6,7 +6,7 @@ let
   containerLib = import ../lib/container.nix { inherit lib pkgs; };
 
   grafanaDir = "/var/lib/grafana";
-  prometheusDir = "/var/lib/prometheus2";
+  prometheusDir = "prometheus2";  # under /var/lib
 
   grafanaPort = 10001;
   prometheusPort = 10002;
@@ -85,7 +85,8 @@ in {
           type = "postgres";
           name = "grafana";
           user = "grafana";
-          host = "/run/postgresql/.s.PGSQL.${toString config.services.postgresql.settings.port}";
+          host = "/run/postgresql";  # apparently doesn't support specifying a port, so don't change it!
+          # host = "/run/postgresql/.s.PGSQL.${toString config.services.postgresql.settings.port}";
         };
         "auth.generic_oauth" = {
           enabled = true;
