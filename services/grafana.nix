@@ -80,6 +80,7 @@ in {
           domain = cfg.host;
           http_addr = "127.0.0.1";
           http_port = grafanaPort;
+          root_url = "https://${cfg.host}";
         };
         database = {
           type = "postgres";
@@ -94,11 +95,9 @@ in {
           client_id = "$__file{${config.age.secrets.grafanaClientId.path}}";
           client_secret = "$__file{${config.age.secrets.grafanaClientSecret.path}}";
           scopes = "openid profile email";
-          root_url = "https://${cfg.oidcHost}";
           auth_url = "https://${cfg.oidcHost}/authorize";
           token_url = "https://${cfg.oidcHost}/token";
           api_url = "https://${cfg.oidcHost}/api/oidc/userinfo";
-          redirect_url = "https://${cfg.host}/login/generic_oauth";
           use_pkce = true;
           allow_sign_up = true;
           role_attribute_path = "contains(groups[*], 'grafana_admins') && 'Admin' || 'Viewer'";
