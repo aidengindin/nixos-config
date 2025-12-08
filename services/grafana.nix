@@ -100,7 +100,7 @@ in {
           api_url = "https://${cfg.oidcHost}/api/oidc/userinfo";
           use_pkce = true;
           allow_sign_up = true;
-          role_attribute_path = "contains(groups[*], 'grafana_admins') && 'Admin' || 'Viewer'";
+          role_attribute_path = "is_grafana_admin == 'true' && 'Admin' || 'Viewer'";
         };
         log = {
           level = "debug";
