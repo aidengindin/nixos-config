@@ -102,6 +102,10 @@ in {
           allow_sign_up = true;
           role_attribute_path = "contains(groups[*], 'grafana_admins') && 'Admin' || 'Viewer'";
         };
+        log = {
+          level = "debug";
+          filters = "oauth.generic_oauth:debug";
+        };
       };
       provision = {
         datasources.settings = {
