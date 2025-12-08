@@ -89,6 +89,7 @@ in {
           host = "/run/postgresql";  # apparently doesn't support specifying a port, so don't change it!
           # host = "/run/postgresql/.s.PGSQL.${toString config.services.postgresql.settings.port}";
         };
+        "auth.basic".enabled = false;
         "auth.generic_oauth" = {
           enabled = true;
           name = "Pocket ID";
@@ -101,10 +102,6 @@ in {
           use_pkce = true;
           allow_sign_up = true;
           role_attribute_path = "is_grafana_admin && 'Admin' || 'Viewer'";
-        };
-        log = {
-          level = "debug";
-          filters = "oauth.generic_oauth:debug";
         };
       };
       provision = {
