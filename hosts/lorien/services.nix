@@ -88,6 +88,8 @@
 
     caddy.enable = true;
 
+    postgres.enable = true;
+
     audiobookshelf.enable = true;
     calibre.enable = true;
     freshrss.enable = true;
@@ -125,6 +127,19 @@
           group = "ally-withings-sync";
         };
       };
+    };
+
+    prometheusExporter.enable = true;
+
+    grafana = {
+      enable = true;
+      prometheusScrapeTargets = [
+        {
+          name = "lorien";
+          host = "127.0.0.1";
+          port = config.agindin.services.prometheusExporter.port;
+        }
+      ];
     };
   };
 }
