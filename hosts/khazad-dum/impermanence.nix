@@ -50,6 +50,7 @@
         "Pictures"
         "Documents"
         "Videos"
+        "cad"
         "code"
         ".cache/spotify-player"
         ".cache/orca-slicer"
