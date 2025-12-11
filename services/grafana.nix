@@ -114,7 +114,7 @@ in {
           prune = true;
           datasources = [
             {
-              name = "Prometheus";
+              name = "Prometheus-New";
               type = "prometheus";
               access = "proxy";
               url = "http://localhost:${toString prometheusPort}";
@@ -128,7 +128,7 @@ in {
               };
             }
             {
-              name = "Loki";
+              name = "Loki-New";
               type = "loki";
               access = "proxy";
               url = "http://localhost:${toString lokiPort}";
