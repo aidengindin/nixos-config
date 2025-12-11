@@ -5,6 +5,8 @@ let
 
   lokiPort = 10004;
   promtailPort = 10005;
+
+  promtailDir = "/var/lib/promtail";
 in {
   options.agindin.services.promtail = {
     enable = mkEnableOption "promtail";
@@ -24,10 +26,10 @@ in {
           grpc_listen_port = 0;
         };
         positions = {
-          filename = "/tmp/positions.yml";
+          filename = "${promtailDir}/positions.yml";
         };
         clients = [{
-          url = "http://${cfg.lokiHost}:${toString lokiPort}";
+          url = "http://${cfg.lokiHost}:${toString lokiPort}/loki/api/v1/push";
         }];
         scrape_configs = [{
           job_name = "journal";
@@ -38,7 +40,7 @@ in {
               host = config.networking.hostName;
             };
           };
-          relabelConfigs = [{
+          relabel_configs = [{
             source_labels = [ "__journal__systemd_unit" ];
             target_label = "unit";
           }];
