@@ -7,9 +7,12 @@ let
 
   grafanaDir = "/var/lib/grafana";
   prometheusDir = "prometheus2";  # under /var/lib
+  lokiDir = "/var/lib/loki";
 
   grafanaPort = 10001;
   prometheusPort = 10002;
+  lokiPort = 10004;
+  promtailPort = 10005;
 
   hostName = config.networking.hostName;
 in {
@@ -19,6 +22,7 @@ in {
       type = types.str;
       default = "grafana.gindin.xyz";
     };
+
     prometheusScrapeTargets = mkOption {
       description = "List of Prometheus exporters to scrape";
       default = [];
@@ -30,6 +34,7 @@ in {
         };
       });
     };
+
     oauth2ClientIdFile = mkOption {
       type = types.path;
       description = "File containing client ID configured in OIDC provider";
@@ -107,19 +112,27 @@ in {
       provision = {
         datasources.settings = {
           prune = true;
-          datasources = [{
-            name = "Prometheus ${hostName}";
-            type = "prometheus";
-            access = "proxy";
-            url = "http://localhost:${toString prometheusPort}";
-            jsonData = {
-              httpMethod = "POST";
-              prometheusType = "Prometheus";
-              cacheLevel = "High";
-              timeInterval = "5s";
-              incrementalQueryOverlapWindow = "10m";
-            };
-          }];
+          datasources = [
+            {
+              name = "Prometheus";
+              type = "prometheus";
+              access = "proxy";
+              url = "http://localhost:${toString prometheusPort}";
+              jsonData = {
+                httpMethod = "POST";
+                prometheusType = "Prometheus";
+                cacheLevel = "High";
+                timeInterval = "5s";
+                incrementalQueryOverlapWindow = "10m";
+              };
+            }
+            {
+              name = "Loki";
+              type = "loki";
+              access = "proxy";
+              url = "http://localhost:${toString lokiPort}";
+            }
+          ];
         };
       };
     };
@@ -134,6 +147,55 @@ in {
           targets = [ "${c.host}:${toString c.port}" ];
         }];
       }) cfg.prometheusScrapeTargets;
+    };
+
+    services.loki = {
+      enable = true;
+      dataDir = lokiDir;
+      configuration = {
+        server.http_listen_port = lokiPort;
+        auth_enabled = false;
+
+        common = {
+          path_prefix = lokiDir;
+          replication_factor = 1;
+          ring = {
+            kvstore.store = "inmemory";
+            instance_addr = "127.0.0.1";
+          };
+          storage = {
+            filesystem = {
+              chunks_directory = "${lokiDir}/chunks";
+              rules_directory = "${lokiDir}/rules";
+            };
+          };
+        };
+
+        schema_config = {
+          configs = [{
+            from = "2024-01-01"; # Set this to a date in the past
+            store = "tsdb";
+            object_store = "filesystem";
+            schema = "v13";
+            index = {
+              prefix = "index_";
+              period = "24h";
+            };
+          }];
+        };
+
+        compactor = {
+          working_directory = "${lokiDir}/compactor";
+          retention_enabled = true;
+          delete_request_store = "filesystem"; # Required for retention
+        };
+
+        limits_config = {
+          retention_period = "168h"; # 7 days
+          reject_old_samples = true;
+          reject_old_samples_max_age = "168h";
+        };
+      };
     };
   };
 }
