@@ -118,6 +118,7 @@ in {
               type = "prometheus";
               access = "proxy";
               url = "http://localhost:${toString prometheusPort}";
+              uid = "local-prometheus";
               jsonData = {
                 httpMethod = "POST";
                 prometheusType = "Prometheus";
@@ -131,6 +132,7 @@ in {
               type = "loki";
               access = "proxy";
               url = "http://localhost:${toString lokiPort}";
+              uid = "local-loki";
             }
           ];
         };
