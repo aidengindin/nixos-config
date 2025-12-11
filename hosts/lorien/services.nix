@@ -130,6 +130,7 @@
     };
 
     prometheusExporter.enable = true;
+    promtail.enable = true;
 
     grafana = {
       enable = true;

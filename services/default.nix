@@ -16,6 +16,7 @@
     ./pocket-id.nix
     ./postgres.nix
     ./prometheusExporter.nix
+    ./promtail.nix
     ./restic.nix
     ./searxng.nix
     ./tandoor.nix
