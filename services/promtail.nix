@@ -5,8 +5,6 @@ let
 
   lokiPort = 10004;
   promtailPort = 10005;
-
-  promtailDir = "/var/lib/promtail";
 in {
   options.agindin.services.promtail = {
     enable = mkEnableOption "promtail";
@@ -26,7 +24,7 @@ in {
           grpc_listen_port = 0;
         };
         positions = {
-          filename = "${promtailDir}/positions.yml";
+          filename = "/tmp/promtail_positions.yml";
         };
         clients = [{
           url = "http://${cfg.lokiHost}:${toString lokiPort}/loki/api/v1/push";
