@@ -11,12 +11,6 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Model configuration
-local AI_MODELS = {
-  claude_opus = "claude-opus-4-20250514",
-  gemini_flash = "gemini-2.5-flash-preview-05-20",
-}
-
 require("lazy").setup({
   -- Appearance
   {
@@ -106,6 +100,7 @@ require("lazy").setup({
           lualine_a = { "mode" },
           lualine_b = { "branch", "diff", "diagnostics", "lsp_status" },
           lualine_c = { "filename" },
+          lualine_x = { require "minuet.lualine" },
           lualine_y = { "encoding", "fileformat", "filetype" },
           lualine_z = { "location" },
         },
@@ -485,6 +480,38 @@ require("lazy").setup({
     config = function ()
       require("Comment").setup()
     end
+  },
+
+  {
+    "milanglacier/minuet-ai.nvim",
+    config = function()
+      require("minuet").setup({
+        provider = "openai_fim_compatible",
+        n_completions = 1,
+        context_window = 512,
+        provider_options = {
+          openai_fim_compatible = {
+            api_key = "TERM",
+            name = "Ollama",
+            end_point = "http://localhost:11434/v1/completions",
+            model = "qwen2.5-coder:3b",
+            optional = {
+              max_tokens = 50,
+              top_p = 0.9,
+            },
+          },
+        },
+        virtualtext = {
+          auto_trigger_ft = { "*" },
+          keymap = {
+            accept = "<Tab>",
+            accept_line = "<C-a>",
+            prev = "<C-p>",
+            next = "<C-n>",
+          },
+        },
+      })
+    end,
   },
 })
 
