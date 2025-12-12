@@ -30,5 +30,7 @@
     blocky = {
       enable = true;
     };
+
+    ollama.enable = true;
   };
 }

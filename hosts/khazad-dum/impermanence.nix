@@ -34,6 +34,7 @@
       "/var/lib/fprint"
       "/var/lib/tailscale"
       "/var/lib/boltd"
+      "/var/lib/ollama/models"
       "/etc/NetworkManager/system-connections"
     ];
     files = [
