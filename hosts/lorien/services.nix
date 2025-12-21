@@ -30,7 +30,7 @@
       file = ../../secrets/restic-password.age;
       owner = "restic";
       group = "restic";
-      mode = "0440";
+      mode = "0400";
     };
 
     aiden-garmin-password = {
