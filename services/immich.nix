@@ -44,6 +44,13 @@ in
         immich-db-password.file = ../secrets/immich-db-password.age;
     };
 
+    # TODO: restic needs proper permissions
+    # implement once config is fully nix'ed
+    # agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
+    #   cfg.uploadLocation
+    #   cfg.dataLocation
+    # ];
+
     systemd.services = {
       create-immich-network = {
         description = "Create Docker network for Immich containers";

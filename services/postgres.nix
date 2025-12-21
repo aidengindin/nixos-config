@@ -6,6 +6,8 @@ let
   mkUserList = users: map (user: { name = user; ensureDBOwnership = true; }) users;
 
   port = 5432;
+
+  backupPath = "/var/backup/postgres";
 in
 {
   options.agindin.services.postgres = {
@@ -15,6 +17,11 @@ in
       default = [];
       description = "List of users for which to create Postgres users and associated databases";
     };
+    backupTimerOnCalendar = mkOption {
+      description = "systemd OnCalendar expression for backup frequency";
+      type = types.str;
+      default = "daily";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -23,6 +30,39 @@ in
       ensureUsers = mkUserList cfg.ensureUsers;
       ensureDatabases = cfg.ensureUsers;
       settings.port = port;
+    };
+
+    agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
+      backupPath
+    ];
+
+    systemd.tmpfiles.rules = [
+      "d ${backupPath} 0750 postgres restic -"
+    ];
+
+    systemd.services.postgres-backup = {
+      description = "PostgreSQL backup";
+      serviceConfig = {
+        Type = "oneshot";
+        User = "postgres";
+        ExecStart = pkgs.writeShellScript "pg-backup" ''
+          for db in ${lib.escapeShellArgs cfg.ensureUsers}; do
+            ${config.services.postgresql.package}/bin/pg_dump -Fc "$db" \
+              > "${backupPath}/$db.dump"
+          done
+        '';
+      };
+    };
+
+    # To restore:
+    # sudo -u postgres pg_restore -d mydb /var/backup/postgres/mydb.dump
+
+    systemd.timers.postgres-backup = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = cfg.backupTimerOnCalendar;
+        Persistent = true;
+      };
     };
   };
 }

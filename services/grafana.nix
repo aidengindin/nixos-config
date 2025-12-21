@@ -7,6 +7,7 @@ let
 
   grafanaDir = "/var/lib/grafana";
   prometheusDir = "prometheus2";  # under /var/lib
+  prometheusDirFull = "/var/lib/${prometheusDir}";
   lokiDir = "/var/lib/loki";
 
   grafanaPort = 10001;
@@ -74,6 +75,18 @@ in {
       };
     };
 
+    agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
+      grafanaDir
+      prometheusDirFull
+      lokiDir
+    ];
+
+    systemd.tmpfiles.rules = mkIf config.agindin.services.restic.enable [
+      "d ${grafanaDir} 0750 grafana restic -"
+      "d ${prometheusDirFull} 0750 prometheus restic -"
+      "d ${lokiDir} 0750 loki restic -"
+    ];
+
     services.grafana = {
       enable = true;
       dataDir = "${grafanaDir}";
@@ -89,7 +102,6 @@ in {
           name = "grafana";
           user = "grafana";
           host = "/run/postgresql";  # apparently doesn't support specifying a port, so don't change it!
-          # host = "/run/postgresql/.s.PGSQL.${toString config.services.postgresql.settings.port}";
         };
         "auth.basic".enabled = false;
         "auth.generic_oauth" = {
