@@ -6,6 +6,7 @@
     ./bitwarden.nix
     ./claude-code.nix
     ./cli.nix
+    ./crush.nix
     ./dev.nix
     ./direnv.nix
     ./emacs.nix
@@ -18,6 +19,7 @@
     ./nix.nix
     ./node.nix
     ./nvim.nix
+    ./opencode.nix
     ./spotify.nix
     ./starship.nix
     ./yazi.nix

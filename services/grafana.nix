@@ -12,9 +12,6 @@ let
   grafanaPort = 10001;
   prometheusPort = 10002;
   lokiPort = 10004;
-  promtailPort = 10005;
-
-  hostName = config.networking.hostName;
 in {
   options.agindin.services.grafana = {
     enable = mkEnableOption "grafana";

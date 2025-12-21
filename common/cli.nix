@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ai-tools, ... }:
+{ config, lib, pkgs, ... }:
 {
   config = {
     home-manager.users.agindin.programs = {
@@ -13,7 +13,7 @@
       };
     };
 
-    environment.systemPackages = (with pkgs; [
+    environment.systemPackages = with pkgs; [
       bat
       duf
       dust
@@ -21,13 +21,12 @@
       fselect
       fzf
       ldns
+      lsof
       procs
       ripgrep
       ripgrep-all
       sd
       usbutils
-    ]) ++ (with ai-tools.packages.${pkgs.stdenv.hostPlatform.system}; [
-      crush
-    ]);
+    ];
   };
 }

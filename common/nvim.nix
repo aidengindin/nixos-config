@@ -24,6 +24,16 @@
       python313
       lua51Packages.lua
       lua51Packages.luarocks
+      lazygit
+      
+      # LSPs
+      lua-language-server
+      pyright
+      rust-analyzer
+      nixd
+      nixfmt
+      bash-language-server
+      haskell-language-server
     ];
   };
 }

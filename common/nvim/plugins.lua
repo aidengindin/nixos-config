@@ -29,6 +29,7 @@ require("lazy").setup({
           variables = { "italic" }
         },
         integrations = {
+          bufferline = true,
           blink_cmp = {
             style = "bordered",
           },
@@ -129,7 +130,7 @@ require("lazy").setup({
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("bufferline").setup({
-        highlights = require("catppuccin.groups.integrations.bufferline").get(),
+        -- highlights = require("catppuccin.groups.integrations.bufferline").get(),
         options = {
           mode = "tabs",
           show_buffer_close_icons = true,
@@ -323,29 +324,11 @@ require("lazy").setup({
 
   -- LSP and completion
   {
-    "williamboman/mason.nvim",
-    config = function()
-      require("mason").setup()
-    end
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    config = function()
-      require("mason-lspconfig").setup {
-        ensure_installed = {
-          "lua_ls",
-          "pyright",
-          "rust_analyzer"
-        },
-        automatic_installation = true
-      }
-    end
-  },
-  {
     "neovim/nvim-lspconfig",
     config = function()
-      local lspconfig = require("lspconfig")
-      lspconfig.lua_ls.setup {
+      vim.lsp.config('lua_ls', {
+        filetypes = { 'lua' },
+        root_markers = { '.git' },
         settings = {
           Lua = {
             diagnostics = {
@@ -357,13 +340,59 @@ require("lazy").setup({
             }
           }
         }
-      }
-      lspconfig.pyright.setup {}
-      lspconfig.rust_analyzer.setup {}
+      })
+      vim.lsp.config('pyright', {
+        filetypes = { 'python' },
+        root_markers = { '.git', 'setup.py', 'pyproject.toml' },
+      })
+      vim.lsp.config('rust_analyzer', {
+        filetypes = { 'rust' },
+        root_markers = { '.git', 'Cargo.toml' },
+      })
+      vim.lsp.config('nixd', {
+        filetypes = { 'nix' },
+        root_markers = { '.git', 'flake.nix' },
+        settings = {
+          nixd = {
+            nixpkgs = {
+              expr = 'import (builtins.getFlake \"/home/agindin/code/nixos-config\").inputs.nixpkgs { }',
+            },
+            formatting = {
+              command = 'nixfmt',
+            },
+            options = {
+              nixos = {
+                expr = '(builtins.getFlake ("git+file://" + toString ./.)).nixosConfigurations.khazad-dum.options',
+              },
+              home_manager = {
+                expr = '(builtins.getFlake ("git+file://" + toString ./.)).nixosConfigurations.khazad-dum.options.home-manager.users.type.getSuboptions []',
+              },
+            },
+          },
+        },
+      })
+      vim.lsp.config('bashls', {
+        cmd = { 'bash-language-server', 'start' },
+        filetypes = { 'sh' },
+      })
+      vim.lsp.config('hls', {
+        cmd = { 'haskell-language-server-wrapper', '--lsp' },
+        filetypes = { 'haskell', 'lhaskell' },
+        root_markers = { '.git', '*.cabal', 'cabal.project', 'stack.yaml', 'package.yaml' },
+      })
+
+      vim.lsp.enable({
+        'lua_ls',
+        'pyright',
+        'rust_analyzer',
+        'nixd',
+        'bashls',
+        'hls',
+      })
     end
   },
   {
-    "Saghen/blink.cmp",
+    "saghen/blink.cmp",
     dependencies = {
       'rafamadriz/friendly-snippets',
     },
@@ -409,7 +438,7 @@ require("lazy").setup({
     ft = "lua",
     opts = {
       library = {
-        "~/nixos-config/common/nvim"
+        "~/code/nixos-config/common/nvim"
       }
     }
   },
@@ -488,7 +517,8 @@ require("lazy").setup({
       require("minuet").setup({
         provider = "openai_fim_compatible",
         n_completions = 1,
-        context_window = 512,
+        context_window = 1024,
+        request_timeout = 60,  -- models take longer than the default 3s to load
         provider_options = {
           openai_fim_compatible = {
             api_key = "TERM",
@@ -503,13 +533,48 @@ require("lazy").setup({
         },
         virtualtext = {
           auto_trigger_ft = { "*" },
+          auto_trigger_ignore_ft = { "TelescopePrompt", "snacks_picker", "opencode_input", "opencode_output" },
           keymap = {
-            accept = "<Tab>",
-            accept_line = "<C-a>",
-            prev = "<C-p>",
-            next = "<C-n>",
+            accept = "<A-j>",
+            accept_line = "<A-k>",
+            dismiss = "<A-x>",
           },
         },
+      })
+    end,
+  },
+
+  {
+    'sudo-tee/opencode.nvim',
+    lazy = false,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      {
+        "MeanderingProgrammer/render-markdown.nvim",
+        opts = {
+          anti_conceal = { enabled = false },
+          file_types = { 'markdown', 'opencode_output' },
+        },
+        ft = { 'markdown', 'Avante', 'copilot-chat', 'opencode_output' },
+      },
+      'saghen/blink.cmp',
+    },
+    config = function ()
+      local status, opencode = pcall(require, 'opencode')
+      if not status then
+        vim.notify('Failed to load opencode: ' .. tostring(opencode), vim.log.levels.ERROR)
+        return
+      end
+      
+      if not opencode.setup then
+        vim.notify('opencode.setup is nil, got: ' .. vim.inspect(opencode), vim.log.levels.ERROR)
+        return
+      end
+
+      require('opencode').setup({
+        preferred_picker = 'snacks',
+        preferred_completion = 'blink',
+        default_global_keymaps = false,
       })
     end,
   },
