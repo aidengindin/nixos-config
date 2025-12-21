@@ -28,8 +28,8 @@
   age.secrets = {
     restic-password = {
       file = ../../secrets/restic-password.age;
-      owner = "root";
-      group = "keys";
+      owner = "restic";
+      group = "restic";
       mode = "0440";
     };
 
