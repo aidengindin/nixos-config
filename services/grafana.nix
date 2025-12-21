@@ -154,6 +154,7 @@ in {
       configuration = {
         server.http_listen_port = lokiPort;
         auth_enabled = false;
+        memberlist.bind_addr = "127.0.0.1";
 
         common = {
           path_prefix = lokiDir;
