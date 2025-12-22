@@ -7,19 +7,6 @@
     
     programs.bash.blesh.enable = true;
 
-    age.secrets = {
-      codecompanion-anthropic-key = {
-        file = ../secrets/codecompanion-anthropic-key.age;
-        owner = "agindin";
-        mode = "0400";
-      };
-      codecompanion-gemini-key = {
-        file = ../secrets/codecompanion-gemini-key.age;
-        owner = "agindin";
-        mode = "0400";
-      };
-    };
-
     programs.bash = {
       interactiveShellInit = lib.mkAfter ''
         set -o vi
@@ -52,9 +39,6 @@
         else
           BLE_ONLOAD+=(__my_atuin_keybind)
         fi
-        export ANTHROPIC_API_KEY="$(cat ${config.age.secrets.codecompanion-anthropic-key.path})"
-        export GEMINI_API_KEY="$(cat ${config.age.secrets.codecompanion-gemini-key.path})"
-
         bind 'set completion-ignore-case on'
         
         # TODO: TEMPORARY FIX - Remove when nix completion scripts are fixed

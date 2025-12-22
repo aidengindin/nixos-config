@@ -81,28 +81,30 @@ in
       };
     };
 
-    services.restic.backups = let
-      commonOptions = {
-        initialize = true;
-        passwordFile = "${cfg.passwordPath}";
-        paths = cfg.paths;
-        pruneOpts = [
-          "--keep-daily 7"
-          "--keep-weekly 4"
-          "--keep-monthly 12"
-        ];
-        timerConfig = {
-          OnCalendar = "02:00";
-          Persistent = true;
-          OnClockChange = true;
-          OnTimezoneChange = true;
+    services.restic = {
+      backups = let
+        commonOptions = {
+          initialize = true;
+          passwordFile = "${cfg.passwordPath}";
+          paths = cfg.paths;
+          pruneOpts = [
+            "--keep-daily 7"
+            "--keep-weekly 4"
+            "--keep-monthly 12"
+          ];
+          timerConfig = {
+            OnCalendar = "02:00";
+            Persistent = true;
+            OnClockChange = true;
+            OnTimezoneChange = true;
+          };
+          user = "restic";
         };
-        user = "restic";
+      in {
+        local = mkIf cfg.localBackup.enable (commonOptions // {
+          repository = cfg.localBackup.repository;
+        });
       };
-    in {
-      local = mkIf cfg.localBackup.enable (commonOptions // {
-        repository = cfg.localBackup.repository;
-      });
     };
   };
 }
