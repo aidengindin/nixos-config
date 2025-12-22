@@ -8,10 +8,11 @@
   boot.kernelPackages = pkgs.linuxPackages_6_18;
 
   hardware.graphics.package = pkgs.mesa;
-  
-  environment.systemPackages = with pkgs; [
-    libinput
-  ];
+
+  agindin.impermanence = {
+    enable = true;
+    fileSystem = "btrfs";
+  };
 
   # Do not allow external SSH access
   agindin.ssh = {

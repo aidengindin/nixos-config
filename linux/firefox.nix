@@ -294,6 +294,10 @@ in
         "tridactyl/themes/mocha/mocha.css".source = ./firefox/tridactyl/mocha.css;
       };
     };
+
+    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
+      ".mozilla"
+    ];
   };
 }
 

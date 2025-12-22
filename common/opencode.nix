@@ -7,6 +7,12 @@ in {
 
   config = mkIf cfg.enable {
     environment.systemPackages = [ unstablePkgs.opencode ];
+
+    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
+      ".config/opencode"
+      ".local/share/opencode"
+      ".local/state/opencode"
+    ];
   };
 }
 

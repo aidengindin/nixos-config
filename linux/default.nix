@@ -11,6 +11,7 @@
     ./firefox.nix
     ./gamingOptimizations.nix
     ./hyprland.nix
+    ./impermanence.nix
     ./kanata.nix
     ./locale.nix
     ./network.nix

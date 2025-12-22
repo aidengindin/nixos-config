@@ -10,6 +10,10 @@ in {
     services.fprintd = {
       enable = true;
     };
+
+    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
+      "/var/lib/fprint"
+    ];
   };
 }
 

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, unstablePkgs, ... }:
+{ config, lib, unstablePkgs, ... }:
 let
   cfg = config.agindin.spotify;
   inherit (lib) mkIf mkEnableOption;
@@ -12,6 +12,10 @@ in
       enable = true;
       package = unstablePkgs.spotify-player;
     };
+
+    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
+      ".cache/spotify-player"
+    ];
   };
 }
 

@@ -37,5 +37,9 @@ in
       User = "ollama";
       Group = "ollama";
     };
+
+    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
+      "/var/lib/ollama/models"
+    ];
   };
 }

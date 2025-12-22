@@ -185,6 +185,10 @@ in {
         };
       };
     };
+
+    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
+      ".config/kdeconnect"
+    ];
   };
 }
 

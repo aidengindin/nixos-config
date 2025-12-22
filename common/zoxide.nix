@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 {
   config = {
     home-manager.users.agindin = {
@@ -7,5 +7,9 @@
         enableBashIntegration = true;
       };
     };
+
+    agindin.impermanence.userDirectories = lib.mkIf config.agindin.impermanence.enable [
+      ".local/share/zoxide"
+    ];
   };
 }

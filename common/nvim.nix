@@ -35,6 +35,11 @@
       bash-language-server
       haskell-language-server
     ];
+
+    agindin.impermanence.userDirectories = lib.mkIf config.agindin.impermanence.enable [
+      ".local/share/nvim"
+      ".local/state/nvim"
+    ];
   };
 }
 

@@ -81,5 +81,9 @@
       v = "nvim";
       vim = "nvim";
     };
+
+    agindin.impermanence.userDirectories = lib.mkIf config.agindin.impermanence.enable [
+      ".local/share/atuin"
+    ];
   };
 }

@@ -11,6 +11,12 @@ in {
     programs.steam = {
       enable = true;
     };
+
+    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
+      ".config/unity3d"
+      ".local/share/Steam"
+      ".steam"
+    ];
   };
 }
 

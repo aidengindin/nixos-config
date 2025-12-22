@@ -21,6 +21,10 @@ in {
         NETWORKING=host
       '';
     };
+
+    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
+      ".local/share/containers"
+    ];
   };
 }
 
