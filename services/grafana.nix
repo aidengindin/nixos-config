@@ -118,7 +118,7 @@ in {
               name = "Prometheus";
               type = "prometheus";
               access = "proxy";
-              url = "http://localhost:${toString globalVars.port.prometheus}";
+              url = "http://localhost:${toString globalVars.ports.prometheus}";
               uid = "local-prometheus";
               jsonData = {
                 httpMethod = "POST";
