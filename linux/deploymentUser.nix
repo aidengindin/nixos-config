@@ -1,4 +1,4 @@
-{ config, pkgs, globalVars, ... }:
+{ config, lib, pkgs, globalVars, ... }:
 let
   deployKeys = [
     globalVars.keys.khazad-dumUser
@@ -72,6 +72,10 @@ in {
     # Ensure the deploy user can write to its home for SSH known_hosts etc.
     systemd.tmpfiles.rules = [
       "d /var/lib/nixos-deploy 0700 nixos-deploy nixos-deploy -"
+    ];
+
+    agindin.impermanence.systemFiles = lib.mkIf config.agindin.impermanence.enable [
+      "/var/lib/nixos-deploy/commands.log"
     ];
   };
 }
