@@ -7,10 +7,6 @@ let
   prometheusDir = "prometheus2";  # under /var/lib
   prometheusDirFull = "/var/lib/${prometheusDir}";
   lokiDir = "/var/lib/loki";
-
-  grafanaPort = 10001;
-  prometheusPort = 10002;
-  lokiPort = 10004;
 in {
   options.agindin.services.grafana = {
     enable = mkEnableOption "grafana";
@@ -142,7 +138,7 @@ in {
 
     services.prometheus = {
       enable = true;
-      port = prometheusPort;
+      port = globalVars.ports.prometheus;
       stateDir = "${prometheusDir}";
       scrapeConfigs = map (c: {
         job_name = c.name;
@@ -156,7 +152,7 @@ in {
       enable = true;
       dataDir = lokiDir;
       configuration = {
-        server.http_listen_port = lokiPort;
+        server.http_listen_port = globalVars.ports.loki;
         auth_enabled = false;
         memberlist.bind_addr = [ "127.0.0.1" ];
 
