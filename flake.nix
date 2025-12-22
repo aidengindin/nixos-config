@@ -56,6 +56,7 @@
           else home-manager.nixosModules.home-manager)
         agenix.nixosModules.default
         zwift.nixosModules.default
+        impermanence.nixosModules.impermanence
       ];
 
       # special args for all NixOS systems
@@ -85,7 +86,6 @@
           modules = (standardNixosModules false) ++ [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
-            impermanence.nixosModules.impermanence
             ./hosts/khazad-dum
           ];
         };
