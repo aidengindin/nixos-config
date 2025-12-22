@@ -1,15 +1,13 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, globalVars, ... }:
 let
   cfg = config.agindin.services.prometheusExporter;
   inherit (lib) mkIf mkOption mkEnableOption types;
-
-  hostName = config.networking.hostName;
 in {
   options.agindin.services.prometheusExporter = {
     enable = mkEnableOption "prometheusExporter";
     port = mkOption {
      type = types.port;
-     default = 10003;
+     default = globalVars.ports.prometheusNodeExporter;
     };
   };
 

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, isLinux, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.agindin.kitty;
   inherit (lib) mkIf mkEnableOption;
@@ -13,7 +13,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = mkIf isLinux [
+    environment.systemPackages = [
       pkgs.kitty
     ];
     home-manager.users.agindin.home.file.".config/kitty/kitty.conf".source = ./kitty/kitty.conf;

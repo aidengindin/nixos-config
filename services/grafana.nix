@@ -1,9 +1,7 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, globalVars, ... }:
 let
   cfg = config.agindin.services.grafana;
   inherit (lib) mkIf mkOption mkEnableOption types;
-
-  containerLib = import ../lib/container.nix { inherit lib pkgs; };
 
   grafanaDir = "/var/lib/grafana";
   prometheusDir = "prometheus2";  # under /var/lib
@@ -88,7 +86,7 @@ in {
         server = {
           domain = cfg.host;
           http_addr = "127.0.0.1";
-          http_port = grafanaPort;
+          http_port = globalVars.ports.grafana;
           root_url = "https://${cfg.host}";
         };
         database = {
@@ -120,7 +118,7 @@ in {
               name = "Prometheus";
               type = "prometheus";
               access = "proxy";
-              url = "http://localhost:${toString prometheusPort}";
+              url = "http://localhost:${toString globalVars.port.prometheus}";
               uid = "local-prometheus";
               jsonData = {
                 httpMethod = "POST";
@@ -134,7 +132,7 @@ in {
               name = "Loki";
               type = "loki";
               access = "proxy";
-              url = "http://localhost:${toString lokiPort}";
+              url = "http://localhost:${toString globalVars.ports.loki}";
               uid = "local-loki";
             }
           ];

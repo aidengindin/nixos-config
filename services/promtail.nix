@@ -1,10 +1,7 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, globalVars, ... }:
 let
   cfg = config.agindin.services.promtail;
   inherit (lib) mkIf mkEnableOption mkOption types;
-
-  lokiPort = 10004;
-  promtailPort = 10005;
 in {
   options.agindin.services.promtail = {
     enable = mkEnableOption "promtail";
@@ -20,14 +17,14 @@ in {
       enable = true;
       configuration = {
         server = {
-          http_listen_port = promtailPort;
+          http_listen_port = globalVars.ports.promtail;
           grpc_listen_port = 0;
         };
         positions = {
           filename = "/tmp/promtail_positions.yml";
         };
         clients = [{
-          url = "http://${cfg.lokiHost}:${toString lokiPort}/loki/api/v1/push";
+          url = "http://${cfg.lokiHost}:${toString globalVars.ports.loki}/loki/api/v1/push";
         }];
         scrape_configs = [{
           job_name = "journal";

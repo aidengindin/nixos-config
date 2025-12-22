@@ -1,10 +1,15 @@
-{ config, lib, pkgs, ... }:
+{ ... }:
 let
-  inherit (lib) strings;
+  globalVars = {
+    ports = {
+      grafana = 10001;
+      prometheus = 10002;
+      prometheusNodeExporter = 10003;
+      loki = 10004;
+      promtail = 10005;
+    };
+  };
 in
 {
-  _module.args = {
-    isLinux = strings.hasInfix "linux" pkgs.stdenv.hostPlatform.system;
-    isDarwin = strings.hasInfix "darwin" pkgs.stdenv.hostPlatform.system;
-  };
+  _module.args = { inherit globalVars; };
 }
