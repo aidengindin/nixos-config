@@ -8,14 +8,11 @@ let
 
   # makes accessing these options less tedious
   myServices = config.agindin.services;
-  freshrss = myServices.freshrss;
   immich = myServices.immich;
   miniflux = myServices.miniflux;
   tandoor = myServices.tandoor;
   calibre = myServices.calibre;
-  memos = myServices.memos;
   openwebui = myServices.openwebui;
-  searxng = myServices.searxng;
   pocket-id = myServices.pocket-id;
   audiobookshelf = myServices.audiobookshelf;
   grafana = myServices.grafana;
@@ -74,13 +71,6 @@ in
             }
           '';
         in ''
-          ${mkStrIf freshrss.enable ''
-          ${freshrss.host} {
-            reverse_proxy 192.168.100.11:80
-            ${tlsSetup}
-          }
-          ''}
-  
           ${mkStrIf miniflux.enable ''
           ${miniflux.host} {
             reverse_proxy 192.168.102.11:8080
@@ -113,13 +103,6 @@ in
           }
           ''}
   
-          ${mkStrIf memos.enable ''
-          ${memos.host} {
-            reverse_proxy 127.0.0.1:5230
-            ${tlsSetup}
-          }
-          ''}
-  
           ${mkStrIf openwebui.enable ''
           ${openwebui.host} {
             reverse_proxy ${openwebui.ip}:8080
@@ -127,13 +110,6 @@ in
           }
           ''}
   
-          ${mkStrIf searxng.enable ''
-          ${searxng.host} {
-            reverse_proxy 127.0.0.1:8888
-            ${tlsSetup}
-          }
-          ''}
-
           ${mkStrIf pocket-id.enable ''
           ${pocket-id.host} {
             reverse_proxy 192.168.103.11:1411 {

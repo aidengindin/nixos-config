@@ -1,25 +1,16 @@
-{ config, lib, pkgs, ... }:
+{ pkgs, ... }:
 {
   config = {
-    home-manager.users.agindin.programs = {
-      eza = {
-        enable = true;
-        git = true;
-        icons = "auto";
-      };
-
-      bottom = {
-        enable = true;
-      };
-    };
-
     environment.systemPackages = with pkgs; [
       bat
+      bottom
       duf
       dust
+      eza
       fd
       fselect
       fzf
+      jq
       ldns
       lsof
       procs

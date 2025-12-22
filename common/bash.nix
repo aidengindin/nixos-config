@@ -72,9 +72,9 @@
     environment.shellAliases = {
       mkdir = "mkdir -p";
       
-      ls = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
-      l = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
-      ll = "eza -lah --group-directories-first";
+      ls = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions --icons=auto";
+      l = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions --icons=auto";
+      ll = "eza -lah --group-directories-first --icons=auto";
 
       cat = "bat";
 

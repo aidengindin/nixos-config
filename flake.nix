@@ -22,30 +22,14 @@
 
     nixos-hardware.url = "github:nixos/nixos-hardware/master";
 
-    # macos configurations
-    darwin = {
-      url = "github:lnl7/nix-darwin/nix-darwin-25.11";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # secrets management
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    wallabag-client = {
-      url = "github:artur-shaik/wallabag-client";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     zwift = {
       url = "github:netbrain/zwift";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
-    ai-tools = {
-      url = "github:numtide/nix-ai-tools";
       inputs.nixpkgs.follows = "unstable";
     };
  };
@@ -59,11 +43,8 @@
     disko,
     impermanence,
     nixos-hardware,
-    darwin,
     agenix,
-    wallabag-client,
-    zwift,
-    ai-tools
+    zwift
   }:
     let
 
@@ -79,7 +60,7 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix ai-tools;
+        inherit agenix;
         unstablePkgs = import unstable {
           system = "x86_64-linux";
           config.allowUnfree = true;
@@ -107,39 +88,6 @@
             impermanence.nixosModules.impermanence
             ./hosts/khazad-dum
           ];
-        };
-      };
-
-      darwinConfigurations = {
-
-        # my main laptop
-        shadowfax = darwin.lib.darwinSystem {
-          system = "aarch64-darwin";
-          modules = [
-            ./hosts/shadowfax
-            home-manager.darwinModules.home-manager
-            agenix.darwinModules.default
-
-            # ghostscript fix
-            {
-              nixpkgs.overlays = [
-                (final: prev: {
-                  ghostscript = unstable.legacyPackages.aarch64-darwin.ghostscript;
-                })
-              ];
-            }
-
-            ({ config, pkgs, ... }: {
-              environment.systemPackages = [ wallabag-client.packages.aarch64-darwin.default ];
-            })
-          ];
-          specialArgs = {
-            inherit agenix ai-tools;
-            unstablePkgs = import unstable {
-              system = "aarch64-darwin";
-              config.allowUnfree = true;
-            };
-          };
         };
       };
     };

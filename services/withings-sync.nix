@@ -8,14 +8,14 @@ let
       owner = "aidengindin";
       repo = "withings-sync";
       rev = "feat/credential-file-env-variable";
-      sha256 = "sha256-UfSpJyGtXc29VdhjziisfAIIgSzm+NnBfhfukuObl9M=";
+      sha256 = "sha256-mZi07BzzyKyAPqF/2AZLegeQxV+1Yx/3fwbN+BT1T/w=";
     };
     propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
       unstablePkgs.python312Packages.setuptools
     ];
   });
 
-  syncOpts = { name, config, ... }: {
+  syncOpts = { name, ... }: {
     options = {
       enable = mkEnableOption "withings-sync service for ${name}";
 

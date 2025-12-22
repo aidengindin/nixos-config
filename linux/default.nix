@@ -1,4 +1,4 @@
-{ config, pkgs, agenix, ... }:
+{ lib, pkgs, ... }:
 {
   imports = [
     ./3dprint.nix
@@ -10,6 +10,7 @@
     ./fingerprint.nix
     ./firefox.nix
     ./gamingOptimizations.nix
+    ./hyprland.nix
     ./kanata.nix
     ./locale.nix
     ./network.nix
@@ -34,7 +35,7 @@
           description = "agindin";
           uid = 1000;
           extraGroups = [ "networkmanager" "wheel" ];
-          packages = with pkgs; [];
+          packages = [];
           hashedPassword = "$6$rounds=100000$mvocPLlUwP/M152J$GsuZBekrbHKGVDzJV3VeRCXoqiFl6l3Dgwd/UPoD3FU0K3LUbGujeG4RrhLsGUQam9M23M8.Ve1z04fIIPpWa0";
         };
       };

@@ -93,7 +93,6 @@
     calibre.enable = true;
     immich.enable = true;
     openwebui.enable = true;
-    searxng.enable = true;
     tandoor.enable = true;
     pocket-id.enable = true;
 

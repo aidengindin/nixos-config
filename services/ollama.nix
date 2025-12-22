@@ -9,7 +9,7 @@ in
     enableRocm = mkOption {
       type = types.bool;
       description = "Whether to enable AMD GPU support";
-      default = true;
+      default = false;
     };
   };
 

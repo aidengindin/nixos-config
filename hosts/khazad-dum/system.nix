@@ -1,14 +1,11 @@
-{ config, pkgs, unstablePkgs, ... }:
-let
-  accentColor = "blue";
-in
+{ pkgs, ... }:
 {
   imports =
     [
       ../../linux
     ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_17;
+  boot.kernelPackages = pkgs.linuxPackages_6_18;
 
   hardware.graphics.package = pkgs.mesa;
   
@@ -21,7 +18,7 @@ in
     enable = false;
   };
 
-  agindin.desktop.enable = true;
+  agindin.hyprland.enable = true;
   agindin.bluetooth.enable = true;
   agindin.fingerprint.enable = true;
   agindin.avahi.enable = true;
@@ -54,8 +51,6 @@ in
   agindin.steam.enable = true;
 
   agindin.print3d.enable = true;
-
-  agindin.crush.enable = true;
 
   agindin.opencode.enable = true;
 

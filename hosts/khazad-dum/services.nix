@@ -27,10 +27,9 @@
     #   passwordPath = config.age.secrets.restic-password.path;
     # };
 
-    blocky = {
+    ollama = {
       enable = true;
+      enableRocm = true;
     };
-
-    ollama.enable = true;
   };
 }
