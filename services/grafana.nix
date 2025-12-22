@@ -81,12 +81,6 @@ in {
       lokiDir
     ];
 
-    systemd.tmpfiles.rules = mkIf config.agindin.services.restic.enable [
-      "d ${grafanaDir} 0750 grafana restic -"
-      "d ${prometheusDirFull} 0750 prometheus restic -"
-      "d ${lokiDir} 0750 loki restic -"
-    ];
-
     services.grafana = {
       enable = true;
       dataDir = "${grafanaDir}";

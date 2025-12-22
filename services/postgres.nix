@@ -36,10 +36,6 @@ in
       backupPath
     ];
 
-    systemd.tmpfiles.rules = [
-      "d ${backupPath} 0750 postgres restic -"
-    ];
-
     systemd.services.postgres-backup = {
       description = "PostgreSQL backup";
       serviceConfig = {

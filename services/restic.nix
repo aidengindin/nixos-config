@@ -69,7 +69,12 @@ in
         "d ${cfg.localBackup.repository} 0750 restic restic - -"
       ];
       services."restic-backups-local" = {
-        serviceConfig.SupplementaryGroups = [ config.users.groups.keys.name ];
+        serviceConfig = {
+          SupplementaryGroups = [ config.users.groups.keys.name ];
+          CPUQuota = "50%";
+          Nice = 19;
+          IOSchedulingClass = "idle";
+        };
       } // mkIf (cfg.localBackup.repositoryMountUnitName != "") {
         after = [ cfg.localBackup.repositoryMountUnitName ];
         requires = [ cfg.localBackup.repositoryMountUnitName ];
@@ -87,7 +92,7 @@ in
           "--keep-monthly 12"
         ];
         timerConfig = {
-          OnCalendar = "daily";
+          OnCalendar = "02:00";
           Persistent = true;
           OnClockChange = true;
           OnTimezoneChange = true;
