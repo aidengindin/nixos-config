@@ -66,7 +66,6 @@
       paths = [
         "/docker-volumes/calibre"
         "/docker-volumes/tandoor"
-        "/var/lib/freshrss"
         "/var/lib/immich"
         "/srv/immich"
       ];
@@ -92,7 +91,6 @@
 
     audiobookshelf.enable = true;
     calibre.enable = true;
-    freshrss.enable = true;
     immich.enable = true;
     openwebui.enable = true;
     searxng.enable = true;
