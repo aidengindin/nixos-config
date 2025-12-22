@@ -14,9 +14,9 @@
     fileSystem = "btrfs";
   };
 
-  # Do not allow external SSH access
   agindin.ssh = {
-    enable = false;
+    enable = true;
+    allowedKeys = [];
   };
 
   agindin.hyprland.enable = true;

@@ -6,6 +6,7 @@
     ./bluetooth.nix
     ./bolt.nix
     ./containers.nix
+    ./deploymentUser.nix
     ./desktop.nix
     ./fingerprint.nix
     ./firefox.nix
