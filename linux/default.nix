@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ lib, pkgs, colmena, ... }:
 {
   imports = [
     ./3dprint.nix
@@ -46,6 +46,7 @@
     environment.systemPackages = with pkgs; [
       lm_sensors
       (lib.hiPrio pkgs.uutils-coreutils-noprefix)
+      colmena.packages.${pkgs.system}.colmena
     ];
 
     security.sudo-rs = {
