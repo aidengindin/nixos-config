@@ -5,27 +5,45 @@ let
   ];
 
   deployWrapper = pkgs.writeShellScript "deploy-wrapper" ''
+    export PATH="/run/wrappers/bin:$PATH"
+    
     # Log all attempts
     echo "$(date -Iseconds) deploy: $SSH_ORIGINAL_COMMAND" >> /var/lib/nixos-deploy/commands.log
-
+    
     # Must have a command
     [[ -z "''${SSH_ORIGINAL_COMMAND:-}" ]] && exit 1
-
+    
     # Allowlist of command prefixes
     case "$SSH_ORIGINAL_COMMAND" in
-      "nix-env --version"*|"nix --version"*|"nix-store --version"*)
+      "nix-daemon --stdio")
+        exec ${pkgs.nix}/bin/nix-daemon --stdio
         ;;
-      "nix "copy*|"nix-copy-closure "*|"nix-store --realise "*|"nix-store -r "*)
+      "nix-env --version")
+        exec ${pkgs.nix}/bin/nix-env --version
+        ;;
+      "nix --version")
+        exec ${pkgs.nix}/bin/nix --version
+        ;;
+      "nix-store --version")
+        exec ${pkgs.nix}/bin/nix-store --version
+        ;;
+      "nix copy"*|"nix-copy-closure "*|"nix-store --realise "*|"nix-store -r "*)
+        exec bash -c "$SSH_ORIGINAL_COMMAND"
+        ;;
+      "sudo -H -- nix-env --profile /nix/var/nix/profiles/system --set /nix/store/"*)
+        exec /run/wrappers/bin/sudo -H -- ${pkgs.nix}/bin/nix-env ''${SSH_ORIGINAL_COMMAND#sudo -H -- nix-env }
         ;;
       "sudo /nix/store/"*"-nixos-system-"*"/bin/switch-to-configuration "*)
+        exec /run/wrappers/bin/sudo ''${SSH_ORIGINAL_COMMAND#sudo }
+        ;;
+      "sudo -H -- /nix/store/"*"-nixos-system-"*"/bin/switch-to-configuration "*)
+        exec /run/wrappers/bin/sudo -H -- ''${SSH_ORIGINAL_COMMAND#sudo -H -- }
         ;;
       *)
         echo "Denied: $SSH_ORIGINAL_COMMAND" >&2
         exit 1
         ;;
-    esac
-
-    exec bash -c "$SSH_ORIGINAL_COMMAND"
+  esac
   '';
   
   # Format keys with restrictions
@@ -36,14 +54,21 @@ let
 in {
   config = {
     users.users.nixos-deploy = {
-      isSystemUser = true;
+      isNormalUser = true;
+      uid = 1100;
       group = "nixos-deploy";
+      extraGroups = [ "wheel" ];
       home = "/var/lib/nixos-deploy";
       createHome = true;
       openssh.authorizedKeys.keys = restrictedKeys;
       shell = "${pkgs.bash}/bin/bash";
+      hashedPassword = "!";  # lock account to prevent password auth
     };
-    users.groups.nixos-deploy = {};
+    users.groups.nixos-deploy = {
+      gid = 1100;
+    };
+
+    nix.settings.trusted-users = [ "nixos-deploy" ];
 
     security.sudo-rs.extraRules = [{
       users = [ "nixos-deploy" ];
@@ -60,6 +85,10 @@ in {
         }
         {
           command = "${config.nix.package}/bin/nix-store";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "${config.nix.package}/bin/nix-daemon";
           options = [ "NOPASSWD" ];
         }
         {

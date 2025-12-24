@@ -13,6 +13,8 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    colmena.url = "github:zhaofengli/colmena";
+
     disko = {
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -28,6 +30,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    jovian = {
+      url = "github:jovian-experiments/jovian-nixos";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     zwift = {
       url = "github:netbrain/zwift";
       inputs.nixpkgs.follows = "unstable";
@@ -40,13 +47,16 @@
     unstable,
     home-manager,
     hm-unstable,
+    colmena,
     disko,
     impermanence,
     nixos-hardware,
     agenix,
+    jovian,
     zwift
   }:
     let
+      inherit (nixpkgs.lib) mapAttrs;
 
       # standard modules shared by all NixOS systems,
       # with some conditional logic based on whether it tracks stable or unstable
@@ -61,34 +71,81 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix;
+        inherit agenix colmena;
         unstablePkgs = import unstable {
           system = "x86_64-linux";
           config.allowUnfree = true;
         };
       };
-    in {
-      nixosConfigurations = {
 
-        # a mini pc home server
-        lorien = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = standardSpecialArgs;
-          modules = (standardNixosModules false) ++ [
+      nodeDefaults = {
+        deployment.targetUser = "nixos-deploy";
+      };
+
+      nodes = {
+        lorien = {
+          isUnstable = false;
+          tags = [ "server" ];
+          allowLocalDeployment = true;
+          modules = [
             ./hosts/lorien
           ];
         };
-
-        # my main laptop
-        khazad-dum = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = standardSpecialArgs;
-          modules = (standardNixosModules false) ++ [
+        khazad-dum = {
+          isUnstable = false;
+          tags = [ "laptop" ];
+          allowLocalDeployment = true;
+          modules = [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             disko.nixosModules.disko
             ./hosts/khazad-dum
           ];
         };
+        weathertop = {
+          isUnstable = true;
+          tags = [ "portable" ];
+          allowLocalDeployment = false;
+          modules = [
+            jovian.nixosModules.default
+          ];
+        };
       };
+    in {
+      colmenaHive = colmena.lib.makeHive self.outputs.colmena;
+
+      colmena = {
+        meta = {
+          nixpkgs = import nixpkgs {
+            system = "x86_64-linux";
+            overlays = [];
+          };
+          specialArgs = standardSpecialArgs;
+        };
+
+        defaults = nodeDefaults;
+      } // (mapAttrs (name: node: { ... }: {
+        imports = (standardNixosModules node.isUnstable) ++ node.modules;
+        deployment = {
+          allowLocalDeployment = node.allowLocalDeployment;
+          tags = node.tags;
+        };
+      } // (if node.isUnstable then {
+        _module.args.pkgs = import unstable {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+        };
+      } else {})) nodes);
+
+      nixosConfigurations = mapAttrs (name: node:
+        let
+          pkgsSource = if node.isUnstable
+            then unstable
+            else nixpkgs;
+        in pkgsSource.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = standardSpecialArgs;
+          modules = (standardNixosModules node.isUnstable) ++ node.modules;
+        }
+      ) nodes;
     };
 }
