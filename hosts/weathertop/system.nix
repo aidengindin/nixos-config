@@ -29,6 +29,8 @@
     "vm.max_map_count" = 262144; 
   };
 
+  zramSwap.enable = true;
+
   agindin.impermanence = {
     enable = true;
     fileSystem = "bcachefs";
