@@ -1,7 +1,11 @@
-{ config, lib, pkgs, ... }:
+{ ... }:
 {
   config = {
+    nixpkgs.config.allowUnfree = true;
     nix = {
+      extraOptions = ''
+        experimental-features = nix-command flakes
+      '';
       optimise = {
         automatic = true;
         dates = [ "weekly" ];

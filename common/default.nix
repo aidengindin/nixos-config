@@ -10,7 +10,6 @@
     ./latex.nix
     ./mpv.nix
     ./neomutt.nix
-    ./nix.nix
     ./nvim.nix
     ./opencode.nix
     ./spotify.nix

@@ -77,7 +77,6 @@ in
       anki
       bitwarden-desktop
       ungoogled-chromium
-      zoom-us
     ];
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
