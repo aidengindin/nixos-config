@@ -16,6 +16,12 @@ in {
       description = "Filesystem to use for impermanence. This determines how impermanence is implemented.";
     };
 
+    deviceLabel = mkOption {
+      type = types.str;
+      default = "main-pool";
+      description = "Disk lable to mount for wiping (required for bcachefs)";
+    };
+
     systemDirectories = mkOption {
       type = types.listOf types.str;
       default = [];
@@ -95,7 +101,7 @@ in {
       };
     };
     
-    boot.initrd.postDeviceCommands = mkIf (cfg.fileSystem == "btrfs") ''
+    boot.initrd.postDeviceCommands = if (cfg.fileSystem == "btrfs") then ''
       mkdir -p /mnt
       mount -o subvol=/ /dev/mapper/cryptroot /mnt
 
@@ -122,7 +128,27 @@ in {
       btrfs subvolume create /mnt/home
 
       umount /mnt
-    '';
+    '' else if (cfg.fileSystem == "bcachefs") then ''
+      mkdir -p /mnt
+      mount -t bcachefs LABEL=${cfg.deviceLabel} /mnt
+
+      if [ -d "/mnt/subvolumes" ]; then
+        for path in /mnt/subvolumes/*; do
+          dir=$(basename "$path")
+
+          if [ "$dir" = "nix" ] || [ "$dir" = "persist" ]; then
+            echo "Skipping preserved subvolume: $dir"
+          else
+            echo "Wiping ephemeral subvolume: $dir"
+            find "$path" -mindepth 1 -delete
+          fi
+        done
+      else
+        echo "WARNING: /mnt/subvolumes not found. Skipping wipe."
+      fi
+
+      umount /mnt
+    '' else "";
 
     age.identityPaths = [
       "/persist/etc/ssh/ssh_host_ed25519_key"
