@@ -30,6 +30,29 @@ in {
       ".local/share/gnome-shell"
       ".config/dconf"
     ];
+
+    home-manager.users.agindin.dconf = {
+      enable = true;
+      settings = {
+        "org/gnome/desktop/interface" = {
+          color-scheme = "prefer-dark";
+          enable-hot-corners = false;
+          show-battery-percentage = true;
+        };
+        "org/gnome/desktop/session" = {
+          idle-delay = "uint32 900";
+        };
+        "org/gnome/desktop/screensaver" = {
+          lock-enable = true;
+        };
+        "org/gnome/mutter" = {
+          edge-tiling = true;
+        };
+        "org/gnome/settings-daemon/plugins/power" = {
+          idle-dim = true;
+        };
+      };
+    };
   };
 }
 
