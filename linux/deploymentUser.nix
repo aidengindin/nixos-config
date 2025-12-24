@@ -68,7 +68,7 @@ in {
       gid = 1100;
     };
 
-    nix-settings.trusted-users = [ "nixos-deploy" ];
+    nix.settings.trusted-users = [ "nixos-deploy" ];
 
     security.sudo-rs.extraRules = [{
       users = [ "nixos-deploy" ];
