@@ -25,10 +25,6 @@
 
   networking.hostName = "weathertop";
 
-  boot.kernel.sysctl = {
-    "vm.max_map_count" = 262144; 
-  };
-
   zramSwap.enable = true;
 
   agindin.impermanence = {
@@ -42,8 +38,12 @@
     deck.enable = true;
   };
 
+  agindin.gamingOptimizations = {
+    enable = true;
+    amd.enable = true;
+  };
+
   agindin.firefox.enable = true;
-  agindin.gamingOptimizations.enable = true;
   agindin.bluetooth.enable = true;
 
   # This value determines the NixOS release from which the default
