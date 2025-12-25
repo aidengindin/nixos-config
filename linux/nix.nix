@@ -1,7 +1,10 @@
-{ config, lib, pkgs, ... }:
+{ ... }:
 {
   config = {
     nix = {
+      extraOptions = ''
+        experimental-features = nix-command flakes
+      '';
       optimise = {
         automatic = true;
         dates = [ "weekly" ];

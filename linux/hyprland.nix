@@ -8,6 +8,13 @@ in {
   };
 
   config = mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = (! config.agindin.gnome.enable);
+        message = "Only one desktop environment can be configured.";
+      }
+    ];
+
     agindin.desktop.enable = true;
 
     environment.systemPackages = with pkgs; [

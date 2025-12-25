@@ -11,6 +11,7 @@
     ./fingerprint.nix
     ./firefox.nix
     ./gamingOptimizations.nix
+    ./gnome.nix
     ./hyprland.nix
     ./impermanence.nix
     ./kanata.nix

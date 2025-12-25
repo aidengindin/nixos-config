@@ -18,10 +18,6 @@
 
   networking.hostName = "lorien";
 
-  boot.kernel.sysctl = {
-    "vm.max_map_count" = 262144; 
-  };
-
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 9001 3000 5580 10400 ];
   # networking.firewall.allowedUDPPorts = [ ... ];

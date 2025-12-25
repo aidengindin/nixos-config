@@ -58,8 +58,20 @@
     let
       inherit (nixpkgs.lib) mapAttrs;
 
-      # standard modules shared by all NixOS systems,
-      # with some conditional logic based on whether it tracks stable or unstable
+      pkgsConfig = {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+      };
+
+      # pre-configured pkgs instances
+      stablePkgs = import nixpkgs pkgsConfig;
+
+      unstablePkgs = import unstable pkgsConfig;
+
+      # Standard modules shared by all NixOS systems,
+      # with some conditional logic based on whether it tracks stable or unstable.
+      # Note that not all modules are used by all systems,
+      # but since their options are included in shared modules, they must be imported here.
       standardNixosModules = isUnstable: [
         (if isUnstable
           then hm-unstable.nixosModules.home-manager
@@ -67,15 +79,12 @@
         agenix.nixosModules.default
         zwift.nixosModules.default
         impermanence.nixosModules.impermanence
+        jovian.nixosModules.default
       ];
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix colmena;
-        unstablePkgs = import unstable {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-        };
+        inherit agenix colmena unstablePkgs;
       };
 
       nodeDefaults = {
@@ -85,15 +94,15 @@
       nodes = {
         lorien = {
           isUnstable = false;
-          tags = [ "server" ];
-          allowLocalDeployment = true;
+          tags = [ "server" "onprem" ];
+          allowLocalDeployment = false;
           modules = [
             ./hosts/lorien
           ];
         };
         khazad-dum = {
           isUnstable = false;
-          tags = [ "laptop" ];
+          tags = [ "laptop" "mobile" ];
           allowLocalDeployment = true;
           modules = [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
@@ -103,10 +112,11 @@
         };
         weathertop = {
           isUnstable = true;
-          tags = [ "portable" ];
+          tags = [ "gaming" "mobile" ];
           allowLocalDeployment = false;
           modules = [
-            jovian.nixosModules.default
+            disko.nixosModules.default
+            ./hosts/weathertop
           ];
         };
       };
@@ -115,10 +125,10 @@
 
       colmena = {
         meta = {
-          nixpkgs = import nixpkgs {
-            system = "x86_64-linux";
-            overlays = [];
-          };
+          nixpkgs = stablePkgs;
+          nodeNixpkgs = mapAttrs (name: node:
+            if node.isUnstable then unstablePkgs else stablePkgs
+          ) nodes;
           specialArgs = standardSpecialArgs;
         };
 
@@ -129,23 +139,46 @@
           allowLocalDeployment = node.allowLocalDeployment;
           tags = node.tags;
         };
-      } // (if node.isUnstable then {
-        _module.args.pkgs = import unstable {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-        };
-      } else {})) nodes);
+      }) nodes);
 
-      nixosConfigurations = mapAttrs (name: node:
+      nixosConfigurations = (mapAttrs (name: node:
         let
-          pkgsSource = if node.isUnstable
-            then unstable
-            else nixpkgs;
+          pkgsSource = if node.isUnstable then unstable else nixpkgs;
+          pkgs = if node.isUnstable then unstablePkgs else stablePkgs;
         in pkgsSource.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = standardSpecialArgs;
-          modules = (standardNixosModules node.isUnstable) ++ node.modules;
+          modules = (standardNixosModules node.isUnstable) ++ node.modules ++ [
+            { nixpkgs.pkgs = pkgs; }
+          ];
         }
-      ) nodes;
+      ) nodes) // {
+
+        # Custom minimal ISO for unattended nixos-anywhere installations
+        iso = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+            ({ ... }: {
+              services.openssh = {
+                enable = true;
+                settings = {
+                  PermitRootLogin = "yes";
+                  PermitEmptyPasswords = true;
+                };
+              };
+              users.users.root = {
+                password = "";
+                # not strictly necessary, but removes an annoying warning
+                initialHashedPassword = nixpkgs.lib.mkForce null;  
+              };
+
+              networking.networkmanager.enable = true;
+            })
+          ];
+        };
+      };
+
+    packages.x86_64-linux.iso = self.nixosConfigurations.iso.config.system.build.isoImage;
     };
 }
