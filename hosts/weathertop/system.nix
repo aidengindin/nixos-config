@@ -37,27 +37,11 @@
     deviceLabel = "main-pool";
   };
 
-  agindin.gnome = {
+  agindin.steam = {
     enable = true;
-    gdm.enable = false;
-  };
-  
-  jovian = {
-    devices.steamdeck = {
-      enable = true;
-      autoUpdate = true;
-      enableGyroDsuService = true;
-    };
-    steam = {
-      enable = true;
-      user = "agindin";
-      autoStart = true;
-      desktopSession = "gnome";
-      updater.splash = "jovian";
-    };
+    deck.enable = true;
   };
 
-  agindin.steam.enable = true;
   agindin.firefox.enable = true;
   agindin.gamingOptimizations.enable = true;
   agindin.bluetooth.enable = true;

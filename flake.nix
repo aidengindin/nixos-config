@@ -68,8 +68,10 @@
 
       unstablePkgs = import unstable pkgsConfig;
 
-      # standard modules shared by all NixOS systems,
-      # with some conditional logic based on whether it tracks stable or unstable
+      # Standard modules shared by all NixOS systems,
+      # with some conditional logic based on whether it tracks stable or unstable.
+      # Note that not all modules are used by all systems,
+      # but since their options are included in shared modules, they must be imported here.
       standardNixosModules = isUnstable: [
         (if isUnstable
           then hm-unstable.nixosModules.home-manager
@@ -77,6 +79,7 @@
         agenix.nixosModules.default
         zwift.nixosModules.default
         impermanence.nixosModules.impermanence
+        jovian.nixosModules.default
       ];
 
       # special args for all NixOS systems
@@ -112,7 +115,6 @@
           tags = [ "gaming" "mobile" ];
           allowLocalDeployment = false;
           modules = [
-            jovian.nixosModules.default
             disko.nixosModules.default
             ./hosts/weathertop
           ];
