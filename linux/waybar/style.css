@@ -1,3 +1,4 @@
+/* Catppuccin Mocha */
 @define-color rosewater #f5e0dc;
 @define-color flamingo #f2cdcd;
 @define-color pink #f5c2e7;
@@ -42,33 +43,104 @@ tooltip {
   color: @text;
 }
 
+/*-----------------
+    LEFT MODULES
+-----------------*/
+
 #workspaces {
-  border-radius: 1rem;
-  margin: 5px;
   background-color: @surface0;
+  margin: 5px 0;
   margin-left: 1rem;
+  padding-left: 0.5rem;
 }
 
 #workspaces button {
   color: @lavender;
-  border-radius: 1rem;
+  padding: 0 6px;
 }
 
 #workspaces button.active {
   color: @sky;
-  border-radius: 1rem;
 }
 
-#workspaces button.hover {
+#workspaces button:hover {
   color: @sapphire;
-  border-radius: 1rem;
 }
 
+#custom-arrow_end {
+  color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+#window {
+  margin-left: 8px;
+}
+
+/*-------------------
+    CENTER MODULES
+-------------------*/
+
+#custom-arrow_start_c {
+  color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+#temperature,
+#cpu,
+#memory,
+#custom-weather,
+#network,
+#bluetooth {
+  background-color: @surface0;
+  padding: 0 0.75rem;
+  margin: 5px 0;
+}
+
+#temperature.critical {
+  color: @red;
+}
+
+/* Clock - different background to stand out, with arrows to transition from/to surface0 segments */
+#clock {
+  background-color: @surface1;
+  padding: 0 0.75rem;
+  margin: 5px 0;
+}
+
+#custom-arrow_clock_start {
+  color: @surface1;
+  background-color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+#custom-arrow_clock_end {
+  color: @surface1;
+  background-color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+#custom-arrow_end_c {
+  color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+/*------------------
+    RIGHT MODULES
+------------------*/
+
+/* Submap - rounded standalone pill */
 #submap {
-  color: @base;
+  background-color: @maroon;
+  color: @crust;
+  padding: 0 0.75rem;
+  margin: 5px 8px;
   border-radius: 1rem;
-  margin: 5px;
-  padding: 0.5rem 1rem;
+  font-weight: bold;
 }
 
 #submap.screenshot {
@@ -83,32 +155,28 @@ tooltip {
   background-color: @lavender;
 }
 
-#idle_inhibitor,
-#privacy,
-#wireplumber,
-#mpris,
-#layout,
-#bluetooth,
-#network,
-#battery,
-#clock,
-#temperature,
-#cpu,
-#memory,
-#language,
-#custom-weather {
-  background-color: @surface0;
-  padding: 0.5rem 1rem;
+#privacy {
+  padding: 0 0.5rem;
   margin: 5px 0;
-  border-radius: 1rem;
 }
 
-#temperature.critical {
-  color: @red;
+#mpris {
+  padding: 0 0.75rem;
+  margin: 5px 0;
 }
 
+#custom-arrow_start_r {
+  color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+#language,
+#wireplumber,
 #battery {
-  color: @green;
+  background-color: @surface0;
+  padding: 0 0.75rem;
+  margin: 5px 0;
 }
 
 #battery.charging {
@@ -119,3 +187,14 @@ tooltip {
   color: @red;
 }
 
+#custom-arrow_end_r {
+  color: @surface0;
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+#idle_inhibitor {
+  padding: 0 0.75rem;
+  margin: 5px 0;
+  margin-right: 1rem;
+}

@@ -5,59 +5,98 @@
     "name": "top_bar",
     "layer": "top",
     "position": "top",
-    "height": 44,
-    "spacing": 4,
-    "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
-    "modules-right": ["privacy", "mpris", "idle_inhibitor", "wireplumber", "hyprland/language", "temperature", "cpu", "memory", "bluetooth", "network", "custom/weather", "battery", "clock"],
+    "height": 0,
+    "spacing": 0,
+    "reload_style_on_change": true,
+
+    "modules-left": [
+      "hyprland/workspaces",
+      "custom/arrow_end",
+      "hyprland/window"
+    ],
+
+    "modules-center": [
+      "custom/arrow_start_c",
+      "temperature",
+      "cpu",
+      "memory",
+      "custom/arrow_clock_start",
+      "clock",
+      "custom/arrow_clock_end",
+      "custom/weather",
+      "network",
+      "bluetooth",
+      "custom/arrow_end_c"
+    ],
+
+    "modules-right": [
+      "hyprland/submap",
+      "privacy",
+      "mpris",
+      "custom/arrow_start_r",
+      "hyprland/language",
+      "wireplumber",
+      "battery",
+      "custom/arrow_end_r",
+      "idle_inhibitor"
+    ],
+
+    // U+E0B0 - arrow pointing RIGHT (ends a colored block) - FILL IN WITH: 
+    "custom/arrow_end": { "format": "", "tooltip": false },
+    "custom/arrow_end_c": { "format": "", "tooltip": false },
+    "custom/arrow_end_r": { "format": "", "tooltip": false },
+
+    // U+E0B2 - arrow pointing LEFT (starts a colored block) - FILL IN WITH: 
+    "custom/arrow_start_c": { "format": "", "tooltip": false },
+    "custom/arrow_start_r": { "format": "", "tooltip": false },
+    "custom/arrow_clock_start": { "format": "", "tooltip": false },
+    "custom/arrow_clock_end": { "format": "", "tooltip": false },
 
     "hyprland/workspaces": {
-      "sort-by": "name",
-      "format": " {icon} ",
-      "format-icons": {
-        "default": "",
-      },
+      "sort-by": "id",
+      "format": "{id}",
+      "on-scroll-up": "hyprctl dispatch workspace +1",
+      "on-scroll-down": "hyprctl dispatch workspace -1"
     },
 
     "hyprland/submap": {
       "format": "{}",
-      "tooltip": false,
+      "tooltip": false
     },
 
     "clock": {
-      "interval": 1,
-      "format": " {:%I:%M:%S %p}",
+      "interval": 5,
+      "format": "{:%H:%M}",
       "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
       "timezone": "America/New_York",
-      "on-click": "swaync-client -t",
+      "on-click": "swaync-client -t"
     },
 
     "bluetooth": {
       "format": "󰂯",
       "format-disabled": "󰂲",
-      "format-connected": "󰂱 {device_alias}",
-      "format-connected-battery": "󰂱 {device_alias} (󰥉 {device_battery_percentage}%)",
+      "format-connected": "󰂱",
+      "format-connected-battery": "󰂱",
       "tooltip-format": "{controller_alias}\t{controller_address} ({status})\n\n{num_connections} connected",
       "tooltip-format-disabled": "bluetooth off",
       "tooltip-format-connected": "{controller_alias}\t{controller_address} ({status})\n\n{num_connections} connected\n\n{device_enumerate}",
       "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
       "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t({device_battery_percentage}%)",
-      "max-length": 35,
-      "on-click": "~/.config/hypr/scripts/bluetooth.sh",
+      "on-click": "~/.config/hypr/scripts/bluetooth.sh"
     },
 
     "network": {
       "format": "󰤮",
       "format-wifi": "{icon}",
       "format-icons": [ "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" ],
-      "format-disconnected": "󰤫 ",
+      "format-disconnected": "󰤫",
       "tooltip-format": "wifi <span color='#ee99a0'>off</span>",
       "tooltip-format-wifi":"SSID: {essid}({signalStrength}%), {frequency} MHz\nInterface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
       "tooltip-format-disconnected": "<span color='#ed8796'>disconnected</span>",
-      "format-ethernet": "󰈀 ",
-      "format-linked": "󰈀 ",
+      "format-ethernet": "󰈀",
+      "format-linked": "󰈀",
       "tooltip-format-ethernet":"Interface: {ifname}\nIP: {ipaddr}\nGW: {gwaddr}\nNetmask: {netmask}\nCIDR: {cidr}\n\n<span color='#a6da95'>{bandwidthUpBits}</span>\t<span color='#ee99a0'>{bandwidthDownBits}</span>\t<span color='#c6a0f6'>󰹹{bandwidthTotalBits}</span>",
-      "max-length": 35,
-      "on-click": "~/.config/hypr/scripts/wifi.sh",
+      "on-click": "~/.config/hypr/scripts/wifi.sh"
     },
 
     "battery": {
@@ -70,8 +109,7 @@
       "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
       "format-charging": "󰂄 {capacity}%",
       "format-plugged": "󰚥 {capacity}%",
-      "tooltip-format": "{capacity}% - {timeTo}\nPower draw: {power:0.1f} W\nHealth: {health}%",
-      "max-length": 25
+      "tooltip-format": "{capacity}% - {timeTo}\nPower draw: {power:0.1f} W\nHealth: {health}%"
     },
 
     "hyprland/window": {
@@ -80,10 +118,10 @@
       "separate-outputs": true,
       "rewrite": {
         "(.*) — Mozilla Firefox": "󰈹 $1",
-        "(.*) — Chromium": " $1",
+        "(.*) — Chromium": " $1",
         "(.*) — mpv": " $1",
-        "kitty": " ",
-        "spotify_player": " ",
+        "kitty": " kitty",
+        "spotify_player": " "
       }
     },
 
@@ -149,15 +187,16 @@
     "temperature": {
       "thermal-zone": 3,
       "critical-threshold": 85,
-      "format": " {temperatureC}°",
+      "format": " {temperatureC}°C"
     },
 
     "cpu": {
-      "format": " {load:0.1f}%",
+      "format": " {usage}%"
     },
 
     "memory": {
-      "format": " {used:0.1f}/{total:0.1f}G",
+      "format": " {percentage}%",
+      "tooltip-format": "{used:0.1f}/{total:0.1f}G RAM\n{swapUsed:0.1f}/{swapTotal:0.1f}G swap"
     },
 
     "custom/weather": {
@@ -165,7 +204,7 @@
       "tooltip": true,
       "interval": 3600,
       "exec": "wttrbar --nerd --fahrenheit --mph --ampm",
-      "return-type": "json",
-    },
+      "return-type": "json"
+    }
   }
 ]
