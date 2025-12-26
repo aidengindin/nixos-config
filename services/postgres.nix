@@ -1,11 +1,9 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, globalVars, ... }:
 let
   cfg = config.agindin.services.postgres;
   inherit (lib) mkIf mkEnableOption mkOption types;
 
   mkUserList = users: map (user: { name = user; ensureDBOwnership = true; }) users;
-
-  port = 5432;
 
   backupPath = "/var/backup/postgres";
 in
@@ -29,7 +27,7 @@ in
       enable = true;
       ensureUsers = mkUserList cfg.ensureUsers;
       ensureDatabases = cfg.ensureUsers;
-      settings.port = port;
+      settings.port = globalVars.ports.postgres;
     };
 
     agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
