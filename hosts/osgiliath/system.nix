@@ -20,6 +20,7 @@
 
   agindin.impermanence = {
     enable = true;
+    persistentSubvolumes = [ "persist" "nix" "media" ];
   };
 
   systemd.timers.bcachefs-fsck = {

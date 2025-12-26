@@ -161,7 +161,7 @@
       bcachefs fs set-option /media --promote_target=hdd
       bcachefs fs set-option /media --data_replicas=2
 
-      mkdir -p /var/lib/posgresql
+      mkdir -p /var/lib/postgresql
       bcachefs fs set-option /var/lib/postgresql --background_target=ssd
       bcachefs fs set-option /var/lib/postgresql --promote_target=ssd
 
