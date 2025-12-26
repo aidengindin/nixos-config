@@ -21,6 +21,8 @@ let
         ui = 8101;
         torrent = 8102;
       };
+
+      miniflux = 8301;
     };
 
     ips = {
