@@ -2,7 +2,7 @@
 {
   disko.devices = {
     disk = {
-      nvme0n1 = {
+      nvme = {
         device = "/dev/nvme0n1";
         type = "disk";
         content = {
@@ -32,7 +32,7 @@
               };
             };
 
-            nvme0n1p2 = {
+            main = {
               priority = 3;
               size = "100%";
               content = {
@@ -51,11 +51,10 @@
         extraFormatArgs = [
           "--compression=lz4"
           "--background_compression=zstd"
-          "--noatime"
           "--encoded_extent_max=256k"
           "--btree_node_size=512k"
         ];
-        mountOptions = [ "verbose" ];
+        mountOptions = [ "verbose" "noatime" ];
         subvolumes = {
           "subvolumes/root" = {
             mountpoint = "/";

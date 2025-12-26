@@ -79,6 +79,7 @@
         agenix.nixosModules.default
         zwift.nixosModules.default
         impermanence.nixosModules.impermanence
+        disko.nixosModules.disko
         jovian.nixosModules.default
       ];
 
@@ -96,28 +97,31 @@
           isUnstable = false;
           tags = [ "server" "onprem" ];
           allowLocalDeployment = false;
-          modules = [
-            ./hosts/lorien
-          ];
+          modules = [ ./hosts/lorien ];
         };
+
+        osgiliath = {
+          isUnstable = false;
+          tags = [ "server" "onprem" ];
+          allowLocalDeployment = true;
+          modules = [ ./hosts/osgiliath ];
+        };
+
         khazad-dum = {
           isUnstable = false;
           tags = [ "laptop" "mobile" ];
           allowLocalDeployment = true;
           modules = [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
-            disko.nixosModules.disko
             ./hosts/khazad-dum
           ];
         };
+
         weathertop = {
           isUnstable = true;
           tags = [ "gaming" "mobile" ];
           allowLocalDeployment = false;
-          modules = [
-            disko.nixosModules.default
-            ./hosts/weathertop
-          ];
+          modules = [ ./hosts/weathertop ];
         };
       };
     in {

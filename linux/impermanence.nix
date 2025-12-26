@@ -22,6 +22,12 @@ in {
       description = "Disk lable to mount for wiping (required for bcachefs)";
     };
 
+    persistentSubvolumes = mkOption {
+      type = types.listOf types.str;
+      default = [ "persist" "nix" ];
+      description = "btrfs or bcachefs subvolumes to persist.";
+    };
+
     systemDirectories = mkOption {
       type = types.listOf types.str;
       default = [];
@@ -136,7 +142,7 @@ in {
         for path in /mnt/subvolumes/*; do
           dir=$(basename "$path")
 
-          if [ "$dir" = "nix" ] || [ "$dir" = "persist" ]; then
+          if ${if cfg.persistentSubvolumes == [] then "false" else lib.concatMapStringsSep " || " (s: "[ \"$dir\" = \"${s}\" ]") cfg.persistentSubvolumes}; then
             echo "Skipping preserved subvolume: $dir"
           else
             echo "Wiping ephemeral subvolume: $dir"
