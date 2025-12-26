@@ -197,6 +197,11 @@ in {
         };
       };
     };
+
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
+      domain = cfg.host;
+      port = globalVars.ports.grafana;
+    }];
   };
 }
 

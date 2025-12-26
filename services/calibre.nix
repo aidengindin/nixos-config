@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 let
   cfg = config.agindin.services.calibre;
   inherit (lib) mkIf mkEnableOption mkOption types;
@@ -44,5 +44,18 @@ in
         "--rm=false"
       ];
     };
+
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.host;
+        host = "127.0.0.1";
+        port = 8200;
+      }
+      {
+        domain = cfg.serverHost;
+        host = "127.0.0.1";
+        port = 8201;
+      }
+    ];
   };
 }

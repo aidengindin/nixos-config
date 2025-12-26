@@ -3,26 +3,12 @@ let
   cfg = config.agindin.services.caddy;
   inherit (lib) mkIf mkEnableOption mkOption types mkMerge;
 
-  # helper function to conditionally insert strings
-  mkStrIf = cond: str: if cond then str else "";
-
-  # makes accessing these options less tedious
-  myServices = config.agindin.services;
-  immich = myServices.immich;
-  miniflux = myServices.miniflux;
-  tandoor = myServices.tandoor;
-  calibre = myServices.calibre;
-  openwebui = myServices.openwebui;
-  pocket-id = myServices.pocket-id;
-  audiobookshelf = myServices.audiobookshelf;
-  grafana = myServices.grafana;
-
   overlay = final: prev: {
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
       plugins = [
-        "github.com/caddy-dns/cloudflare@v0.2.1"
+        "github.com/caddy-dns/cloudflare@v0.2.2"
       ];
-      hash = "sha256-Dvifm7rRwFfgXfcYvXcPDNlMaoxKd5h4mHEK6kJ+T4A=";
+      hash = "sha256-ea8PC/+SlPRdEVVF/I3c1CBprlVp1nrumKM5cMwJJ3U=";
     };
   };
 in
@@ -33,6 +19,18 @@ in
       type = types.path;
       default =  ../secrets/lorien-caddy-cloudflare-api-key.age;
       description = "Path to age-encrypted file containing Cloudflare API token";
+    };
+    proxyHosts = mkOption {
+      description = "Hosts to proxy.";
+      default = [];
+      type = types.listOf (types.submodule {
+        options = {
+          domain = mkOption { type = types.str; };
+          host = mkOption { type = types.str; default = "127.0.0.1"; };
+          port = mkOption { type = types.port; };
+          extraConfig = mkOption { type = types.str; default = ""; };
+        };
+      });
     };
   };
 
@@ -70,73 +68,12 @@ in
               dns cloudflare {env.CLOUDFLARE_API_KEY}
             }
           '';
-        in ''
-          ${mkStrIf miniflux.enable ''
-          ${miniflux.host} {
-            reverse_proxy 192.168.102.11:8080
+        in lib.strings.concatMapStringsSep "\n" (host: ''
+          ${host.domain} {
+            reverse_proxy ${host.host}:${toString host.port} ${if (host.extraConfig != "") then "{\n${host.extraConfig}\n}" else ""}
             ${tlsSetup}
           }
-          ''}
-  
-          ${mkStrIf immich.enable ''
-          ${immich.host} {
-            reverse_proxy ${immich.ip}:2283
-            ${tlsSetup}
-          }
-          ''}
-  
-          ${mkStrIf tandoor.enable ''
-          ${tandoor.host} {
-            reverse_proxy ${tandoor.ip}:8080
-            ${tlsSetup}
-          }
-          ''}
-  
-          ${mkStrIf calibre.enable ''
-          ${calibre.host} {
-            reverse_proxy 127.0.0.1:8200
-            ${tlsSetup}
-          }
-          ${calibre.serverHost} {
-            reverse_proxy 127.0.0.1:8201
-            ${tlsSetup}
-          }
-          ''}
-  
-          ${mkStrIf openwebui.enable ''
-          ${openwebui.host} {
-            reverse_proxy ${openwebui.ip}:8080
-            ${tlsSetup}
-          }
-          ''}
-  
-          ${mkStrIf pocket-id.enable ''
-          ${pocket-id.host} {
-            reverse_proxy 192.168.103.11:1411 {
-              header_up Host {host}
-              header_up X-Real-IP {remote_host}
-              header_up X-Forwarded-For {remote_host}
-              header_up X-Forwarded-Proto {scheme}
-              header_up X-Forwarded-Host {host}
-            }
-            ${tlsSetup}
-          }
-          ''}
-
-          ${mkStrIf audiobookshelf.enable ''
-          ${audiobookshelf.host} {
-            reverse_proxy 192.168.104.11:8000
-            ${tlsSetup}
-          }
-          ''}
-
-          ${mkStrIf grafana.enable ''
-          ${grafana.host} {
-            reverse_proxy 127.0.0.1:10001
-            ${tlsSetup}
-          }
-          ''}
-        '';
+        '') cfg.proxyHosts;
       };
   
       systemd = {

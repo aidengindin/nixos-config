@@ -22,30 +22,39 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (containerLib.makeContainer {
-    name = "abshelf";
-    subnet = "192.168.104.0/24";
-    hostAddress = "192.168.104.10";
-    localAddress = "192.168.104.11";
-    stateVersion = cfg.stateVersion;
+  config = mkIf cfg.enable (lib.mkMerge [
+    (containerLib.makeContainer {
+      name = "abshelf";
+      subnet = "192.168.104.0/24";
+      hostAddress = "192.168.104.10";
+      localAddress = "192.168.104.11";
+      stateVersion = cfg.stateVersion;
 
-    bindMounts = {
-      "/var/lib/audiobookshelf" = {
-        hostPath = "/var/lib/audiobookshelf";
-        isReadOnly = false;
+      bindMounts = {
+        "/var/lib/audiobookshelf" = {
+          hostPath = "/var/lib/audiobookshelf";
+          isReadOnly = false;
+        };
       };
-    };
 
-    openPorts = [ 8000 ];
+      openPorts = [ 8000 ];
 
-    extraConfig = {
-      services.audiobookshelf = {
-        enable = true;
-        host = "0.0.0.0";
+      extraConfig = {
+        services.audiobookshelf = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 8000;
+          dataDir = "audiobookshelf";  # /var/lib/audiobookshelf
+        };
+      };
+    })
+    {
+      agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
+        domain = cfg.host;
+        host = "192.168.104.11";
         port = 8000;
-        dataDir = "audiobookshelf";  # /var/lib/audiobookshelf
-      };
-    };
-  });
+      }];
+    }
+  ]);
 }
 

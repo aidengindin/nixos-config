@@ -160,5 +160,11 @@ in
         ];
       };
     };
+
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
+      domain = cfg.host;
+      host = cfg.ip;
+      port = 2283;
+    }];
   };
 }
