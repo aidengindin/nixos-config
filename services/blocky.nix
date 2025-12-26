@@ -117,7 +117,10 @@ in
         };
 
         clientLookup.clients = {
-          adsAllowed = cfg.adsAllowedClients;
+          adsAllowed = [
+            "100.126.51.78"
+            "fd7a:115c:a1e0::a701:3353"
+          ];
         };
 
         upstreams.groups.default = upstreams;

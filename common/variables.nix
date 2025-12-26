@@ -2,11 +2,32 @@
 let
   globalVars = {
     ports = {
+      postgres = 5432;
+
       grafana = 10001;
       prometheus = 10002;
       prometheusNodeExporter = 10003;
       loki = 10004;
       promtail = 10005;
+
+      prowlarr = 8001;
+      radarr = 8002;
+      sonarr = 8003;
+      bazarr = 8004;
+      flaresolverr = 8005;
+      jellyfin = 8096;
+
+      qbittorrent = {
+        ui = 8101;
+        torrent = 8102;
+      };
+    };
+
+    ips = {
+      qbittorrent = {
+        host = "192.168.200.1";
+        local = "192.168.200.2";
+      };
     };
 
     keys = {
