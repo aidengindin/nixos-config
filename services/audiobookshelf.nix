@@ -1,60 +1,32 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, globalVars, ... }:
 let
   cfg = config.agindin.services.audiobookshelf;
   inherit (lib) mkIf mkEnableOption mkOption types;
-
-  containerLib = import ../lib/container.nix { inherit lib pkgs; };
 in {
   options.agindin.services.audiobookshelf = {
     enable = mkEnableOption "audiobookshelf";
-    host = mkOption {
+    domain = mkOption {
       type = types.str;
       default = "audiobooks.gindin.xyz";
     };
-    interface = mkOption {
-      type = types.str;
-      default = "enp1s0";
-      description = "Host network interface to use for NAT";
-    };
-    stateVersion = mkOption {
-      type = types.str;
-      default = "25.05";
-    };
   };
 
-  config = mkIf cfg.enable (lib.mkMerge [
-    (containerLib.makeContainer {
-      name = "abshelf";
-      subnet = "192.168.104.0/24";
-      hostAddress = "192.168.104.10";
-      localAddress = "192.168.104.11";
-      stateVersion = cfg.stateVersion;
+  config = mkIf cfg.enable {
+    services.audiobookshelf = {
+      enable = true;
+      host = "0.0.0.0";
+      port = globalVars.ports.audiobookshelf;
+      dataDir = "audiobookshelf";
+    };
 
-      bindMounts = {
-        "/var/lib/audiobookshelf" = {
-          hostPath = "/var/lib/audiobookshelf";
-          isReadOnly = false;
-        };
-      };
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
+      domain = cfg.domain;
+      port = globalVars.ports.audiobookshelf;
+    }];
 
-      openPorts = [ 8000 ];
-
-      extraConfig = {
-        services.audiobookshelf = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 8000;
-          dataDir = "audiobookshelf";  # /var/lib/audiobookshelf
-        };
-      };
-    })
-    {
-      agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-        domain = cfg.host;
-        host = "192.168.104.11";
-        port = 8000;
-      }];
-    }
-  ]);
+    agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
+      "/var/lib/audiobookshelf"
+    ];
+  };
 }
 

@@ -23,6 +23,8 @@ let
       };
 
       miniflux = 8301;
+
+      audiobookshelf = 8310;
     };
 
     ips = {
