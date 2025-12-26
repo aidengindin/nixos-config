@@ -25,6 +25,8 @@ let
       miniflux = 8301;
 
       audiobookshelf = 8310;
+
+      pocket-id = 1411;
     };
 
     ips = {

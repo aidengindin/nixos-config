@@ -27,6 +27,10 @@ in {
     agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
       "/var/lib/audiobookshelf"
     ];
+
+    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
+      "/var/lib/audiobookshelf"
+    ];
   };
 }
 
