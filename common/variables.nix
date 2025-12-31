@@ -26,7 +26,10 @@ let
 
       audiobookshelf = 8310;
 
-      pocket-id = 1411;
+      pocket-id = {
+        ui = 8320;
+        prometheus = 8321;
+      };
     };
 
     ips = {
