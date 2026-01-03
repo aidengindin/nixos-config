@@ -1,10 +1,9 @@
 { globalVars, ... }:
 
 {
-  imports =
-    [
-      ../../linux
-    ];
+  imports = [
+    ../../linux
+  ];
 
   agindin.ssh = {
     enable = true;
@@ -20,7 +19,13 @@
 
   agindin.impermanence = {
     enable = true;
-    persistentSubvolumes = [ "persist" "nix" "media" ];
+    fileSystem = "bcachefs";
+    useLuks = false;
+    persistentSubvolumes = [
+      "persist"
+      "nix"
+      "media"
+    ];
   };
 
   systemd.timers.bcachefs-fsck = {

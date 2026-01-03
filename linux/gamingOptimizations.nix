@@ -44,13 +44,13 @@ in
       "vm.max_map_count=2147483642"
 
       "split_lock_detect=off"
-    ] ++ (mkIf cfg.amd.enable [
+    ] ++ (if cfg.amd.enable then [
       # Enable all GPU features including overclocking
       "amdgpu.ppfeaturemask=0xffffffff"
 
       # Use AMD P-State driver for better CPU scaling
       "amd_pstate=active"
-    ]);
+    ] else []);
 
     boot.kernel.sysctl = {
       # Lower swappiness

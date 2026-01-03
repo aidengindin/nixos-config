@@ -1,26 +1,13 @@
-{ config, lib, pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   imports = [
     ../../linux
   ];
 
-  # bcachefs was removed from mainline in 6.17, but Jovian's kernel (6.16.x)
-  # still has it built-in. Assert on kernel version so we catch this before
-  # deploying a broken config when Jovian updates to 6.17+.
-  assertions = [{
-    assertion = lib.versionOlder config.boot.kernelPackages.kernel.version "6.17";
-    message = ''
-      Jovian kernel is now ${config.boot.kernelPackages.kernel.version}.
-      bcachefs was removed in 6.17 - you need to handle this before deploying!
-    '';
-  }];
-
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Jovian's kernel (6.16) has bcachefs built-in, override the bcachefs module's
-  # attempt to set linuxPackages_latest
   boot.kernelPackages = lib.mkForce pkgs.linuxPackages_jovian;
 
   networking.hostName = "weathertop";
@@ -29,7 +16,8 @@
 
   agindin.impermanence = {
     enable = true;
-    fileSystem = "bcachefs";
+    fileSystem = "btrfs";
+    useLuks = false;
     deviceLabel = "main-pool";
   };
 

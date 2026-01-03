@@ -35,38 +35,42 @@
             main = {
               priority = 3;
               size = "100%";
+              label = "main-pool";
               content = {
-                type = "bcachefs";
-                filesystem = "main-pool";
+                type = "btrfs";
+                extraArgs = [ "-f" ];
+                subvolumes = {
+                  "/root" = {
+                    mountpoint = "/";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                  "/home" = {
+                    mountpoint = "/home";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                  "/nix" = {
+                    mountpoint = "/nix";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                  "/persist" = {
+                    mountpoint = "/persist";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                };
               };
             };
-          };
-        };
-      };
-    };
-
-    bcachefs_filesystems = {
-      main-pool = {
-        type = "bcachefs_filesystem";
-        extraFormatArgs = [
-          "--compression=lz4"
-          "--background_compression=zstd"
-          "--encoded_extent_max=256k"
-          "--btree_node_size=512k"
-        ];
-        mountOptions = [ "verbose" "noatime" ];
-        subvolumes = {
-          "subvolumes/root" = {
-            mountpoint = "/";
-          };
-          "subvolumes/home" = {
-            mountpoint = "/home";
-          };
-          "subvolumes/nix" = {
-            mountpoint = "/nix";
-          };
-          "subvolumes/persist" = {
-            mountpoint = "/persist";
           };
         };
       };
@@ -75,4 +79,3 @@
 
   fileSystems."/persist".neededForBoot = true;
 }
-

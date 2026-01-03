@@ -1,9 +1,8 @@
 { pkgs, ... }:
 {
-  imports =
-    [
-      ../../linux
-    ];
+  imports = [
+    ../../linux
+  ];
 
   boot.kernelPackages = pkgs.linuxPackages_6_18;
 
@@ -12,12 +11,15 @@
   agindin.impermanence = {
     enable = true;
     fileSystem = "btrfs";
+    useLuks = true;
   };
 
   agindin.ssh = {
     enable = true;
-    allowedKeys = [];
+    allowedKeys = [ ];
   };
+
+  agindin.qmk.enable = true;
 
   agindin.hyprland.enable = true;
   agindin.bluetooth.enable = true;
@@ -42,7 +44,7 @@
   };
 
   services.fwupd.enable = true;
-  
+
   agindin.zwift.enable = true;
 
   agindin.steam.enable = true;
@@ -63,4 +65,3 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
 }
-
