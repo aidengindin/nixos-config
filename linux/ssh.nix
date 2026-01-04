@@ -13,7 +13,7 @@ in
     };
   };
 
-  config = mkIf cfg.enable {
+  config = {
     services.openssh = {
       enable = true;
       settings = {

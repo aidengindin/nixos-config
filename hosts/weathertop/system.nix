@@ -19,6 +19,11 @@
     fileSystem = "btrfs";
     useLuks = false;
     deviceLabel = "main-pool";
+    userDirectories = [
+      "emulation"
+      ".config/Ryujinx"
+      ".config/steam-rom-manager"
+    ];
   };
 
   agindin.steam = {
@@ -33,6 +38,13 @@
 
   agindin.firefox.enable = true;
   agindin.bluetooth.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    ryubing
+    steam-rom-manager
+  ];
+
+  services.udev.packages = with pkgs; [ game-devices-udev-rules ];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
