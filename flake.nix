@@ -201,13 +201,14 @@
                   services.openssh = {
                     enable = true;
                     settings.PermitRootLogin = "yes";
-                    extraConfig = "PermitEmptyPasswords yes";
                   };
 
                   # Set a simple password for ssh login
                   users.users.root.password = "password";
 
                   networking.networkmanager.enable = true;
+
+                  environment.systemPackages = with pkgs; [ smartmontools e2fsprogs ];
                 }
               )
             ];
