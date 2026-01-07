@@ -2,8 +2,90 @@
 {
   disko.devices = {
     disk = {
+      # Secondary disks first (alphabetically) so they're partitioned before the primaries format the RAID
+
+      # HDD 2 - Media Pool member (must be partitioned before hdd1 formats)
+      aaa-hdd2 = {
+        device = "/dev/disk/by-id/ata-WDC_WD40EFPX-68C6CN0_WD-WX52D95L9YPX";
+        type = "disk";
+        content = {
+          type = "gpt";
+          partitions = {
+            hdd-pool-member = {
+              size = "100%";
+              label = "hdd-pool-member";
+              # No content - this partition is formatted as part of hdd1's btrfs raid1
+            };
+          };
+        };
+      };
+
+      # NVMe 2 - Swap + SSD Pool member (must be partitioned before nvme1 formats)
+      aab-nvme2 = {
+        device = "/dev/disk/by-id/nvme-SAMSUNG_MZVKW512HMJP-000L7_S35BNX0K705819";
+        type = "disk";
+        content = {
+          type = "gpt";
+          partitions = {
+            swap = {
+              priority = 1;
+              size = "8G";
+              name = "swap";
+              content = {
+                type = "swap";
+                discardPolicy = "both";
+                resumeDevice = false;
+              };
+            };
+
+            ssd-pool-member = {
+              priority = 2;
+              size = "100%";
+              label = "ssd-pool-member";
+              # No content - this partition is formatted as part of nvme1's btrfs raid1
+            };
+          };
+        };
+      };
+
+      # HDD 1 - Media Pool (primary)
+      hdd1 = {
+        device = "/dev/disk/by-id/ata-WDC_WD40EFPX-68C6CN0_WD-WX52D95L97SP";
+        type = "disk";
+        content = {
+          type = "gpt";
+          partitions = {
+            hdd-pool = {
+              size = "100%";
+              label = "hdd-pool";
+              content = {
+                type = "btrfs";
+                extraArgs = [
+                  "-f"
+                  "-d"
+                  "raid1"
+                  "-m"
+                  "raid1"
+                  "/dev/disk/by-partlabel/hdd-pool-member"
+                ];
+                subvolumes = {
+                  "/media" = {
+                    mountpoint = "/media";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+
+      # NVMe 1 - Boot + Swap + SSD Pool (primary)
       nvme1 = {
-        device = "/dev/changeme";
+        device = "/dev/disk/by-id/nvme-SAMSUNG_MZVKW512HMJP-000L7_S35BNX0K419760";
         type = "disk";
         content = {
           type = "gpt";
@@ -32,146 +114,57 @@
               };
             };
 
-            cache_partition = {
+            ssd-pool = {
               priority = 3;
               size = "100%";
+              label = "ssd-pool";
               content = {
-                type = "bcachefs";
-                filesystem = "main-pool";
-                extraFormatArgs = [ "--label=ssd.nvme1" "--group=ssd" ];
+                type = "btrfs";
+                extraArgs = [
+                  "-f"
+                  "-d"
+                  "raid1"
+                  "-m"
+                  "raid1"
+                  "/dev/disk/by-partlabel/ssd-pool-member"
+                ];
+                subvolumes = {
+                  "/root" = {
+                    mountpoint = "/";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                  "/home" = {
+                    mountpoint = "/home";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                  "/nix" = {
+                    mountpoint = "/nix";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                  "/persist" = {
+                    mountpoint = "/persist";
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  };
+                };
               };
             };
           };
-        };
-      };
-
-      nvme2 =  {
-        device = "/dev/changeme";
-        type = "disk";
-        content = {
-          type = "gpt";
-          partitions = {
-            swap = {
-              priority = 1;
-              size = "8G";
-              name = "swap";
-              content = {
-                type = "swap";
-                discardPolicy = "both";
-                resumeDevice = false;
-              };
-            };
-
-            cache_partition = {
-              priority = 2;
-              size = "100%";
-              content = {
-                type = "bcachefs";
-                filesystem = "main-pool";
-                extraFormatArgs = [ "--label=ssd.nvme2" "--group=ssd" ];
-              };
-            };
-          };
-        };
-      };
-
-      hdd1 = {
-        device = "/dev/changeme";
-        type = "disk";
-        content = {
-          type = "gpt";
-          partitions = {
-            data = {
-              size = "100%";
-              content = {
-                type = "bcachefs";
-                filesystem = "main-pool";
-                extraFormatArgs = [ "--label=hdd.disk1" "--group=hdd" ];
-              };
-            };
-          };
-        };
-      };
-
-      hdd2 = {
-        device = "/dev/changeme";
-        type = "disk";
-        content = {
-          type = "gpt";
-          partitions = {
-            data = {
-              size = "100%";
-              content = {
-                type = "bcachefs";
-                filesystem = "main-pool";
-                extraFormatArgs = [ "--label=hdd.disk2" "--group=hdd" ];
-              };
-            };
-          };
-        };
-      };
-    };
-
-    # 4. The Bcachefs Pool Definition
-    bcachefs_filesystems = {
-      main-pool = {
-        type = "bcachefs_filesystem";
-        extraFormatArgs = [
-          "--replicas=2"
-          "--metadata_replicas=2"
-          
-          "--foreground_target=ssd"       # New writes go to SSD (fast tier)
-          "--promote_target=ssd"          # Hot data read from HDD moves to SSD
-          "--background_target=hdd"       # Cold data moves to HDDs
-          
-          "--compression=lz4"
-          "--background_compression=zstd"
-          
-          "--encoded_extent_max=1M"       # Larger chunks = better compression for media
-          "--btree_node_size=256k"        # Efficient metadata for large filesystems
-          "--errors=ro"                   # Remount Read-Only on corruption
-        ];
-        mountOptions = [ "verbose" "noatime" ];
-        subvolumes = {
-          "subvolumes/root" = { mountpoint = "/"; };
-          "subvolumes/home" = { mountpoint = "/home"; };
-          "subvolumes/nix" = { mountpoint = "/nix"; };
-          "subvolumes/persist" = { mountpoint = "/persist"; };
-          "subvolumes/media" = { mountpoint = "/media"; };
         };
       };
     };
   };
 
   fileSystems."/persist".neededForBoot = true;
-
-  systemd.services.bcachefs-tune = {
-    description = "Apply bcachefs performance tuning policies";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "local-fs.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      bcachefs fs set-option /nix --compression=zstd
-      bcachefs fs set-option /nix --background_compression=zstd
-
-      bcachefs fs set-option /media --background_target=hdd
-      bcachefs fs set-option /media --promote_target=hdd
-      bcachefs fs set-option /media --data_replicas=2
-
-      mkdir -p /var/lib/postgresql
-      bcachefs fs set-option /var/lib/postgresql --background_target=ssd
-      bcachefs fs set-option /var/lib/postgresql --promote_target=ssd
-
-      # Immich: Keep the DB fast, but force thumbnails/videos to HDD
-      mkdir -p /var/lib/immich/{library,thumbs}
-      bcachefs fs set-option /var/lib/immich/library --background_target=hdd
-      bcachefs fs set-option /var/lib/immich/library --promote_target=hdd     # Don't cache raw photos on SSD
-      bcachefs fs set-option /var/lib/immich/upload  --background_target=hdd
-      bcachefs fs set-option /var/lib/immich/upload  --promote_target=hdd     # Don't cache raw photos on SSD
-      bcachefs fs set-option /var/lib/immich/thumbs  --background_target=ssd  # Keep thumbs fast!
-    '';
-  };
 }

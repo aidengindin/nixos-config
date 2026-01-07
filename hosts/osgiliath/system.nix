@@ -19,31 +19,23 @@
 
   agindin.impermanence = {
     enable = true;
-    fileSystem = "bcachefs";
+    fileSystem = "btrfs";
     useLuks = false;
+    deviceLabel = "ssd-pool";
     persistentSubvolumes = [
       "persist"
       "nix"
-      "media"
     ];
   };
 
-  systemd.timers.bcachefs-fsck = {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "quarterly";
-      Persistent = true;
-    };
-  };
-  systemd.services.bcachefs-fsck = {
-    serviceConfig = {
-      Type = "oneshot";
-      Nice = 19;
-      IOSchedulingClass = "idle";
-    };
-    script = ''
-      bcachefs fsck -n /
-    '';
+  # Periodic btrfs scrub for data integrity
+  services.btrfs.autoScrub = {
+    enable = true;
+    interval = "monthly";
+    fileSystems = [
+      "/"
+      "/media"
+    ];
   };
 
   system.stateVersion = "25.11";

@@ -23,11 +23,8 @@ in
     '';
 
     fileSystem = mkOption {
-      type = types.enum [
-        "btrfs"
-        "bcachefs"
-      ];
-      description = "Filesystem to use for impermanence. This determines how impermanence is implemented.";
+      type = types.enum [ "btrfs" ];
+      description = "Filesystem to use for impermanence.";
     };
 
     useLuks = mkOption {
@@ -39,7 +36,7 @@ in
     deviceLabel = mkOption {
       type = types.str;
       default = "main-pool";
-      description = "Disk label to mount for wiping (required for bcachefs and non-LUKS btrfs)";
+      description = "Disk label to mount for wiping (for non-LUKS btrfs)";
     };
 
     persistentSubvolumes = mkOption {
@@ -48,7 +45,7 @@ in
         "persist"
         "nix"
       ];
-      description = "btrfs or bcachefs subvolumes to persist.";
+      description = "btrfs subvolumes to persist.";
     };
 
     systemDirectories = mkOption {
@@ -139,70 +136,39 @@ in
       };
     };
 
-    boot.initrd.postDeviceCommands =
-      if (cfg.fileSystem == "btrfs") then
-        ''
-          mkdir -p /mnt
-          ${
-            if cfg.useLuks then
-              "mount -o subvol=/ /dev/mapper/cryptroot /mnt"
-            else
-              "mount -o subvol=/ /dev/disk/by-label/${cfg.deviceLabel} /mnt"
-          }
+    boot.initrd.postDeviceCommands = ''
+      mkdir -p /mnt
+      ${
+        if cfg.useLuks then
+          "mount -o subvol=/ /dev/mapper/cryptroot /mnt"
+        else
+          "mount -o subvol=/ /dev/disk/by-label/${cfg.deviceLabel} /mnt"
+      }
 
-          # Unmount nested subvolumes
-          for dir in home nix persist; do
-            umount "/mnt/root/$dir" 2>/dev/null || true
-          done
+      # Unmount nested subvolumes
+      for dir in home nix persist; do
+        umount "/mnt/root/$dir" 2>/dev/null || true
+      done
 
-          # Delete automatically created nested subvolumes
-          for subvol in srv var/lib/portables var/lib/machines tmp var/tmp; do
-            btrfs subvolume delete --commit-after "/mnt/root/$subvol" 2>/dev/null || true
-          done
+      # Delete automatically created nested subvolumes
+      for subvol in srv var/lib/portables var/lib/machines tmp var/tmp; do
+        btrfs subvolume delete --commit-after "/mnt/root/$subvol" 2>/dev/null || true
+      done
 
-          # Delete subvolumes
-          if [ -e /mnt/root ]; then
-            btrfs subvolume delete --commit-after /mnt/root
-          fi
-          if [ -e /mnt/home ]; then
-            btrfs subvolume delete --commit-after /mnt/home
-          fi
+      # Delete subvolumes
+      if [ -e /mnt/root ]; then
+        btrfs subvolume delete --commit-after /mnt/root
+      fi
+      if [ -e /mnt/home ]; then
+        btrfs subvolume delete --commit-after /mnt/home
+      fi
 
-          # Create empty subvolumes
-          btrfs subvolume create /mnt/root
-          btrfs subvolume create /mnt/home
+      # Create empty subvolumes
+      btrfs subvolume create /mnt/root
+      btrfs subvolume create /mnt/home
 
-          umount /mnt
-        ''
-      else if (cfg.fileSystem == "bcachefs") then
-        ''
-          mkdir -p /mnt
-          mount -t bcachefs LABEL=${cfg.deviceLabel} /mnt
-
-          if [ -d "/mnt/subvolumes" ]; then
-            for path in /mnt/subvolumes/*; do
-              dir=$(basename "$path")
-
-              if ${
-                if cfg.persistentSubvolumes == [ ] then
-                  "false"
-                else
-                  lib.concatMapStringsSep " || " (s: "[ \"$dir\" = \"${s}\" ]") cfg.persistentSubvolumes
-              }; then
-                echo "Skipping preserved subvolume: $dir"
-              else
-                echo "Wiping ephemeral subvolume: $dir"
-                find "$path" -mindepth 1 -delete
-              fi
-            done
-          else
-            echo "WARNING: /mnt/subvolumes not found. Skipping wipe."
-          fi
-
-          umount /mnt
-        ''
-      else
-        "";
+      umount /mnt
+    '';
 
     age.identityPaths = [
       "/persist/etc/ssh/ssh_host_ed25519_key"

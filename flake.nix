@@ -183,7 +183,6 @@
         // {
 
           # Custom minimal ISO for unattended nixos-anywhere installations
-          # Includes bcachefs support for systems that use it
           iso = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             modules = [
@@ -191,10 +190,8 @@
               (
                 { pkgs, ... }:
                 {
-                  # Use latest kernel for bcachefs support
                   boot.kernelPackages = pkgs.linuxPackages_latest;
                   boot.supportedFilesystems = {
-                    bcachefs = true;
                     zfs = nixpkgs.lib.mkForce false;
                   };
 
@@ -208,7 +205,10 @@
 
                   networking.networkmanager.enable = true;
 
-                  environment.systemPackages = with pkgs; [ smartmontools e2fsprogs ];
+                  environment.systemPackages = with pkgs; [
+                    smartmontools
+                    e2fsprogs
+                  ];
                 }
               )
             ];
