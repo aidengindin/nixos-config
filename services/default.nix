@@ -10,6 +10,7 @@
     ./grafana.nix
     ./immich.nix
     ./jellyfin.nix
+    ./linkwarden.nix
     ./miniflux.nix
     ./ollama.nix
     ./openwebui.nix
@@ -22,4 +23,3 @@
     ./withings-sync.nix
   ];
 }
-

@@ -20,8 +20,8 @@
       };
     };
     groups = {
-      aiden-withings-sync = {};
-      ally-withings-sync = {};
+      aiden-withings-sync = { };
+      ally-withings-sync = { };
     };
   };
 

@@ -31,6 +31,8 @@ let
         prometheus = 8321;
       };
 
+      linkwarden = 8340;
+
       tandoor = 8330;
     };
 
@@ -47,7 +49,7 @@ let
 
       lorienUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINkD2Lt8RW1FK3HXQiNG20C9VdI1blj3Z/rdiSxfp63w aiden@aidengindin.com";
       khazad-dumUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBs7J/zItppa7TZ77vTsW2LJcHdkLtJ5534dHifsWnml aiden@aidengindin.com";
-      
+
       lorienRestic = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICkDpjjWM4ceQL7vsplfuTjGxh/xm/sDSF2HUtpdzgi0 root@lorien";
       lorienCaddy = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDhPFaF9+zV9A/8/Rk1KYT75Y/ROtmAYYYbjYjw4/vP caddy@lorien";
     };
