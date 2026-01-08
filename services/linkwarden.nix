@@ -78,6 +78,7 @@ in
 
     services.linkwarden = {
       enable = true;
+      host = "127.0.0.1";
       storageLocation = dataDir;
       port = globalVars.ports.linkwarden;
       database.host = "/run/postgresql";
