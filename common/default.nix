@@ -3,6 +3,7 @@
   imports = [
     ./bash.nix
     ./cli.nix
+    ./claude-code.nix
     ./dev.nix
     ./direnv.nix
     ./git.nix

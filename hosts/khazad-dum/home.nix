@@ -1,10 +1,11 @@
-{ config, lib, pkgs, ... }:
+{ ... }:
 {
   imports = [
     ../../common
   ];
 
   agindin = {
+    claude-code.enable = true;
     kitty.enable = true;
     latex.enable = true;
     firefox.enable = true;
@@ -16,4 +17,3 @@
   # this line should not be edited even when upgrading NixOS versions
   home-manager.users.agindin.home.stateVersion = "25.05";
 }
-
