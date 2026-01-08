@@ -30,6 +30,8 @@ let
         ui = 8320;
         prometheus = 8321;
       };
+
+      tandoor = 8330;
     };
 
     ips = {

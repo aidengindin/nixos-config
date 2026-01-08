@@ -65,7 +65,6 @@
       enable = true;
       paths = [
         "/docker-volumes/calibre"
-        "/docker-volumes/tandoor"
         "/var/lib/immich"
         "/srv/immich"
       ];
