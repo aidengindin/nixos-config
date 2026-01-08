@@ -19,7 +19,6 @@ in
   "restic-password.age".publicKeys = [
     lorienHost
     lorienUser
-    resticUser
     khazad-dumUser
   ];
   "tandoor-secret-key.age".publicKeys = [
@@ -35,7 +34,6 @@ in
   "lorien-caddy-cloudflare-api-key.age".publicKeys = [
     lorienHost
     lorienUser
-    lorienCaddy
     khazad-dumUser
   ];
   "miniflux-credentials.age".publicKeys = [
