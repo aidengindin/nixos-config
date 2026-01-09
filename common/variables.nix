@@ -34,6 +34,8 @@ let
       linkwarden = 8340;
 
       tandoor = 8330;
+
+      calibre-web = 8350;
     };
 
     ips = {
@@ -46,9 +48,11 @@ let
     keys = {
       lorienHost = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILnIe7mhYr7SaUuxGFax29rEDxMd7YhNCDGR6nYqzwPG root@lorien";
       khazad-dumHost = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmD0CnrRzF6ZXj4lkV9eIE1TBfj66MTi0Ixi8EbrrIP khazad-dum";
+      osgiliathHost = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJaFETfHUy5/YTPVtZ6gSVa1TlzlC01oP08uAldfqIIQ root@osgiliath";
 
       lorienUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINkD2Lt8RW1FK3HXQiNG20C9VdI1blj3Z/rdiSxfp63w aiden@aidengindin.com";
       khazad-dumUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBs7J/zItppa7TZ77vTsW2LJcHdkLtJ5534dHifsWnml aiden@aidengindin.com";
+      osgiliathUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmhV70QRjTlv8FWbzTyYZlEgJzA8pxe4pl5HuAKw/Ff aiden@aidengindin.com";
 
       lorienRestic = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICkDpjjWM4ceQL7vsplfuTjGxh/xm/sDSF2HUtpdzgi0 root@lorien";
       lorienCaddy = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDhPFaF9+zV9A/8/Rk1KYT75Y/ROtmAYYYbjYjw4/vP caddy@lorien";

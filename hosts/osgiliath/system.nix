@@ -9,6 +9,7 @@
     enable = true;
     allowedKeys = [
       globalVars.keys.khazad-dumUser
+      globalVars.keys.lorienUser
     ];
   };
 
@@ -37,6 +38,17 @@
       "/media"
     ];
   };
+
+  # Media group for shared access to /media
+  users.groups.media = {
+    gid = 991;
+    members = [ "agindin" ];
+  };
+
+  # Set permissions on /media filesystem
+  systemd.tmpfiles.rules = [
+    "d /media 0770 root media -"
+  ];
 
   system.stateVersion = "25.11";
 }

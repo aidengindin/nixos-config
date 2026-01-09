@@ -10,6 +10,7 @@
     enable = true;
     allowedKeys = [
       globalVars.keys.khazad-dumUser
+      globalVars.keys.osgiliathUser
     ];
   };
 

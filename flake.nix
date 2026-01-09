@@ -64,10 +64,17 @@
         config.allowUnfree = true;
       };
 
-      # pre-configured pkgs instances
-      stablePkgs = import nixpkgs pkgsConfig;
+      # Custom packages overlay
+      customPackagesOverlay = final: prev: (import ./pkgs { pkgs = prev; });
 
-      unstablePkgs = import unstable pkgsConfig;
+      # pre-configured pkgs instances
+      stablePkgs = import nixpkgs (pkgsConfig // {
+        overlays = [ customPackagesOverlay ];
+      });
+
+      unstablePkgs = import unstable (pkgsConfig // {
+        overlays = [ customPackagesOverlay ];
+      });
 
       # Standard modules shared by all NixOS systems,
       # with some conditional logic based on whether it tracks stable or unstable.
