@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   unstablePkgs,
   ...
 }:
@@ -21,7 +22,92 @@ in
         ".local/state/claude-code"
         ".claude"
       ];
-      userFiles = [ ".claude.json" ];
+      # NOTE: .claude.json is NOT listed in userFiles because Claude Code uses
+      # atomic writes (write temp, rename) which don't work across bind mount boundaries.
+      # Instead we copy it to/from persist using systemd services below.
+    };
+
+    # Handle .claude.json persistence with systemd services since bind mounts
+    # break atomic writes. Strategy:
+    # 1. File watcher triggers immediate save on any change (primary mechanism)
+    # 2. Periodic 30s timer catches any missed changes (backup)
+    # 3. Shutdown service for graceful shutdowns (won't help with crashes)
+    systemd = mkIf config.agindin.impermanence.enable {
+      services = {
+        # Restore config from persist on boot
+        claude-code-restore-config = {
+          description = "Restore Claude Code config from persistent storage";
+          wantedBy = [ "multi-user.target" ];
+          after = [ "local-fs.target" ];
+
+          serviceConfig = {
+            Type = "oneshot";
+            User = "agindin";
+            ExecStart = ''
+              ${lib.getExe' pkgs.bash "bash"} -c '
+                PERSIST="/persist/home/agindin/.claude.json"
+                HOME="/home/agindin/.claude.json"
+                [ -f "$PERSIST" ] && ${lib.getExe' pkgs.coreutils "cp"} -f "$PERSIST" "$HOME" && ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME" || true
+              '
+            '';
+          };
+        };
+
+        # Save config to persist (triggered by watcher, timer, or shutdown)
+        claude-code-save-config = {
+          description = "Save Claude Code config to persistent storage";
+          serviceConfig = {
+            Type = "oneshot";
+            User = "agindin";
+            ExecStart = ''
+              ${lib.getExe' pkgs.bash "bash"} -c '
+                HOME="/home/agindin/.claude.json"
+                PERSIST="/persist/home/agindin/.claude.json"
+                [ -f "$HOME" ] && ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(${lib.getExe' pkgs.coreutils "dirname"} "$PERSIST")" && ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME" "$PERSIST" || true
+              '
+            '';
+          };
+        };
+
+        # Save on graceful shutdown (won't run on crashes/hard reboots)
+        claude-code-save-on-shutdown = {
+          description = "Save Claude Code config on shutdown";
+          wantedBy = [ "shutdown.target" ];
+          before = [ "shutdown.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            User = "agindin";
+            ExecStart = ''
+              ${lib.getExe' pkgs.bash "bash"} -c '
+                HOME="/home/agindin/.claude.json"
+                PERSIST="/persist/home/agindin/.claude.json"
+                [ -f "$HOME" ] && ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(${lib.getExe' pkgs.coreutils "dirname"} "$PERSIST")" && ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME" "$PERSIST" || true
+              '
+            '';
+          };
+        };
+      };
+
+      # Watch for changes to .claude.json and trigger immediate save
+      paths.claude-code-watch-config = {
+        description = "Watch Claude Code configuration for changes";
+        wantedBy = [ "multi-user.target" ];
+        pathConfig = {
+          PathChanged = "/home/agindin/.claude.json";
+          Unit = "claude-code-save-config.service";
+        };
+      };
+
+      # Periodically sync config every 30 seconds while system is running
+      timers.claude-code-periodic-save = {
+        description = "Periodically save Claude Code configuration";
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "30s";
+          OnUnitActiveSec = "30s";
+          Unit = "claude-code-save-config.service";
+        };
+      };
     };
   };
 }
