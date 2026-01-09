@@ -4,7 +4,10 @@
     ../../linux
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_18;
+  boot.kernelPackages = pkgs.linuxPackages_6_12;
+  boot.kernelParams = [
+    "mem_sleep_default=deep"  # Use deep sleep instead of s2idle
+  ];
 
   hardware.graphics.package = pkgs.mesa;
 
