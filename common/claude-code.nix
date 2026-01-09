@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   unstablePkgs,
   ...
 }:
@@ -15,10 +14,14 @@ in
   config = mkIf cfg.enable {
     environment.systemPackages = [ unstablePkgs.claude-code ];
 
-    agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
-      ".config/claude-code"
-      ".local/share/claude-code"
-      ".local/state/claude-code"
-    ];
+    agindin.impermanence = mkIf config.agindin.impermanence.enable {
+      userDirectories = [
+        ".config/claude-code"
+        ".local/share/claude-code"
+        ".local/state/claude-code"
+        ".claude"
+      ];
+      userFiles = [ ".claude.json" ];
+    };
   };
 }
