@@ -82,11 +82,13 @@ in
     lorienHost
     lorienUser
     khazad-dumUser
+    osgiliathHost
   ];
   "grafana-client-secret.age".publicKeys = [
     lorienHost
     lorienUser
     khazad-dumUser
+    osgiliathHost
   ];
 
   "linkwarden-client-id.age".publicKeys = [
@@ -103,6 +105,11 @@ in
   ];
 
   "osgiliath-caddy-cloudflare-api-key.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
+  "osgiliath-restic-password.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
   ];

@@ -27,6 +27,8 @@ in {
       });
     };
 
+    openLokiPort = mkEnableOption "Whether to open the Loki port for external promtail instances";
+
     oauth2ClientIdFile = mkOption {
       type = types.path;
       description = "File containing client ID configured in OIDC provider";
@@ -197,6 +199,10 @@ in {
         };
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openLokiPort [
+      globalVars.ports.loki
+    ];
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
       domain = cfg.host;

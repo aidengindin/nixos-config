@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, globalVars, ... }:
 
 {
   imports = [ ../../services ];
@@ -125,18 +125,25 @@
       };
     };
 
-    prometheusExporter.enable = true;
-    promtail.enable = true;
-
-    grafana = {
+    prometheusExporter = {
       enable = true;
-      prometheusScrapeTargets = [
-        {
-          name = "lorien";
-          host = "127.0.0.1";
-          port = config.agindin.services.prometheusExporter.port;
-        }
-      ];
+      openPort = true;
     };
+
+    promtail = {
+      enable = true;
+      lokiHost = "osgiliath";
+    };
+
+    # grafana = {
+    #   enable = true;
+    #   prometheusScrapeTargets = [
+    #     {
+    #       name = "lorien";
+    #       host = "127.0.0.1";
+    #       port = globalVars.ports.prometheusNodeExporter;
+    #     }
+    #   ];
+    # };
   };
 }
