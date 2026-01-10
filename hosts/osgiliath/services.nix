@@ -52,6 +52,20 @@
           port = globalVars.ports.prometheusNodeExporter;
         }
       ];
+      dashboards = [
+        {
+          name = "infrastructure-overview";
+          source = ../../dashboards/infrastructure-overview.json;
+        }
+        {
+          name = "osgiliath-details";
+          source = ../../dashboards/osgiliath-details.json;
+        }
+        {
+          name = "lorien-details";
+          source = ../../dashboards/lorien-details.json;
+        }
+      ];
     };
 
     calibre-web.enable = true;

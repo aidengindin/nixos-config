@@ -29,6 +29,23 @@ in {
 
     openLokiPort = mkEnableOption "Whether to open the Loki port for external promtail instances";
 
+    dashboards = mkOption {
+      description = "Dashboard files to provision";
+      default = [];
+      type = types.listOf (types.submodule {
+        options = {
+          name = mkOption {
+            type = types.str;
+            description = "Dashboard filename (without .json extension)";
+          };
+          source = mkOption {
+            type = types.path;
+            description = "Path to dashboard JSON file";
+          };
+        };
+      });
+    };
+
     oauth2ClientIdFile = mkOption {
       type = types.path;
       description = "File containing client ID configured in OIDC provider";
@@ -135,6 +152,14 @@ in {
             }
           ];
         };
+        dashboards.settings = mkIf (cfg.dashboards != []) {
+          providers = [
+            {
+              name = "Host Monitoring";
+              options.path = "/etc/grafana-dashboards";
+            }
+          ];
+        };
       };
     };
 
@@ -208,6 +233,14 @@ in {
       domain = cfg.host;
       port = globalVars.ports.grafana;
     }];
+
+    environment.etc = lib.mkMerge (map (dashboard: {
+      "grafana-dashboards/${dashboard.name}.json" = {
+        source = dashboard.source;
+        group = "grafana";
+        user = "grafana";
+      };
+    }) cfg.dashboards);
   };
 }
 
