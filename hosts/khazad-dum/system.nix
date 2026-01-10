@@ -4,9 +4,9 @@
     ../../linux
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_12;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelParams = [
-    "mem_sleep_default=deep"  # Use deep sleep instead of s2idle
+    "amdgpu.ip_block_mask=0xfffff7ff"  # Disable VPE (IP block 11) - workaround for suspend/resume crashes
   ];
 
   hardware.graphics.package = pkgs.mesa;
