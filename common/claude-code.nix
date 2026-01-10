@@ -38,17 +38,22 @@ in
         claude-code-restore-config = {
           description = "Restore Claude Code config from persistent storage";
           wantedBy = [ "multi-user.target" ];
-          after = [ "local-fs.target" ];
+          after = [
+            "local-fs.target"
+            "fix-home-permissions.service"
+          ];
+          wants = [ "fix-home-permissions.service" ];
 
           serviceConfig = {
             Type = "oneshot";
             User = "agindin";
-            ExecStart = ''
-              ${lib.getExe' pkgs.bash "bash"} -c '
-                PERSIST="/persist/home/agindin/.claude.json"
-                HOME="/home/agindin/.claude.json"
-                [ -f "$PERSIST" ] && ${lib.getExe' pkgs.coreutils "cp"} -f "$PERSIST" "$HOME" && ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME" || true
-              '
+            ExecStart = pkgs.writeShellScript "restore-claude-config" ''
+              PERSIST="/persist/home/agindin/.claude.json"
+              HOME_FILE="/home/agindin/.claude.json"
+              if [ -f "$PERSIST" ]; then
+                ${lib.getExe' pkgs.coreutils "cp"} -f "$PERSIST" "$HOME_FILE"
+                ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME_FILE"
+              fi
             '';
           };
         };
@@ -59,12 +64,15 @@ in
           serviceConfig = {
             Type = "oneshot";
             User = "agindin";
-            ExecStart = ''
-              ${lib.getExe' pkgs.bash "bash"} -c '
-                HOME="/home/agindin/.claude.json"
-                PERSIST="/persist/home/agindin/.claude.json"
-                [ -f "$HOME" ] && ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(${lib.getExe' pkgs.coreutils "dirname"} "$PERSIST")" && ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME" "$PERSIST" || true
-              '
+            ExecStart = pkgs.writeShellScript "save-claude-config" ''
+              HOME_FILE="/home/agindin/.claude.json"
+              PERSIST="/persist/home/agindin/.claude.json"
+              PERSIST_DIR="/persist/home/agindin"
+
+              if [ -f "$HOME_FILE" ]; then
+                ${lib.getExe' pkgs.coreutils "mkdir"} -p "$PERSIST_DIR"
+                ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME_FILE" "$PERSIST"
+              fi
             '';
           };
         };
@@ -77,12 +85,15 @@ in
           serviceConfig = {
             Type = "oneshot";
             User = "agindin";
-            ExecStart = ''
-              ${lib.getExe' pkgs.bash "bash"} -c '
-                HOME="/home/agindin/.claude.json"
-                PERSIST="/persist/home/agindin/.claude.json"
-                [ -f "$HOME" ] && ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(${lib.getExe' pkgs.coreutils "dirname"} "$PERSIST")" && ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME" "$PERSIST" || true
-              '
+            ExecStart = pkgs.writeShellScript "save-claude-config-shutdown" ''
+              HOME_FILE="/home/agindin/.claude.json"
+              PERSIST="/persist/home/agindin/.claude.json"
+              PERSIST_DIR="/persist/home/agindin"
+
+              if [ -f "$HOME_FILE" ]; then
+                ${lib.getExe' pkgs.coreutils "mkdir"} -p "$PERSIST_DIR"
+                ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME_FILE" "$PERSIST"
+              fi
             '';
           };
         };
