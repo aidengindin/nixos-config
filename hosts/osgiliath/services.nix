@@ -66,6 +66,10 @@
           source = ../../dashboards/lorien-details.json;
         }
       ];
+      alerting = {
+        enable = true;
+        monitoredHosts = [ "osgiliath" "lorien" ];
+      };
     };
 
     calibre-web.enable = true;

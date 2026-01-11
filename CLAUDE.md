@@ -69,9 +69,14 @@ colmena apply --on @onprem    # Deploy to on-premises machines
 # Build without deploying (dry-run)
 colmena build
 
+# Test build for a specific host
+colmena build --on <hostname>
+
 # Reboot hosts after deployment
 colmena apply --reboot
 ```
+
+**Important:** Always test builds with `colmena build --on <hostname>` before deploying to catch configuration errors early.
 
 Available host tags:
 - `server`: lorien, osgiliath

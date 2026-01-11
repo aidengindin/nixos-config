@@ -113,5 +113,10 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  "grafana-discord-webhook-url.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
 }
 

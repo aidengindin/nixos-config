@@ -46,6 +46,22 @@ in {
       });
     };
 
+    alerting = {
+      enable = mkEnableOption "Grafana alerting with Discord notifications";
+
+      discordWebhookFile = mkOption {
+        type = types.path;
+        description = "File containing Discord webhook URL";
+        default = ../secrets/grafana-discord-webhook-url.age;
+      };
+
+      monitoredHosts = mkOption {
+        type = types.listOf types.str;
+        description = "List of host job names to monitor and alert on";
+        default = [];
+      };
+    };
+
     oauth2ClientIdFile = mkOption {
       type = types.path;
       description = "File containing client ID configured in OIDC provider";
@@ -82,6 +98,13 @@ in {
       };
       grafanaClientSecret = {
         file = cfg.oauth2ClientSecretFile;
+        owner = "grafana";
+        group = "grafana";
+        mode = "0440";
+      };
+    } // lib.optionalAttrs cfg.alerting.enable {
+      grafanaDiscordWebhook = {
+        file = cfg.alerting.discordWebhookFile;
         owner = "grafana";
         group = "grafana";
         mode = "0440";
@@ -157,6 +180,485 @@ in {
             {
               name = "Host Monitoring";
               options.path = "/etc/grafana-dashboards";
+            }
+          ];
+        };
+        alerting.contactPoints.settings = mkIf cfg.alerting.enable {
+          contactPoints = [
+            {
+              orgId = 1;
+              name = "Discord";
+              receivers = [
+                {
+                  uid = "discord-webhook";
+                  type = "discord";
+                  settings = {
+                    url = "$__file{${config.age.secrets.grafanaDiscordWebhook.path}}";
+                    message = "{{ .CommonAnnotations.summary }}";
+                    title = "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}";
+                  };
+                  disableResolveMessage = false;
+                }
+              ];
+            }
+          ];
+        };
+        alerting.policies.settings = mkIf cfg.alerting.enable {
+          policies = [
+            {
+              orgId = 1;
+              receiver = "Discord";
+              group_by = ["alertname" "host"];
+              group_wait = "30s";
+              group_interval = "5m";
+              repeat_interval = "4h";
+            }
+          ];
+        };
+        alerting.rules.settings = mkIf cfg.alerting.enable {
+          groups = [
+            {
+              orgId = 1;
+              name = "Host Monitoring";
+              folder = "Infrastructure";
+              interval = "1m";
+              rules = (lib.flatten (map (host: [
+                {
+                  uid = "${host}-high-cpu";
+                  title = "${host} - High CPU Usage";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\",job=\"${host}\"}[5m])) * 100)";
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["B"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [80];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["C"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "NoData";
+                  execErrState = "Error";
+                  for = "5m";
+                  annotations = {
+                    summary = "High CPU usage on ${host}: {{ humanize $values.B.Value }}%";
+                  };
+                  labels = {
+                    host = host;
+                  };
+                }
+                {
+                  uid = "${host}-high-memory";
+                  title = "${host} - High Memory Usage";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = "100 * (1 - (node_memory_MemAvailable_bytes{job=\"${host}\"} / node_memory_MemTotal_bytes{job=\"${host}\"}))";
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["B"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [90];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["C"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "NoData";
+                  execErrState = "Error";
+                  for = "5m";
+                  annotations = {
+                    summary = "High memory usage on ${host}: {{ humanize $values.B.Value }}%";
+                  };
+                  labels = {
+                    host = host;
+                  };
+                }
+                {
+                  uid = "${host}-low-disk-space";
+                  title = "${host} - Low Disk Space";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = "100 - ((node_filesystem_avail_bytes{job=\"${host}\",mountpoint=\"/\"} * 100) / node_filesystem_size_bytes{job=\"${host}\",mountpoint=\"/\"})";
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["B"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [85];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["C"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "NoData";
+                  execErrState = "Error";
+                  for = "10m";
+                  annotations = {
+                    summary = "Low disk space on ${host} /: {{ humanize $values.B.Value }}% used";
+                  };
+                  labels = {
+                    host = host;
+                  };
+                }
+                {
+                  uid = "${host}-systemd-failed";
+                  title = "${host} - Systemd Service Failed";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = "node_systemd_unit_state{job=\"${host}\",state=\"failed\"} == 1";
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["B"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "count";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [0];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["C"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "OK";
+                  execErrState = "Error";
+                  for = "2m";
+                  annotations = {
+                    summary = "Systemd service(s) failed on ${host}";
+                  };
+                  labels = {
+                    host = host;
+                  };
+                }
+                {
+                  uid = "${host}-host-down";
+                  title = "${host} - Host Down";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = "up{job=\"${host}\"}";
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = ["B"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [1];
+                              type = "lt";
+                            };
+                            operator.type = "and";
+                            query.params = ["C"];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "Alerting";
+                  execErrState = "Alerting";
+                  for = "3m";
+                  annotations = {
+                    summary = "${host} is down or unreachable";
+                  };
+                  labels = {
+                    host = host;
+                  };
+                }
+              ]) cfg.alerting.monitoredHosts));
             }
           ];
         };
