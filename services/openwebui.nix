@@ -1,31 +1,21 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, globalVars, ... }:
 let
   cfg = config.agindin.services.openwebui;
   inherit (lib) mkIf mkEnableOption mkOption types;
+
+  # Override open-webui to include PostgreSQL driver
+  open-webui-with-postgres = pkgs.open-webui.overridePythonAttrs (old: {
+    propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
+      pkgs.python3Packages.psycopg2
+    ];
+  });
 in
 {
   options.agindin.services.openwebui = {
     enable = mkEnableOption "openwebui";
-    tag = mkOption {
-      # https://github.com/open-webui/open-webui/releases
-      type = types.str;
-      default = "git-e0d5de1";
-      description = "Tag of the openwebui image to use";
-    };
-    subnet = mkOption {
-      type = types.str;
-      default = "172.100.20.0/24";
-      description = "Subnet for the openwebui Docker network to use";
-    };
-    ip = mkOption {
-      type = types.str;
-      default = "172.100.20.10";
-      description = "IP address for the openwebui container";
-    };
-    host = mkOption {
+    domain = mkOption {
       type = types.str;
       default = "openwebui.gindin.xyz";
-      description = "Host for the openwebui container";
     };
   };
 
@@ -34,58 +24,53 @@ in
       openwebui-env.file = ../secrets/openwebui-env.age;
     };
 
-    systemd = {
-      tmpfiles.rules = [
-        "d /var/lib/openwebui 0750 root root -"
-      ];
-      services = {
-        create-openwebui-network = {
-          description = "Create Docker network for openwebui containers";
-          serviceConfig.type = "oneshot";
-          wantedBy = [ "multi-user.target" ];
-          after = [ "docker.service" ];
-          script = ''
-            if ! ${pkgs.docker}/bin/docker network inspect openwebui-network &>/dev/null; then
-              echo "openwebui-network does not exist. Creating..."
-              if ${pkgs.docker}/bin/docker network create --subnet=${cfg.subnet} openwebui-network; then
-                echo "Network created with subnet ${cfg.subnet}"
-              else
-                echo "Failed to create network."
-                exit 1
-              fi
-            fi
-          '';
-        };
-
-        docker-openwebui.after = [ "create-openwebui-network.service" ];
-      };
+    agindin.services.postgres = {
+      enable = true;
+      ensureUsers = [ "open-webui" ];
+      extensions = ps: [ ps.pgvector ];
     };
 
-    virtualisation.oci-containers.containers = {
-      openwebui = {
-        image = "ghcr.io/open-webui/open-webui:${cfg.tag}";
-        volumes = [
-          "/var/lib/openwebui:/app/backend/data"
-        ];
-        environment = {
-          BYPASS_MODEL_ACCESS_CONTROL = "true";
-        };
-        environmentFiles = [
-          config.age.secrets.openwebui-env.path
-        ];
-        extraOptions = [
-          "--restart=unless-stopped"
-          "--rm=false"
-          "--network=openwebui-network"
-          "--ip=${cfg.ip}"
-        ];
+    systemd.services.openwebui-init-db = {
+      description = "Initialize open-webui database with pgvector extension";
+      after = [ "postgresql.service" "postgresql-ensure-databases.service" ];
+      before = [ "open-webui.service" ];
+      requires = [ "postgresql.service" ];
+      wantedBy = [ "open-webui.service" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        User = "postgres";
+        RemainAfterExit = true;
       };
+
+      script = ''
+        ${config.services.postgresql.package}/bin/psql -d open-webui \
+          -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+      '';
+    };
+
+    services.open-webui = {
+      enable = true;
+      package = open-webui-with-postgres;
+      port = globalVars.ports.open-webui;
+      environment = {
+        BYPASS_MODEL_ACCESS_CONTROL = "true";
+        WEBUI_URL = "https://${cfg.domain}";
+        DATABASE_URL = "postgresql:///open-webui?host=/run/postgresql";
+        DATABASE_ENABLE_SESSION_SHARING = "true";
+        PGVECTOR_CREATE_EXTENSION = "false";
+      };
+      environmentFile = config.age.secrets.openwebui-env.path;
     };
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.host;
-      host = cfg.ip;
-      port = 8080;
+      domain = cfg.domain;
+      port = globalVars.ports.open-webui;
     }];
+
+    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
+      config.services.open-webui.stateDir
+    ];
   };
 }
+

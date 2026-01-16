@@ -55,6 +55,7 @@ in
     lorienHost
     lorienUser
     khazad-dumUser
+    osgiliathHost
   ];
   "ally-garmin-password.age".publicKeys = [
     lorienHost

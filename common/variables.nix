@@ -36,6 +36,8 @@ let
       tandoor = 8330;
 
       calibre-web = 8350;
+
+      open-webui = 8360;
     };
 
     ips = {
