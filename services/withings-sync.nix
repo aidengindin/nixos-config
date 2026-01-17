@@ -3,7 +3,17 @@ let
   cfg = config.agindin.services.withings-sync;
   inherit (lib) mkIf mkEnableOption mkOption types mapAttrs' nameValuePair concatStringsSep;
 
-  withingsPackage = unstablePkgs.python312Packages.withings-sync.overrideAttrs (oldAttrs: {
+  # Override python packages to skip tests in dependencies
+  pythonPackagesOverride = unstablePkgs.python312.override {
+    packageOverrides = self: super: {
+      jaraco-test = super.jaraco-test.overridePythonAttrs (old: {
+        doCheck = false;
+        doInstallCheck = false;
+      });
+    };
+  };
+
+  withingsPackage = pythonPackagesOverride.pkgs.withings-sync.overrideAttrs (oldAttrs: {
     src = pkgs.fetchFromGitHub {
       owner = "aidengindin";
       repo = "withings-sync";
@@ -11,8 +21,10 @@ let
       sha256 = "sha256-mZi07BzzyKyAPqF/2AZLegeQxV+1Yx/3fwbN+BT1T/w=";
     };
     propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
-      unstablePkgs.python312Packages.setuptools
+      pythonPackagesOverride.pkgs.setuptools
     ];
+    doCheck = false;
+    doInstallCheck = false;
   });
 
   syncOpts = { name, ... }: {

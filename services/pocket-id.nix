@@ -16,6 +16,12 @@ in {
   };
 
   config = mkIf cfg.enable {
+    age.secrets.pocket-id-encryption-key = {
+      file = ../secrets/pocket-id-encryption-key.age;
+      owner = "pocket-id";
+      group = "pocket-id";
+    };
+
     services.pocket-id = {
       enable = true;
       package = unstablePkgs.pocket-id;
@@ -25,9 +31,10 @@ in {
         PORT = uiPort;
         TRUST_PROXY = true;
 
-        DB_PROVIDER = "postgres";
         DB_CONNECTION_STRING = "postgresql://pocket-id@/pocket-id?host=/run/postgresql";
-        
+
+        ENCRYPTION_KEY_FILE = config.age.secrets.pocket-id-encryption-key.path;
+
         METRICS_ENABLED = true;
         OTEL_METRICS_EXPORTER = "prometheus";
         OTEL_EXPORTER_PROMETHEUS_PORT = prometheusPort;

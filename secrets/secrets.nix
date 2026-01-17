@@ -119,5 +119,11 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  "pocket-id-encryption-key.age".publicKeys = [
+    lorienHost
+    osgiliathHost
+    khazad-dumUser
+  ];
 }
 
