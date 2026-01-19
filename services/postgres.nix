@@ -1,9 +1,25 @@
-{ config, lib, pkgs, globalVars, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.postgres;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 
-  mkUserList = users: map (user: { name = user; ensureDBOwnership = true; }) users;
+  mkUserList =
+    users:
+    map (user: {
+      name = user;
+      ensureDBOwnership = true;
+    }) users;
 
   backupPath = "/var/backup/postgres";
 in
@@ -12,12 +28,12 @@ in
     enable = mkEnableOption "postgres";
     ensureUsers = mkOption {
       type = types.listOf types.str;
-      default = [];
+      default = [ ];
       description = "List of users for which to create Postgres users and associated databases";
     };
     extensions = mkOption {
       type = types.functionTo (types.listOf types.package);
-      default = _ps: [];
+      default = _ps: [ ];
       description = "PostgreSQL extensions to install (function taking package set)";
       example = lib.literalExpression "ps: [ ps.pgvector ps.postgis ]";
     };
@@ -44,6 +60,10 @@ in
 
     agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
       backupPath
+    ];
+
+    systemd.tmpfiles.rules = [
+      "d ${backupPath} 0700 postgres postgres -"
     ];
 
     systemd.services.postgres-backup = {
