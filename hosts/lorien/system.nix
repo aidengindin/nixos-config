@@ -1,10 +1,9 @@
 { globalVars, ... }:
 
 {
-  imports =
-    [
-      ../../linux
-    ];
+  imports = [
+    ../../linux
+  ];
 
   agindin.ssh = {
     enable = true;
@@ -20,7 +19,12 @@
   networking.hostName = "lorien";
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 9001 3000 5580 10400 ];
+  networking.firewall.allowedTCPPorts = [
+    9001
+    3000
+    5580
+    10400
+  ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;

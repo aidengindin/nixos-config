@@ -65,8 +65,6 @@
       enable = true;
       paths = [
         "/docker-volumes/calibre"
-        "/var/lib/immich"
-        "/srv/immich"
       ];
       localBackup = {
         enable = true;
@@ -90,7 +88,6 @@
 
     audiobookshelf.enable = true;
     calibre.enable = true;
-    immich.enable = true;
     openwebui.enable = true;
     tandoor.enable = true;
     pocket-id.enable = true;

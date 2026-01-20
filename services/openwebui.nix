@@ -1,11 +1,22 @@
-{ config, lib, pkgs, globalVars, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.openwebui;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 
   # Override open-webui to include PostgreSQL driver
   open-webui-with-postgres = pkgs.open-webui.overridePythonAttrs (old: {
-    propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
+    propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [
       pkgs.python3Packages.psycopg2
     ];
   });
@@ -27,12 +38,15 @@ in
     agindin.services.postgres = {
       enable = true;
       ensureUsers = [ "open-webui" ];
-      extensions = ps: [ ps.pgvector ];
+      extensions = [ (ps: [ ps.pgvector ]) ];
     };
 
     systemd.services.openwebui-init-db = {
       description = "Initialize open-webui database with pgvector extension";
-      after = [ "postgresql.service" "postgresql-ensure-databases.service" ];
+      after = [
+        "postgresql.service"
+        "postgresql-ensure-databases.service"
+      ];
       before = [ "open-webui.service" ];
       requires = [ "postgresql.service" ];
       wantedBy = [ "open-webui.service" ];
@@ -63,14 +77,15 @@ in
       environmentFile = config.age.secrets.openwebui-env.path;
     };
 
-    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.domain;
-      port = globalVars.ports.open-webui;
-    }];
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.domain;
+        port = globalVars.ports.open-webui;
+      }
+    ];
 
     agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
       config.services.open-webui.stateDir
     ];
   };
 }
-

@@ -32,10 +32,10 @@ in
       description = "List of users for which to create Postgres users and associated databases";
     };
     extensions = mkOption {
-      type = types.functionTo (types.listOf types.package);
-      default = _ps: [ ];
-      description = "PostgreSQL extensions to install (function taking package set)";
-      example = lib.literalExpression "ps: [ ps.pgvector ps.postgis ]";
+      type = types.listOf (types.functionTo (types.listOf types.package));
+      default = [ ];
+      description = "PostgreSQL extensions to install (list of functions taking package set)";
+      example = lib.literalExpression "[ (ps: [ ps.pgvector ]) (ps: [ ps.postgis ]) ]";
     };
     backupTimerOnCalendar = mkOption {
       description = "systemd OnCalendar expression for backup frequency";
@@ -47,7 +47,7 @@ in
   config = mkIf cfg.enable {
     services.postgresql = {
       enable = true;
-      extensions = cfg.extensions;
+      extensions = mkIf (cfg.extensions != [ ]) (ps: lib.concatMap (f: f ps) cfg.extensions);
       ensureUsers = mkUserList cfg.ensureUsers;
       ensureDatabases = cfg.ensureUsers;
       settings.port = globalVars.ports.postgres;

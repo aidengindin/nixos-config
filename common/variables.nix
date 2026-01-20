@@ -38,6 +38,8 @@ let
       calibre-web = 8350;
 
       open-webui = 8360;
+
+      immich = 8370;
     };
 
     ips = {

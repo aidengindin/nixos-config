@@ -42,7 +42,10 @@
   # Media group for shared access to /media
   users.groups.media = {
     gid = 991;
-    members = [ "agindin" "restic" ];
+    members = [
+      "agindin"
+      "restic"
+    ];
   };
 
   # Set permissions on /media filesystem

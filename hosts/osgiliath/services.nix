@@ -1,4 +1,9 @@
-{ config, globalVars, ... }:
+{
+  config,
+  lib,
+  globalVars,
+  ...
+}:
 {
   imports = [ ../../services ];
 
@@ -68,8 +73,16 @@
       ];
       alerting = {
         enable = true;
-        monitoredHosts = [ "osgiliath" "lorien" ];
+        monitoredHosts = [
+          "osgiliath"
+          "lorien"
+        ];
       };
+    };
+
+    immich = {
+      enable = true;
+      mediaLocation = "/media/immich";
     };
 
     calibre-web.enable = true;
