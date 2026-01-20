@@ -55,6 +55,14 @@ in
       machine-learning.enable = true;
     };
 
+    # Fix permissions for Restic (recursive) and service UMask
+    systemd = {
+      services.immich-server.serviceConfig.UMask = lib.mkForce "0007";
+      tmpfiles.rules = [
+        "z ${cfg.mediaLocation} 0750 immich media - -"
+      ];
+    };
+
     # Ensure backup user exists (wrapper handles backup logic)
     agindin.services.postgres = {
       enable = true;
