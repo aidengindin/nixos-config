@@ -1,14 +1,24 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.services.restic;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 in
 {
   options.agindin.services.restic = {
     enable = mkEnableOption "restic";
     paths = mkOption {
       type = types.listOf types.str;
-      default = [];
+      default = [ ];
       description = "Paths to back up";
     };
     localBackup = {
@@ -35,12 +45,13 @@ in
     users.users.restic = {
       isSystemUser = true;
       group = "restic";
+      extraGroups = [ "postgres" ];
       description = "Restic backup service user";
       home = "/var/lib/restic";
       createHome = true;
-      openssh.authorizedKeys.keys = [];
+      openssh.authorizedKeys.keys = [ ];
     };
-    users.groups.restic = {};
+    users.groups.restic = { };
 
     system.activationScripts = {
 
@@ -75,36 +86,42 @@ in
           Nice = 19;
           IOSchedulingClass = "idle";
         };
-      } // mkIf (cfg.localBackup.repositoryMountUnitName != "") {
+      }
+      // mkIf (cfg.localBackup.repositoryMountUnitName != "") {
         after = [ cfg.localBackup.repositoryMountUnitName ];
         requires = [ cfg.localBackup.repositoryMountUnitName ];
       };
     };
 
     services.restic = {
-      backups = let
-        commonOptions = {
-          initialize = true;
-          passwordFile = "${cfg.passwordPath}";
-          paths = cfg.paths;
-          pruneOpts = [
-            "--keep-daily 7"
-            "--keep-weekly 4"
-            "--keep-monthly 12"
-          ];
-          timerConfig = {
-            OnCalendar = "02:00";
-            Persistent = true;
-            OnClockChange = true;
-            OnTimezoneChange = true;
+      backups =
+        let
+          commonOptions = {
+            initialize = true;
+            passwordFile = "${cfg.passwordPath}";
+            paths = cfg.paths;
+            pruneOpts = [
+              "--keep-daily 7"
+              "--keep-weekly 4"
+              "--keep-monthly 12"
+            ];
+            timerConfig = {
+              OnCalendar = "02:00";
+              Persistent = true;
+              OnClockChange = true;
+              OnTimezoneChange = true;
+            };
+            user = "restic";
           };
-          user = "restic";
+        in
+        {
+          local = mkIf cfg.localBackup.enable (
+            commonOptions
+            // {
+              repository = cfg.localBackup.repository;
+            }
+          );
         };
-      in {
-        local = mkIf cfg.localBackup.enable (commonOptions // {
-          repository = cfg.localBackup.repository;
-        });
-      };
     };
   };
 }

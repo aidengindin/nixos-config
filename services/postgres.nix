@@ -63,7 +63,7 @@ in
     ];
 
     systemd.tmpfiles.rules = [
-      "d ${backupPath} 0700 postgres postgres -"
+      "d ${backupPath} 0750 postgres postgres -"
     ];
 
     systemd.services.postgres-backup = {
