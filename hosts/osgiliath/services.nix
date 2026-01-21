@@ -89,5 +89,7 @@
 
     linkwarden.enable = true;
 
+    octoprint.enable = true;
+
   };
 }

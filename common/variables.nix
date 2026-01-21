@@ -40,6 +40,8 @@ let
       open-webui = 8360;
 
       immich = 8370;
+
+      octoprint = 8380;
     };
 
     ips = {
