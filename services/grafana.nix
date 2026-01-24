@@ -5,7 +5,6 @@ let
 
   grafanaDir = "/var/lib/grafana";
   prometheusDir = "prometheus2";  # under /var/lib
-  prometheusDirFull = "/var/lib/${prometheusDir}";
   lokiDir = "/var/lib/loki";
 in {
   options.agindin.services.grafana = {
@@ -23,6 +22,7 @@ in {
           name = mkOption { type = types.str; };
           host = mkOption { type = types.str; };
           port = mkOption { type = types.port; };
+          metrics_path = mkOption { type = types.str; default = "/metrics"; };
         };
       });
     };
@@ -110,12 +110,6 @@ in {
         mode = "0440";
       };
     };
-
-    agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
-      grafanaDir
-      prometheusDirFull
-      lokiDir
-    ];
 
     services.grafana = {
       enable = true;
@@ -671,6 +665,7 @@ in {
       stateDir = "${prometheusDir}";
       scrapeConfigs = map (c: {
         job_name = c.name;
+        metrics_path = c.metrics_path;
         static_configs = [{
           targets = [ "${c.host}:${toString c.port}" ];
         }];

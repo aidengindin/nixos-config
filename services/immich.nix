@@ -38,6 +38,10 @@ in
       mediaLocation = cfg.mediaLocation;
       host = "127.0.0.1";
       port = globalVars.ports.immich;
+      environment = {
+        IMMICH_METRICS = "true";
+        IMMICH_TELEMETRY_INCLUDE = "all";
+      };
 
       # Use upstream module's database management
       database = {

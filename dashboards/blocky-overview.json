@@ -1,0 +1,251 @@
+{
+  "id": null,
+  "title": "Blocky Overview",
+  "tags": [
+    "blocky",
+    "overview"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 26,
+  "version": 1,
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Queries (Global)",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": "local-prometheus",
+      "targets": [
+        {
+          "expr": "sum(increase(blocky_query_total[$__range]))",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Blocked % (Global)",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "datasource": "local-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(blocky_response_total{response_type=\"BLOCKED\"}[$__range])) / sum(increase(blocky_query_total[$__range]))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cache Hit % (Global)",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "datasource": "local-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(blocky_cache_hits_total[$__range])) / (sum(increase(blocky_cache_hits_total[$__range])) + sum(increase(blocky_cache_misses_total[$__range])))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Errors (Global)",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": "local-prometheus",
+      "targets": [
+        {
+          "expr": "sum(increase(blocky_error_total[$__range]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queries per Host",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "datasource": "local-prometheus",
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(blocky_query_total[5m])) * 60",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Avg Response Time per Host",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "datasource": "local-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(blocky_request_duration_seconds_sum[5m])) / sum by (job) (rate(blocky_request_duration_seconds_count[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Host Statistics",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "datasource": "local-prometheus",
+      "targets": [
+        {
+          "expr": "sum by (job) (increase(blocky_query_total[$__range]))",
+          "format": "table",
+          "legendFormat": "Queries",
+          "refId": "A",
+          "instant": true
+        },
+        {
+          "expr": "sum by (job) (increase(blocky_response_total{response_type=\"BLOCKED\"}[$__range]))",
+          "format": "table",
+          "legendFormat": "Blocked",
+          "refId": "B",
+          "instant": true
+        },
+        {
+          "expr": "sum by (job) (rate(blocky_cache_hits_total[$__range])) / (sum by (job) (rate(blocky_cache_hits_total[$__range])) + sum by (job) (rate(blocky_cache_misses_total[$__range])))",
+          "format": "table",
+          "legendFormat": "Cache Hit Ratio",
+          "refId": "C",
+          "instant": true
+        },
+        {
+          "expr": "sum by (job) (rate(blocky_request_duration_seconds_sum[$__range])) / sum by (job) (rate(blocky_request_duration_seconds_count[$__range]))",
+          "format": "table",
+          "legendFormat": "Avg Duration",
+          "refId": "D",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value #A": "Queries",
+              "Value #B": "Blocked",
+              "Value #C": "Cache Hit Ratio",
+              "Value #D": "Avg Duration"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cache Hit Ratio"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "Query Types (Global)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "datasource": "local-prometheus",
+      "targets": [
+        {
+          "expr": "sum by (type) (increase(blocky_query_total[$__range]))",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Response Reasons (Global)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "datasource": "local-prometheus",
+      "targets": [
+        {
+          "expr": "sum by (reason) (increase(blocky_response_total[$__range]))",
+          "legendFormat": "{{reason}}"
+        }
+      ]
+    }
+  ]
+}

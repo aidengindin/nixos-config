@@ -1,12 +1,24 @@
-{ config, lib, unstablePkgs, globalVars, ... }:
+{
+  config,
+  lib,
+  unstablePkgs,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.pocket-id;
-  inherit (lib) mkIf mkOption mkEnableOption types;
+  inherit (lib)
+    mkIf
+    mkOption
+    mkEnableOption
+    types
+    ;
 
   dataDir = "/var/lib/pocket-id";
   uiPort = globalVars.ports.pocket-id.ui;
   prometheusPort = globalVars.ports.pocket-id.prometheus;
-in {
+in
+{
   options.agindin.services.pocket-id = {
     enable = mkEnableOption "pocket-id";
     domain = mkOption {
@@ -38,6 +50,7 @@ in {
         METRICS_ENABLED = true;
         OTEL_METRICS_EXPORTER = "prometheus";
         OTEL_EXPORTER_PROMETHEUS_PORT = prometheusPort;
+        OTEL_EXPORTER_PROMETHEUS_HOST = "0.0.0.0";
       };
     };
 
@@ -46,17 +59,21 @@ in {
       ensureUsers = [ "pocket-id" ];
     };
 
-    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.domain;
-      port = uiPort;
-      extraConfig = ''
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-Host {host}
-      '';
-    }];
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.domain;
+        port = uiPort;
+        extraConfig = ''
+          header_up Host {host}
+          header_up X-Real-IP {remote_host}
+          header_up X-Forwarded-For {remote_host}
+          header_up X-Forwarded-Proto {scheme}
+          header_up X-Forwarded-Host {host}
+        '';
+      }
+    ];
+
+    networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ prometheusPort ];
 
     agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
       dataDir
@@ -86,4 +103,3 @@ in {
     };
   };
 }
-

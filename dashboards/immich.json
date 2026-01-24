@@ -1,0 +1,43 @@
+{
+  "title": "Immich",
+  "uid": "immich",
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Process CPU",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (rate(process_cpu_time_total{job=\"immich\"}[5m]))", "legendFormat": "CPU" }]
+    },
+    {
+      "id": 2,
+      "title": "Memory Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "process_memory_usage{job=\"immich\"}", "legendFormat": "RSS" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 3,
+      "title": "Asset Operations (Rate)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (rate(immich_asset_repository_get_by_id_duration_count[5m]))", "legendFormat": "Asset Lookup" }]
+    },
+    {
+      "id": 5,
+      "title": "P95 Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_bucket{job=\"immich\"}[5m])) by (le))", "legendFormat": "P95" }],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    }
+  ]
+}

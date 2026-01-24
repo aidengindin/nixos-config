@@ -53,6 +53,14 @@ in
       settings.port = globalVars.ports.postgres;
     };
 
+    services.prometheus.exporters.postgres = {
+      enable = true;
+      port = globalVars.ports.postgresExporter;
+      runAsLocalSuperUser = true;
+    };
+
+    networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ globalVars.ports.postgresExporter ];
+
     agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
       "/var/lib/postgresql"
       backupPath

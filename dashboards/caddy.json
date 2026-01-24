@@ -1,0 +1,50 @@
+{
+  "title": "Caddy",
+  "uid": "caddy",
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (rate(caddy_http_requests_total[5m]))", "legendFormat": "{{job}}" }]
+    },
+    {
+      "id": 2,
+      "title": "P95 Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(caddy_http_request_duration_seconds_bucket[5m])) by (le, job))", "legendFormat": "{{job}}" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 3,
+      "title": "Response Codes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (code, job) (rate(caddy_http_request_duration_seconds_count[5m]))", "legendFormat": "{{code}} - {{job}}" }]
+    },
+    {
+      "id": 4,
+      "title": "Admin API Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (rate(caddy_admin_http_requests_total[5m]))", "legendFormat": "{{job}}" }]
+    },
+    {
+      "id": 5,
+      "title": "Upstream Health",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (caddy_reverse_proxy_upstreams_healthy)", "legendFormat": "{{job}} Healthy Upstreams" }]
+    }
+  ]
+}

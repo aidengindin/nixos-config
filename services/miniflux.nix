@@ -1,8 +1,19 @@
-{ config, lib, globalVars, ... }:
+{
+  config,
+  lib,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.miniflux;
-  inherit (lib) mkIf mkEnableOption mkOption types;
-in {
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
+in
+{
   options.agindin.services.miniflux = {
     enable = mkEnableOption "miniflux";
     domain = mkOption {
@@ -32,10 +43,12 @@ in {
   };
 
   config = mkIf cfg.enable {
-    assertions = [{
-      assertion = config.services.postgresql.enable;
-      message = "Miniflux requires PostgreSQL to be enabled";
-    }];
+    assertions = [
+      {
+        assertion = config.services.postgresql.enable;
+        message = "Miniflux requires PostgreSQL to be enabled";
+      }
+    ];
 
     agindin.services.postgres.ensureUsers = [ "miniflux" ];
 
@@ -53,18 +66,23 @@ in {
         OAUTH2_USER_CREATION = 1;
         DISABLE_LOCAL_AUTH = 1;
         LOG_LEVEL = "info";
+        METRICS_COLLECTOR = "1";
+        METRICS_ALLOWED_NETWORKS = "127.0.0.1/32,100.0.0.0/8";
       };
     };
+
+    networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ globalVars.ports.miniflux ];
 
     systemd.services.miniflux.serviceConfig.LoadCredential = [
       "client_id:${cfg.oauth2ClientIdFile}"
       "client_secret:${cfg.oauth2ClientSecretFile}"
     ];
 
-    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.domain;
-      port = globalVars.ports.miniflux;
-    }];
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.domain;
+        port = globalVars.ports.miniflux;
+      }
+    ];
   };
 }
-

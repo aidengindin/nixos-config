@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, globalVars, ... }:
 let
   cfg = config.agindin.services.blocky;
   inherit (lib) mkIf mkEnableOption mkOption types;
@@ -89,11 +89,6 @@ in
       default = 53;
       description = "Port to serve DNS";
     };
-    # httpPort = mkOption {
-    #   type = types.int;
-    #   default = null;
-    #   description = "Port to serve HTTP for prometheus";
-    # };
     adsAllowedClients = mkOption {
       type = types.listOf types.str;
       default = [];
@@ -105,6 +100,10 @@ in
     networking.firewall = {
       allowedTCPPorts = [ cfg.port ];
       allowedUDPPorts = [ cfg.port ];
+      interfaces = {
+        "lo".allowedTCPPorts = [ globalVars.ports.blockyHttp ];
+        "tailscale0".allowedTCPPorts = [ globalVars.ports.blockyHttp ];
+      };
     };
 
     services.blocky = {
@@ -113,7 +112,7 @@ in
         log.level = "info";
         ports = {
           dns = cfg.port;
-          # http = cfg.httpPort;
+          http = globalVars.ports.blockyHttp;
         };
 
         clientLookup.clients = {
@@ -144,10 +143,10 @@ in
           };
         };
 
-        # prometheus = mkIf (cfg.httpPort != null) {
-        #   enable = true;
-        #   path = "/prometheus";
-        # };
+        prometheus = {
+          enable = true;
+          path = "/prometheus";
+        };
 
         ede.enable = false;
       };

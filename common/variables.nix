@@ -7,6 +7,9 @@ let
       grafana = 10001;
       prometheus = 10002;
       prometheusNodeExporter = 10003;
+      postgresExporter = 10006;
+      caddyMetrics = 10007;
+      blockyHttp = 4000;
       loki = 10004;
       promtail = 10005;
 

@@ -1,0 +1,53 @@
+{
+  "title": "Miniflux",
+  "uid": "miniflux",
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Users",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "miniflux_users", "legendFormat": "Users" }]
+    },
+    {
+      "id": 2,
+      "title": "Feeds",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "miniflux_feeds{status='total'}", "legendFormat": "Feeds" }]
+    },
+    {
+      "id": 3,
+      "title": "Entries",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "miniflux_entries{status='total'}", "legendFormat": "Entries" }]
+    },
+    {
+      "id": 4,
+      "title": "Broken Feeds",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "miniflux_broken_feeds", "legendFormat": "Broken" }],
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } } }
+    },
+    {
+      "id": 5,
+      "title": "DB Connections",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [
+        { "expr": "miniflux_db_open_connections", "legendFormat": "Open" },
+        { "expr": "miniflux_db_connections_in_use", "legendFormat": "In Use" }
+      ]
+    }
+  ]
+}

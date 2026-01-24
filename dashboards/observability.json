@@ -1,0 +1,34 @@
+{
+  "title": "Observability",
+  "uid": "observability",
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Grafana Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (rate(grafana_http_request_duration_seconds_count[5m]))", "legendFormat": "Grafana" }]
+    },
+    {
+      "id": 2,
+      "title": "Loki Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "sum by (job) (rate(loki_request_duration_seconds_count[5m]))", "legendFormat": "Loki" }]
+    },
+    {
+      "id": 3,
+      "title": "Promtail Logs Sent",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "rate(promtail_sent_bytes_total[5m])", "legendFormat": "{{job}}" }],
+      "fieldConfig": { "defaults": { "unit": "Bps" } }
+    }
+  ]
+}

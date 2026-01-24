@@ -1,0 +1,28 @@
+{
+  "title": "Pocket ID",
+  "uid": "pocket-id",
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 0,
+      "title": "Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "up{job='pocket-id'}", "legendFormat": "Status" }]
+    },
+    {
+      "id": 1,
+      "title": "Version Info",
+      "type": "table",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "uid": "local-prometheus" },
+      "targets": [{ "expr": "target_info{service_name='pocket-id'}", "format": "table", "instant": true }],
+      "options": { "showHeader": true }
+    }
+  ]
+}
+  ]
+}
