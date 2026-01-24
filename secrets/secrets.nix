@@ -125,5 +125,10 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  "osgiliath-restic-b2-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
 }
 

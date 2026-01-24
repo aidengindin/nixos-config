@@ -13,6 +13,11 @@
       group = "restic";
       mode = "0400";
     };
+    restic-b2-env = {
+      file = ../../secrets/osgiliath-restic-b2-env.age;
+      owner = "restic";
+      group = "restic";
+    };
   };
 
   agindin.services = {
@@ -26,6 +31,11 @@
       localBackup = {
         enable = true;
         repository = "/media/backups";
+      };
+      b2Backup = {
+        enable = true;
+        bucket = "osgiliath-restic-backup";
+        environmentFile = config.age.secrets.restic-b2-env.path;
       };
     };
 

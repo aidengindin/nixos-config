@@ -33,6 +33,17 @@ in
         default = "";
       };
     };
+    b2Backup = {
+      enable = mkEnableOption "restic b2 backup";
+      bucket = mkOption {
+        type = types.str;
+        description = "Name of the B2 bucket";
+      };
+      environmentFile = mkOption {
+        type = types.path;
+        description = "Path to file containing B2_ACCOUNT_ID and B2_ACCOUNT_KEY";
+      };
+    };
     passwordPath = mkOption {
       type = types.path;
       description = "Path to password file";
@@ -119,6 +130,13 @@ in
             commonOptions
             // {
               repository = cfg.localBackup.repository;
+            }
+          );
+          b2 = mkIf cfg.b2Backup.enable (
+            commonOptions
+            // {
+              repository = "b2:${cfg.b2Backup.bucket}";
+              environmentFile = cfg.b2Backup.environmentFile;
             }
           );
         };
