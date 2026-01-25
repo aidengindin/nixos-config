@@ -86,7 +86,6 @@
 
     postgres.enable = true;
 
-    audiobookshelf.enable = true;
     calibre.enable = true;
     openwebui.enable = true;
     tandoor.enable = true;

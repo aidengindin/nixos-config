@@ -45,6 +45,7 @@
     members = [
       "agindin"
       "restic"
+      "audiobookshelf"
     ];
   };
 

@@ -44,6 +44,8 @@
       cloudflareApiKeyFile = ../../secrets/osgiliath-caddy-cloudflare-api-key.age;
     };
 
+    audiobookshelf.enable = true;
+
     prometheusExporter = {
       enable = true;
       openPort = false;
