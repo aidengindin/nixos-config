@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ lib, pkgs, globalVars, ... }:
 
 {
   imports = [
@@ -11,6 +11,14 @@
   boot.kernelPackages = lib.mkForce pkgs.linuxPackages_jovian;
 
   networking.hostName = "weathertop";
+
+  agindin.ssh = {
+    enable = true;
+    allowedKeys = [
+      globalVars.keys.khazad-dumUser
+      globalVars.keys.lorienUser
+    ];
+  };
 
   zramSwap.enable = true;
 
@@ -45,6 +53,12 @@
   ];
 
   services.udev.packages = with pkgs; [ game-devices-udev-rules ];
+
+  # Fix 8BitDo controller disconnections by disabling USB autosuspend
+  services.udev.extraRules = ''
+    # 8BitDo controller dongles - disable USB autosuspend
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="2dc8", TEST=="power/control", ATTR{power/control}="on"
+  '';
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
