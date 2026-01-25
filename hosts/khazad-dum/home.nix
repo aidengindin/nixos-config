@@ -12,6 +12,7 @@
     mpv.enable = true;
     neomutt.enable = true;
     spotify.enable = true;
+    vesktop.enable = true;
   };
 
   # this line should not be edited even when upgrading NixOS versions

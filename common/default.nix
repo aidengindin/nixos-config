@@ -15,6 +15,7 @@
     ./opencode.nix
     ./spotify.nix
     ./starship.nix
+    ./vesktop.nix
     ./yazi.nix
     ./zoxide.nix
   ];
