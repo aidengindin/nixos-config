@@ -11,7 +11,7 @@
     shellAliases = {
       mkdir = "mkdir -p";
       s = "kitten ssh";
-      
+
       ls = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
       l = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions";
       ll = "eza -lah --group-directories-first";
@@ -37,7 +37,7 @@
     };
 
     syntaxHighlighting.enable = true;
-    
+
     initExtra = ''
       setopt GLOB_SUBST
 

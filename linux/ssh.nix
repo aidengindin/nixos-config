@@ -1,14 +1,24 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   cfg = config.agindin.ssh;
-  inherit (lib) mkOption mkEnableOption mkIf types;
+  inherit (lib)
+    mkOption
+    mkEnableOption
+    mkIf
+    types
+    ;
 in
 {
   options.agindin.ssh = {
     enable = mkEnableOption "ssh";
     allowedKeys = mkOption {
       type = types.listOf types.str;
-      default = [];
+      default = [ ];
       description = "Keys allowed to authenticate ssh sessions.";
     };
   };
@@ -25,4 +35,3 @@ in
     users.users.agindin.openssh.authorizedKeys.keys = cfg.allowedKeys;
   };
 }
-

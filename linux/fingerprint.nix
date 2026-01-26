@@ -1,8 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.fingerprint;
   inherit (lib) mkIf mkEnableOption types;
-in {
+in
+{
   options.agindin.fingerprint = {
     enable = mkEnableOption "Whether to configure fingerprint scanner";
   };
@@ -16,4 +22,3 @@ in {
     ];
   };
 }
-

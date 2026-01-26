@@ -56,7 +56,10 @@ in
     users.users.restic = {
       isSystemUser = true;
       group = "restic";
-      extraGroups = [ "postgres" ];
+      extraGroups = [
+        "postgres"
+      ]
+      ++ lib.optional (config.users.groups ? keys) config.users.groups.keys.name;
       description = "Restic backup service user";
       home = "/var/lib/restic";
       createHome = true;
@@ -92,7 +95,6 @@ in
       ];
       services."restic-backups-local" = {
         serviceConfig = {
-          SupplementaryGroups = [ config.users.groups.keys.name ];
           CPUQuota = "50%";
           Nice = 19;
           IOSchedulingClass = "idle";

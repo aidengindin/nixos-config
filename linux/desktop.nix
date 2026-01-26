@@ -1,7 +1,17 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   cfg = config.agindin.desktop;
-  inherit (lib) mkEnableOption mkIf mkOption types;
+  inherit (lib)
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 in
 {
   options.agindin.desktop = {
@@ -48,18 +58,20 @@ in
           platformTheme.name = "qtct";
         };
 
-        xdg.configFile = let
-          catppuccinQtColors = "${pkgs.catppuccin-qt5ct}/share/qt5ct/colors";
-        in {
-          "qt5ct/colors" = {
-            source = catppuccinQtColors;
-            recursive = true;
+        xdg.configFile =
+          let
+            catppuccinQtColors = "${pkgs.catppuccin-qt5ct}/share/qt5ct/colors";
+          in
+          {
+            "qt5ct/colors" = {
+              source = catppuccinQtColors;
+              recursive = true;
+            };
+            "qt6ct/colors" = {
+              source = catppuccinQtColors;
+              recursive = true;
+            };
           };
-          "qt6ct/colors" = {
-            source = catppuccinQtColors;
-            recursive = true;
-          };
-        };
 
         home.file = {
           "Pictures/wallpapers/nixos.png".source = ./wallpapers/nixos.png;

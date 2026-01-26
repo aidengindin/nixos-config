@@ -6,7 +6,7 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelParams = [
-    "amdgpu.ip_block_mask=0xfffff7ff"  # Disable VPE (IP block 11) - workaround for suspend/resume crashes
+    "amdgpu.ip_block_mask=0xfffff7ff" # Disable VPE (IP block 11) - workaround for suspend/resume crashes
   ];
 
   hardware.graphics.package = pkgs.mesa;

@@ -1,8 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.hyprland;
   inherit (lib) mkIf mkEnableOption;
-in {
+in
+{
   options.agindin.hyprland = {
     enable = mkEnableOption "Enable hyprland tiling WM";
   };
@@ -10,7 +16,7 @@ in {
   config = mkIf cfg.enable {
     assertions = [
       {
-        assertion = (! config.agindin.gnome.enable);
+        assertion = (!config.agindin.gnome.enable);
         message = "Only one desktop environment can be configured.";
       }
     ];
@@ -54,7 +60,7 @@ in {
         initial_session = default_session;
       };
     };
-    
+
     xdg.portal = {
       enable = true;
       extraPortals = with pkgs; [
@@ -103,35 +109,35 @@ in {
           enable = true;
           style = builtins.readFile ./swaync/style.css;
           settings = {
-            notification-icon-size =  48;
-            notification-body-image-height =  100;
-            notification-body-image-width =  200;
-            timeout =  2;
-            timeout-low =  2;
-            timeout-critical =  0;
-            notification-window-width =  300;
-            keyboard-shortcuts =  true;
-            image-visibility =  "when-available";
-            transition-time =  200;
-            hide-on-clear =  true;
-            hide-on-action =  true;
-            widgets =  [
+            notification-icon-size = 48;
+            notification-body-image-height = 100;
+            notification-body-image-width = 200;
+            timeout = 2;
+            timeout-low = 2;
+            timeout-critical = 0;
+            notification-window-width = 300;
+            keyboard-shortcuts = true;
+            image-visibility = "when-available";
+            transition-time = 200;
+            hide-on-clear = true;
+            hide-on-action = true;
+            widgets = [
               "title"
               "dnd"
               "notifications"
             ];
-            widget-config =  {
-              title =  {
-                text =  "Notifications";
-                clear-all-button =  true;
-                button-text =  "Clear All";
+            widget-config = {
+              title = {
+                text = "Notifications";
+                clear-all-button = true;
+                button-text = "Clear All";
               };
-              dnd =  {
-                text =  "Do Not Disturb";
+              dnd = {
+                text = "Do Not Disturb";
               };
-              mpris =  {
-                image-size =  96;
-                blur =  true;
+              mpris = {
+                image-size = 96;
+                blur = true;
               };
             };
           };
@@ -185,7 +191,11 @@ in {
               {
                 id_vendor = "RPI";
                 id_model = "RP2";
-                options = [ "uid=1000" "gid=100" "umask=0022" ];
+                options = [
+                  "uid=1000"
+                  "gid=100"
+                  "umask=0022"
+                ];
               }
             ];
           };
@@ -198,4 +208,3 @@ in {
     ];
   };
 }
-

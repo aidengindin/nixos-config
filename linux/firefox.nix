@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.firefox;
   inherit (lib) mkIf mkEnableOption;
@@ -93,15 +98,15 @@ in
           id = 0;
           isDefault = true;
           # userChrome = builtins.readFile ./firefox/user-chrome.css;
-          userContent = pkgs.lib.concatMapStringsSep "\n\n"
-            (site: builtins.readFile "${catppuccinUserstyles}/${site}.css")
-            userstyleSites;
-          
+          userContent = pkgs.lib.concatMapStringsSep "\n\n" (
+            site: builtins.readFile "${catppuccinUserstyles}/${site}.css"
+          ) userstyleSites;
+
           # Moving preferences from policies.Preferences to profile settings
           settings = {
             # Enable custom user chrome - crucial for userChrome.css
             "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
-            
+
             # Force enable CSS customization
             "devtools.chrome.enabled" = true;
             "browser.devedition.theme.enabled" = true;
@@ -125,7 +130,7 @@ in
             "layout.css.prefers-color-scheme.content-override" = 0;
             "browser.theme.content-theme" = 0;
             "browser.theme.toolbar-theme" = 0;
-            
+
             # Force system colors for theme
             "browser.theme.dark-private-windows" = false;
             "extensions.activeThemeID" = "default-theme@mozilla.org";
@@ -136,7 +141,7 @@ in
             "browser.download.useDownloadDir" = true;
             "browser.download.alwaysOpenPanel" = false;
             "browser.download.manager.addToRecentDocs" = false;
-            
+
             # New tab and homepage
             "browser.startup.page" = 3; # Restore previous session
             "browser.newtabpage.enabled" = false; # Blank new tab
@@ -146,25 +151,25 @@ in
             "services.sync.prefs.browser.newtabpage.activity-stream.showSponsored" = false;
             "services.sync.prefs.browser.newtabpage.activity-stream.showSponsoredTopSites" = false;
             "browser.newtabpage.activity-stream.default.sites" = "";
-            
+
             # Search suggestions
             "browser.search.suggest.enabled" = true;
             "browser.urlbar.suggest.searches" = true;
             "browser.urlbar.quicksuggest.enabled" = false;
             "browser.urlbar.suggest.pocket" = false;
             "browser.urlbar.suggest.quicksuggest.sponsored" = false;
-            
+
             # Disable autofill and passwords
             "signon.rememberSignons" = false;
             "signon.autofillForms" = false;
             "signon.generation.enabled" = false;
             "signon.formlessCapture.enabled" = false;
             "browser.formfill.enable" = false;
-            
+
             # Performance
             "gfx.webrender.all" = true; # Force WebRender
             "layers.acceleration.force-enabled" = true;
-            
+
             # Disable annoying features
             "browser.aboutConfig.showWarning" = false;
             "browser.shell.checkDefaultBrowser" = false;
@@ -300,4 +305,3 @@ in
     ];
   };
 }
-

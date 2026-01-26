@@ -2,7 +2,8 @@
 let
   cfg = config.agindin.gnome;
   inherit (lib) mkEnableOption mkIf;
-in {
+in
+{
   options.agindin.gnome = {
     enable = mkEnableOption "Whether to enable GNOME desktop environment.";
     gdm.enable = mkEnableOption "Whether to enable GDM display manager.";
@@ -11,7 +12,7 @@ in {
   config = mkIf cfg.enable {
     assertions = [
       {
-        assertion = (! config.agindin.hyprland.enable);
+        assertion = (!config.agindin.hyprland.enable);
         message = "Only one desktop environment can be configured.";
       }
     ];
@@ -55,4 +56,3 @@ in {
     };
   };
 }
-

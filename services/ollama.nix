@@ -1,7 +1,18 @@
-{ config, lib, pkgs, unstablePkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  unstablePkgs,
+  ...
+}:
 let
   cfg = config.agindin.services.ollama;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 in
 {
   options.agindin.services.ollama = {
@@ -17,12 +28,15 @@ in
     users.users.ollama = {
       isSystemUser = true;
       group = "ollama";
-      extraGroups = [ "render" "video" ];
+      extraGroups = [
+        "render"
+        "video"
+      ];
       home = "/var/lib/ollama";
       createHome = true;
     };
-    users.groups.ollama = {};
-    
+    users.groups.ollama = { };
+
     services.ollama = {
       enable = true;
       package = unstablePkgs.ollama;

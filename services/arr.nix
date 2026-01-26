@@ -1,8 +1,20 @@
-{ config, lib, pkgs, globalVars, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.arr;
-  inherit (lib) mkEnableOption mkIf mkOption types;
-in {
+  inherit (lib)
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+in
+{
   options.agindin.services.arr = {
     enable = mkEnableOption "Whether to enable *arr stack.";
     mediaPath = mkOption {
@@ -135,7 +147,12 @@ in {
       "d '${cfg.mediaPath}/movies'    0775 radarr      radarr      -"
     ];
 
-    users.groups.media.members = [ "qbittorrent" "sonarr" "radarr" "bazarr" ];
+    users.groups.media.members = [
+      "qbittorrent"
+      "sonarr"
+      "radarr"
+      "bazarr"
+    ];
 
     # Enable split tunneling for qbittorrent
 
@@ -146,25 +163,33 @@ in {
 
     # Wireguard VPN config for AirVPN
     networking.wireguard.interfaces.wg-vpn = {
-      ips = [];  # VPN tunnel IP
-      privateKeyFile = "";  # Configure w/ agenix
+      ips = [ ]; # VPN tunnel IP
+      privateKeyFile = ""; # Configure w/ agenix
 
-      peers = [{
-        publicKey = "";  # AirVPN server public key
-        allowedIPs = [ "0.0.0.0/0" ];
-        endpoint = "";  # server host:port
-        persistentKeepalive = 25;
-      }];
+      peers = [
+        {
+          publicKey = ""; # AirVPN server public key
+          allowedIPs = [ "0.0.0.0/0" ];
+          endpoint = ""; # server host:port
+          persistentKeepalive = 25;
+        }
+      ];
     };
 
     systemd.services.airvpn-namespace = {
       description = "AirVPN network namespace";
       before = [ "qbittorrent.service" ];
-      after = [ "network-online.target" "wireguard-wg-vpn.service" ];
+      after = [
+        "network-online.target"
+        "wireguard-wg-vpn.service"
+      ];
       wants = [ "wireguard-wg-vpn.service" ];
       wantedBy = [ "multi-user.target" ];
-      
-      path = with pkgs; [ iproute2 iptables ];
+
+      path = with pkgs; [
+        iproute2
+        iptables
+      ];
 
       serviceConfig = {
         Type = "oneshot";
@@ -236,7 +261,7 @@ in {
     systemd.services.qbittorrent = {
       after = [ "airvpn-namespace.service" ];
       wants = [ "airvpn-namespace.service" ];
-      bindsTo = [ "airvpn-namespace.service" ];  # Stop if VPN namespace stops
+      bindsTo = [ "airvpn-namespace.service" ]; # Stop if VPN namespace stops
 
       path = [ pkgs.iproute2 ];
 
@@ -265,4 +290,3 @@ in {
     ];
   };
 }
-

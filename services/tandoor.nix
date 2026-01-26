@@ -1,7 +1,17 @@
-{ config, lib, globalVars, ... }:
+{
+  config,
+  lib,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.tandoor;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 in
 {
   options.agindin.services.tandoor = {
@@ -29,9 +39,11 @@ in
 
     agindin.services.postgres.enable = true;
 
-    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.domain;
-      port = globalVars.ports.tandoor;
-    }];
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.domain;
+        port = globalVars.ports.tandoor;
+      }
+    ];
   };
 }

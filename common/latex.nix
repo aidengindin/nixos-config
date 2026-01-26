@@ -1,11 +1,16 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.latex;
   inherit (lib) mkIf mkEnableOption;
 
   # This allows for adding specific packages as needed
   myTexlive = pkgs.texlive.combine {
-    inherit (pkgs.texlive) 
+    inherit (pkgs.texlive)
       scheme-medium
       collection-latexextra
       ;

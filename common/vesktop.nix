@@ -2,7 +2,8 @@
 let
   cfg = config.agindin.vesktop;
   inherit (lib) mkIf mkEnableOption;
-in {
+in
+{
   options.agindin.vesktop.enable = mkEnableOption "vesktop";
 
   config = mkIf cfg.enable {
@@ -11,4 +12,3 @@ in {
     };
   };
 }
-

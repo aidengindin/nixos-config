@@ -45,6 +45,9 @@ let
       immich = 8370;
 
       octoprint = 8380;
+
+      netalertx = 20211;
+      netalertxMetrics = 20212;
     };
 
     ips = {

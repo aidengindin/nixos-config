@@ -1,8 +1,15 @@
-{ config, lib, pkgs, unstablePkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  unstablePkgs,
+  ...
+}:
 let
   cfg = config.agindin.opencode;
   inherit (lib) mkEnableOption mkIf;
-in {
+in
+{
   options.agindin.opencode.enable = mkEnableOption "opencode";
 
   config = mkIf cfg.enable {
@@ -15,4 +22,3 @@ in {
     ];
   };
 }
-

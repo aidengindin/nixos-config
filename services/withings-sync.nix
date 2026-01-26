@@ -1,7 +1,21 @@
-{ config, lib, pkgs, unstablePkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  unstablePkgs,
+  ...
+}:
 let
   cfg = config.agindin.services.withings-sync;
-  inherit (lib) mkIf mkEnableOption mkOption types mapAttrs' nameValuePair concatStringsSep;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    mapAttrs'
+    nameValuePair
+    concatStringsSep
+    ;
 
   # Override python packages to skip tests in dependencies
   pythonPackagesOverride = unstablePkgs.python312.override {
@@ -20,71 +34,73 @@ let
       rev = "feat/credential-file-env-variable";
       sha256 = "sha256-mZi07BzzyKyAPqF/2AZLegeQxV+1Yx/3fwbN+BT1T/w=";
     };
-    propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or []) ++ [
+    propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or [ ]) ++ [
       pythonPackagesOverride.pkgs.setuptools
     ];
     doCheck = false;
     doInstallCheck = false;
   });
 
-  syncOpts = { name, ... }: {
-    options = {
-      enable = mkEnableOption "withings-sync service for ${name}";
+  syncOpts =
+    { name, ... }:
+    {
+      options = {
+        enable = mkEnableOption "withings-sync service for ${name}";
 
-      garminCredentials = {
-        username = mkOption {
-          type = types.str;
-          description = "Garmin Connect username";
+        garminCredentials = {
+          username = mkOption {
+            type = types.str;
+            description = "Garmin Connect username";
+          };
+          passwordFile = mkOption {
+            type = types.path;
+            description = "Path to a file containing the Garmin Connect password";
+          };
         };
-        passwordFile = mkOption {
+
+        stateDir = mkOption {
           type = types.path;
-          description = "Path to a file containing the Garmin Connect password";
+          default = "/var/lib/withings-sync/${name}";
+          description = "Directory to store state in";
         };
-      };
 
-      stateDir = mkOption {
-        type = types.path;
-        default = "/var/lib/withings-sync/${name}";
-        description = "Directory to store state in";
-      };
+        features = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "List of features to enable (e.g. BLOOD_PRESSURE)";
+          example = [ "BLOOD_PRESSURE" ];
+        };
 
-      features = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = "List of features to enable (e.g. BLOOD_PRESSURE)";
-        example = [ "BLOOD_PRESSURE" ];
-      };
+        interval = mkOption {
+          type = types.str;
+          default = "1h";
+          description = "Systemd timer interval to run the sync";
+        };
 
-      interval = mkOption {
-        type = types.str;
-        default = "1h";
-        description = "Systemd timer interval to run the sync";
-      };
+        extraArgs = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "Extra arguments to pass to the sync script";
+        };
 
-      extraArgs = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = "Extra arguments to pass to the sync script";
-      };
+        user = mkOption {
+          type = types.str;
+          description = "User to run the sync script as";
+        };
 
-      user = mkOption {
-        type = types.str;
-        description = "User to run the sync script as";
-      };
-
-      group = mkOption {
-        type = types.str;
-        description = "Group to run the sync script as";
+        group = mkOption {
+          type = types.str;
+          description = "Group to run the sync script as";
+        };
       };
     };
-  };
 in
 {
   options.agindin.services.withings-sync = {
     enable = mkEnableOption "withings-sync";
     users = mkOption {
       type = types.attrsOf (types.submodule syncOpts);
-      default = {};
+      default = { };
       description = "Sync configuration for each user";
     };
     package = mkOption {
@@ -99,13 +115,16 @@ in
       cfg.package
     ];
 
-    systemd.tmpfiles.rules = lib.concatLists (lib.mapAttrsToList (name: userCfg: [
-      ''
-        d ${userCfg.stateDir}/config 0700 ${userCfg.user} ${userCfg.group} -
-      ''
-    ]) cfg.users);
+    systemd.tmpfiles.rules = lib.concatLists (
+      lib.mapAttrsToList (name: userCfg: [
+        ''
+          d ${userCfg.stateDir}/config 0700 ${userCfg.user} ${userCfg.group} -
+        ''
+      ]) cfg.users
+    );
 
-    systemd.services = mapAttrs' (name: userCfg:
+    systemd.services = mapAttrs' (
+      name: userCfg:
       nameValuePair "withings-sync-${name}" {
         description = "Withings sync for ${name}";
         wantedBy = [ "multi-user.target" ];
@@ -141,30 +160,36 @@ in
           RestrictRealtime = true;
           RestrictSUIDSGID = true;
           SystemCallArchitectures = "native";
-          SystemCallFilter = [ "@system-service" "~@resources" "~@privileged" ];
+          SystemCallFilter = [
+            "@system-service"
+            "~@resources"
+            "~@privileged"
+          ];
           UMask = "0077";
         };
 
-        script = let
-          featuresArg = if userCfg.features != []
-            then "--features ${concatStringsSep "," userCfg.features}"
-            else "";
-        in ''
-          set -euo pipefail
+        script =
+          let
+            featuresArg =
+              if userCfg.features != [ ] then "--features ${concatStringsSep "," userCfg.features}" else "";
+          in
+          ''
+            set -euo pipefail
 
-          export HOME="${userCfg.stateDir}"
+            export HOME="${userCfg.stateDir}"
 
-          export GARMIN_PASSWORD_FILE="${userCfg.garminCredentials.passwordFile}"
+            export GARMIN_PASSWORD_FILE="${userCfg.garminCredentials.passwordFile}"
 
-          withings-sync \
-            --garmin-username "${userCfg.garminCredentials.username}" \
-            ${featuresArg} \
-            ${concatStringsSep " " userCfg.extraArgs}
-        '';
+            withings-sync \
+              --garmin-username "${userCfg.garminCredentials.username}" \
+              ${featuresArg} \
+              ${concatStringsSep " " userCfg.extraArgs}
+          '';
       }
     ) cfg.users;
 
-    systemd.timers = mapAttrs' (name: userCfg:
+    systemd.timers = mapAttrs' (
+      name: userCfg:
       nameValuePair "withings-sync-${name}.timer" {
         description = "Withings sync for ${name}";
         wantedBy = [ "timers.target" ];

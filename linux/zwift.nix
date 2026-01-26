@@ -1,16 +1,33 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.zwift;
   inherit (lib) mkIf mkEnableOption;
-in {
+in
+{
   options.agindin.zwift = {
     enable = mkEnableOption "zwift";
   };
 
   config = mkIf cfg.enable {
     networking.firewall = {
-      allowedUDPPorts = [ 3022 3023 3024 3025 5353 ];
-      allowedTCPPorts = [ 3022 3023 3024 3025 ];
+      allowedUDPPorts = [
+        3022
+        3023
+        3024
+        3025
+        5353
+      ];
+      allowedTCPPorts = [
+        3022
+        3023
+        3024
+        3025
+      ];
     };
     programs.zwift = {
       enable = true;
@@ -27,4 +44,3 @@ in {
     ];
   };
 }
-

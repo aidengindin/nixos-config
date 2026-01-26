@@ -1,10 +1,16 @@
-{ config, lib, pkgs, unstablePkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  unstablePkgs,
+  ...
+}:
 
 {
   config = {
     environment.systemPackages = with unstablePkgs; [ atuin ];
     environment.shells = with pkgs; [ bash ];
-    
+
     programs.bash.blesh.enable = true;
 
     programs.bash = {
@@ -40,7 +46,7 @@
           BLE_ONLOAD+=(__my_atuin_keybind)
         fi
         bind 'set completion-ignore-case on'
-        
+
         # TODO: TEMPORARY FIX - Remove when nix completion scripts are fixed
         # Override nix completions with dummy functions to prevent arithmetic expansion errors
         # The flake update introduced buggy nix completion scripts causing bash arithmetic expansion errors
@@ -71,7 +77,7 @@
 
     environment.shellAliases = {
       mkdir = "mkdir -p";
-      
+
       ls = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions --icons=auto";
       l = "eza -la --group-directories-first --no-filesize --no-user --no-time --no-permissions --icons=auto";
       ll = "eza -lah --group-directories-first --icons=auto";

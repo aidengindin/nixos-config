@@ -2,7 +2,8 @@
 let
   cfg = config.agindin.steam;
   inherit (lib) mkIf mkEnableOption;
-in {
+in
+{
   options.agindin.steam = {
     enable = mkEnableOption "Whether to enable Steam";
     deck.enable = mkEnableOption "Whether to enable options to run on Steam Deck (strict superset of machine.enable)";
@@ -43,4 +44,3 @@ in {
     ];
   };
 }
-

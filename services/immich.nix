@@ -81,6 +81,8 @@ in
     };
     users.groups.immich = { };
 
+    users.users.restic.extraGroups = mkIf config.agindin.services.restic.enable [ "immich" ];
+
     agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
       "/var/lib/immich"
       "/var/cache/immich" # Machine learning cache

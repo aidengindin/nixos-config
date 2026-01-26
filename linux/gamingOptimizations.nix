@@ -44,13 +44,19 @@ in
       "vm.max_map_count=2147483642"
 
       "split_lock_detect=off"
-    ] ++ (if cfg.amd.enable then [
-      # Enable all GPU features including overclocking
-      "amdgpu.ppfeaturemask=0xffffffff"
+    ]
+    ++ (
+      if cfg.amd.enable then
+        [
+          # Enable all GPU features including overclocking
+          "amdgpu.ppfeaturemask=0xffffffff"
 
-      # Use AMD P-State driver for better CPU scaling
-      "amd_pstate=active"
-    ] else []);
+          # Use AMD P-State driver for better CPU scaling
+          "amd_pstate=active"
+        ]
+      else
+        [ ]
+    );
 
     boot.kernel.sysctl = {
       # Lower swappiness
@@ -62,7 +68,7 @@ in
       # Increase dirty page writeback time for better performance
       "vm.dirty_ratio" = 10;
       "vm.dirty_background_ratio" = 5;
-      
+
       # Network latency for online gaming
       "net.ipv4.tcp_fastopen" = 3;
       "net.core.netdev_max_backlog" = 16384;

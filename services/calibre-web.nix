@@ -1,7 +1,18 @@
-{ config, lib, pkgs, globalVars, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.calibre-web;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 
   # DeDRM plugin from noDRM fork
   dedrmPlugin = pkgs.fetchurl {
@@ -79,7 +90,7 @@ in
         ];
         environment = {
           PUID = "1000";
-          PGID = "991";  # media group
+          PGID = "991"; # media group
           TZ = "America/New_York";
           OAUTHLIB_RELAX_TOKEN_SCOPE = "1";
           CALIBRE_CONFIG_DIRECTORY = "/config/.config/calibre";
@@ -97,7 +108,8 @@ in
       "d '${cfg.dataDir}' 0755 1000 1000 -"
       "d '${cfg.calibreLibrary}' 0775 1000 ${if config.users.groups ? media then "media" else "1000"} -"
       "d '${cfg.ingestDir}' 0775 1000 ${if config.users.groups ? media then "media" else "1000"} -"
-    ] ++ (lib.optionals cfg.enableDrmPlugins [
+    ]
+    ++ (lib.optionals cfg.enableDrmPlugins [
       "d '${cfg.dataDir}/.config' 0755 1000 1000 -"
       "d '${cfg.dataDir}/.config/calibre' 0755 1000 1000 -"
       "d '${cfg.dataDir}/.config/calibre/plugins' 0755 1000 1000 -"
@@ -108,7 +120,10 @@ in
       description = "Install Calibre DRM removal plugins";
       wantedBy = [ "multi-user.target" ];
       after = [ "docker-calibre-web.service" ];
-      requires = [ "docker.service" "docker-calibre-web.service" ];
+      requires = [
+        "docker.service"
+        "docker-calibre-web.service"
+      ];
       path = [ config.virtualisation.docker.package ];
       serviceConfig = {
         Type = "oneshot";
@@ -179,9 +194,11 @@ in
       cfg.ingestDir
     ];
 
-    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.domain;
-      port = globalVars.ports.calibre-web;
-    }];
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.domain;
+        port = globalVars.ports.calibre-web;
+      }
+    ];
   };
 }

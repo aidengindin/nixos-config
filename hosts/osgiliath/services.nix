@@ -201,5 +201,6 @@
 
     octoprint.enable = true;
 
+    netalertx.enable = true;
   };
 }

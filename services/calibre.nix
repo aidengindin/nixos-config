@@ -1,7 +1,12 @@
 { config, lib, ... }:
 let
   cfg = config.agindin.services.calibre;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 in
 {
   options.agindin.services.calibre = {

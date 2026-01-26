@@ -33,27 +33,55 @@
                 ];
                 content = {
                   type = "btrfs";
-                  extraArgs = [ "-L" "nixos" "-f" ];
+                  extraArgs = [
+                    "-L"
+                    "nixos"
+                    "-f"
+                  ];
                   subvolumes = {
                     "/root" = {
                       mountpoint = "/";
-                      mountOptions = [ "subvol=root" "compress=zstd" "noatime" "ssd" ];
+                      mountOptions = [
+                        "subvol=root"
+                        "compress=zstd"
+                        "noatime"
+                        "ssd"
+                      ];
                     };
                     "/home" = {
                       mountpoint = "/home";
-                      mountOptions = [ "subvol=home" "compress=zstd" "noatime" "ssd" ];
+                      mountOptions = [
+                        "subvol=home"
+                        "compress=zstd"
+                        "noatime"
+                        "ssd"
+                      ];
                     };
                     "/nix" = {
                       mountpoint = "/nix";
-                      mountOptions = [ "subvol=nix" "compress=zstd" "noatime" "ssd" ];
+                      mountOptions = [
+                        "subvol=nix"
+                        "compress=zstd"
+                        "noatime"
+                        "ssd"
+                      ];
                     };
                     "/persist" = {
                       mountpoint = "/persist";
-                      mountOptions = [ "subvol=persist" "compress=zstd" "noatime" "ssd" ];
+                      mountOptions = [
+                        "subvol=persist"
+                        "compress=zstd"
+                        "noatime"
+                        "ssd"
+                      ];
                     };
                     "/swap" = {
                       mountpoint = "/swap";
-                      mountOptions = [ "subvol=swap" "noatime" "ssd" ];
+                      mountOptions = [
+                        "subvol=swap"
+                        "noatime"
+                        "ssd"
+                      ];
                       swap.swapfile.size = "16G";
                     };
                   };
@@ -65,7 +93,6 @@
       };
     };
   };
-  
+
   fileSystems."/persist".neededForBoot = true;
 }
-

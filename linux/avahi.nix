@@ -1,8 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.agindin.avahi;
   inherit (lib) mkIf mkEnableOption;
-in {
+in
+{
   options.agindin.avahi = {
     enable = mkEnableOption "avahi";
   };
@@ -18,4 +24,3 @@ in {
     };
   };
 }
-

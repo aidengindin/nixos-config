@@ -1,8 +1,14 @@
-{ config, lib, globalVars, ... }:
+{
+  config,
+  lib,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.prometheusExporter;
   inherit (lib) mkIf mkEnableOption;
-in {
+in
+{
   options.agindin.services.prometheusExporter = {
     enable = mkEnableOption "prometheusExporter";
     openPort = mkEnableOption "Whether to open the exporter port";
@@ -22,4 +28,3 @@ in {
     ];
   };
 }
-

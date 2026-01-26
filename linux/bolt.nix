@@ -1,7 +1,8 @@
 { config, lib, ... }:
 let
   inherit (lib) mkIf mkMerge;
-in {
+in
+{
   config = mkMerge [
     (mkIf (builtins.elem "thunderbolt" config.boot.initrd.availableKernelModules) {
       services.hardware.bolt.enable = true;

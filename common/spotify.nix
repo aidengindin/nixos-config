@@ -1,4 +1,9 @@
-{ config, lib, unstablePkgs, ... }:
+{
+  config,
+  lib,
+  unstablePkgs,
+  ...
+}:
 let
   cfg = config.agindin.spotify;
   inherit (lib) mkIf mkEnableOption;
@@ -18,4 +23,3 @@ in
     ];
   };
 }
-

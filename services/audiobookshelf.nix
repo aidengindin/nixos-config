@@ -1,8 +1,19 @@
-{ config, lib, globalVars, ... }:
+{
+  config,
+  lib,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.audiobookshelf;
-  inherit (lib) mkIf mkEnableOption mkOption types;
-in {
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
+in
+{
   options.agindin.services.audiobookshelf = {
     enable = mkEnableOption "audiobookshelf";
     domain = mkOption {
@@ -19,10 +30,12 @@ in {
       dataDir = "audiobookshelf";
     };
 
-    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [{
-      domain = cfg.domain;
-      port = globalVars.ports.audiobookshelf;
-    }];
+    agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
+      {
+        domain = cfg.domain;
+        port = globalVars.ports.audiobookshelf;
+      }
+    ];
 
     agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
       "/var/lib/audiobookshelf"
@@ -33,4 +46,3 @@ in {
     ];
   };
 }
-

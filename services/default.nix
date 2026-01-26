@@ -13,6 +13,7 @@
     ./jellyfin.nix
     ./linkwarden.nix
     ./miniflux.nix
+    ./netalertx.nix
     ./octoprint.nix
     ./ollama.nix
     ./openwebui.nix

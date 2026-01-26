@@ -1,7 +1,17 @@
-{ config, lib, globalVars, ... }:
+{
+  config,
+  lib,
+  globalVars,
+  ...
+}:
 let
   cfg = config.agindin.services.blocky;
-  inherit (lib) mkIf mkEnableOption mkOption types;
+  inherit (lib)
+    mkIf
+    mkEnableOption
+    mkOption
+    types
+    ;
 
   upstreams = [
     "tcp-tls:1.1.1.1:853"
@@ -10,12 +20,14 @@ let
     "https://1.0.0.1/dns-query"
     "https://dns11.quad9.net/dns-query"
   ];
-  bootstrap = [{
-    upstream = "https://dns11.quad9.net/dns-query";
-    ips = [ "9.9.9.9" ];
-  }];
+  bootstrap = [
+    {
+      upstream = "https://dns11.quad9.net/dns-query";
+      ips = [ "9.9.9.9" ];
+    }
+  ];
 
-  customDNS = {};
+  customDNS = { };
 
   blacklist = [
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
@@ -91,7 +103,7 @@ in
     };
     adsAllowedClients = mkOption {
       type = types.listOf types.str;
-      default = [];
+      default = [ ];
       description = "List of clients that should be allowed to see ads";
     };
   };
@@ -153,4 +165,3 @@ in
     };
   };
 }
-

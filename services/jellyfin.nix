@@ -2,7 +2,8 @@
 let
   cfg = config.agindin.services.jellyfin;
   inherit (lib) mkEnableOption mkIf;
-in {
+in
+{
   options.agindin.services.jellyfin = {
     enable = mkEnableOption "Whether to enable Jellyfin.";
   };
@@ -15,10 +16,9 @@ in {
     agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
       config.services.jellyfin.dataDir
     ];
-    
+
     agindin.services.restic.paths = mkIf config.agindin.services.restic.enable [
       config.services.jellyfin.dataDir
     ];
   };
 }
-
