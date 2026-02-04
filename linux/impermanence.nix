@@ -39,6 +39,12 @@ in
       description = "Disk label to mount for wiping (for non-LUKS btrfs)";
     };
 
+    wipeHome = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to wipe the /home subvolume on boot.";
+    };
+
     persistentSubvolumes = mkOption {
       type = types.listOf types.str;
       default = [
@@ -114,7 +120,7 @@ in
         "/etc/ssh/ssh_host_rsa_key"
         "/etc/ssh/ssh_host_rsa_key.pub"
       ];
-      users.agindin = {
+      users.agindin = mkIf cfg.wipeHome {
         directories = cfg.userDirectories ++ [
           "Music"
           "Pictures"
@@ -159,13 +165,27 @@ in
       if [ -e /mnt/root ]; then
         btrfs subvolume delete --commit-after /mnt/root
       fi
-      if [ -e /mnt/home ]; then
-        btrfs subvolume delete --commit-after /mnt/home
-      fi
+      ${
+        if cfg.wipeHome then
+          ''
+            if [ -e /mnt/home ]; then
+              btrfs subvolume delete --commit-after /mnt/home
+            fi
+          ''
+        else
+          ""
+      }
 
       # Create empty subvolumes
       btrfs subvolume create /mnt/root
-      btrfs subvolume create /mnt/home
+      ${
+        if cfg.wipeHome then
+          ''
+            btrfs subvolume create /mnt/home
+          ''
+        else
+          ""
+      }
 
       umount /mnt
     '';

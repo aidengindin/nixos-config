@@ -32,6 +32,7 @@
     fileSystem = "btrfs";
     useLuks = false;
     deviceLabel = "main-pool";
+    wipeHome = false;
     userDirectories = [
       "emulation"
       ".config/Ryujinx"
