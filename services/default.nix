@@ -6,7 +6,6 @@
     ./audiobookshelf.nix
     ./blocky.nix
     ./caddy.nix
-    ./calibre.nix
     ./calibre-web.nix
     ./grafana.nix
     ./immich.nix

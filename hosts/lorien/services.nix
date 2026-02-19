@@ -63,9 +63,6 @@
   agindin.services = {
     restic = {
       enable = true;
-      paths = [
-        "/docker-volumes/calibre"
-      ];
       localBackup = {
         enable = true;
         repository = "/mnt/usbhdd/restic";
@@ -86,7 +83,6 @@
 
     postgres.enable = true;
 
-    calibre.enable = true;
     openwebui.enable = true;
     tandoor.enable = true;
     pocket-id.enable = true;
@@ -130,16 +126,5 @@
       enable = true;
       lokiHost = "osgiliath";
     };
-
-    # grafana = {
-    #   enable = true;
-    #   prometheusScrapeTargets = [
-    #     {
-    #       name = "lorien";
-    #       host = "127.0.0.1";
-    #       port = globalVars.ports.prometheusNodeExporter;
-    #     }
-    #   ];
-    # };
   };
 }
