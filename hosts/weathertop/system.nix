@@ -64,6 +64,9 @@
   services.udev.extraRules = ''
     # 8BitDo controller dongles - disable USB autosuspend
     ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="2dc8", TEST=="power/control", ATTR{power/control}="on"
+    # Prevent USB controllers from waking the system (Steam Deck)
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1022", ATTR{device}=="0x162c", TEST=="power/wakeup", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1022", ATTR{device}=="0x163b", TEST=="power/wakeup", ATTR{power/wakeup}="disabled"
   '';
 
   # This value determines the NixOS release from which the default

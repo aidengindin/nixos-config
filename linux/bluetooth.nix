@@ -29,6 +29,8 @@ in
     services.udev.extraRules = ''
       # Keep Bluetooth controller powered (IMC Networks on Steam Deck)
       ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3553", TEST=="power/control", ATTR{power/control}="on"
+      # Prevent Bluetooth controller from waking the system
+      ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3553", TEST=="power/wakeup", ATTR{power/wakeup}="disabled"
     '';
 
     # System service to ensure Bluetooth stays powered
