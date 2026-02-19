@@ -11,7 +11,36 @@
       "type": "stat",
       "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
       "datasource": { "uid": "local-prometheus" },
-      "targets": [{ "expr": "pg_up", "legendFormat": "{{job}}" }]
+      "targets": [{ "expr": "pg_up", "legendFormat": "{{job}}" }],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      }
     },
     {
       "id": 2,

@@ -48,15 +48,16 @@ in
     services.postgresql = {
       enable = true;
       extensions = mkIf (cfg.extensions != [ ]) (ps: lib.concatMap (f: f ps) cfg.extensions);
-      ensureUsers = mkUserList cfg.ensureUsers;
-      ensureDatabases = cfg.ensureUsers;
+      ensureUsers = mkUserList (cfg.ensureUsers ++ [ "postgres_exporter" ]);
+      ensureDatabases = cfg.ensureUsers ++ [ "postgres_exporter" ];
       settings.port = globalVars.ports.postgres;
     };
 
     services.prometheus.exporters.postgres = {
       enable = true;
       port = globalVars.ports.postgresExporter;
-      runAsLocalSuperUser = true;
+      runAsLocalSuperUser = false;
+      dataSourceName = "postgresql://postgres_exporter:postgres_exporter@localhost:${toString globalVars.ports.postgres}/postgres_exporter?sslmode=disable";
     };
 
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ globalVars.ports.postgresExporter ];
@@ -73,6 +74,24 @@ in
     systemd.tmpfiles.rules = [
       "d ${backupPath} 0750 postgres postgres -"
     ];
+
+    # Explicitly setup postgres_exporter user permissions and password
+    # This is needed because initialScript is ignored on existing databases
+    systemd.services.postgres-exporter-setup = {
+      description = "Setup postgres_exporter user and permissions";
+      after = [ "postgresql.service" ];
+      requires = [ "postgresql.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "postgres";
+        ExecStart = pkgs.writeShellScript "postgres-exporter-setup" ''
+          ${config.services.postgresql.package}/bin/psql -c "ALTER USER postgres_exporter WITH PASSWORD 'postgres_exporter';"
+          ${config.services.postgresql.package}/bin/psql -c "GRANT pg_monitor TO postgres_exporter;"
+          ${config.services.postgresql.package}/bin/psql -c "GRANT pg_read_all_stats TO postgres_exporter;" || true
+        '';
+      };
+    };
 
     systemd.services.postgres-backup = {
       description = "PostgreSQL backup";
