@@ -15,7 +15,7 @@ in
     home-manager.users.agindin.programs.opencode = {
       enable = true;
       package = unstablePkgs.opencode;
-      skills = ./opencode/skills;
+      # skills = ./opencode/skills;
       settings = {
         hooks = {
           Stop = [
@@ -29,11 +29,11 @@ in
       };
     };
 
-    home-manager.users.agindin.home.activation.opencodeScriptPermissions =
-      lib.hm.dag.entryAfter [ "writeBoundary" ]
-        ''
-          chmod +x "$XDG_CONFIG_HOME/opencode/skills/taskmaster/hooks/check-completion.sh"
-        '';
+    # home-manager.users.agindin.home.activation.opencodeScriptPermissions =
+    #   lib.hm.dag.entryAfter [ "writeBoundary" ]
+    #     ''
+    #       chmod +x "$XDG_CONFIG_HOME/opencode/skills/taskmaster/hooks/check-completion.sh"
+    #     '';
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
       ".config/opencode"
