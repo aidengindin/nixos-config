@@ -17,6 +17,7 @@
       ripgrep
       ripgrep-all
       sd
+      unzip
       usbutils
     ];
   };
