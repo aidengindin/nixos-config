@@ -16,17 +16,17 @@ in
       enable = true;
       package = unstablePkgs.opencode;
       # skills = ./opencode/skills;
-      settings = {
-        hooks = {
-          Stop = [
-            {
-              type = "command";
-              command = "$XDG_CONFIG_HOME/opencode/skills/taskmaster/hooks/check-completion.sh";
-              timeout = "10";
-            }
-          ];
-        };
-      };
+      # settings = {
+      #   hooks = {
+      #     Stop = [
+      #       {
+      #         type = "command";
+      #         command = "$XDG_CONFIG_HOME/opencode/skills/taskmaster/hooks/check-completion.sh";
+      #         timeout = "10";
+      #       }
+      #     ];
+      #   };
+      # };
     };
 
     # home-manager.users.agindin.home.activation.opencodeScriptPermissions =

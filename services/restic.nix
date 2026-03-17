@@ -98,11 +98,19 @@ in
           CPUQuota = "50%";
           Nice = 19;
           IOSchedulingClass = "idle";
+          SupplementaryGroups = config.users.users.restic.extraGroups;
         };
-      }
-      // mkIf (cfg.localBackup.repositoryMountUnitName != "") {
-        after = [ cfg.localBackup.repositoryMountUnitName ];
-        requires = [ cfg.localBackup.repositoryMountUnitName ];
+        after = mkIf (cfg.localBackup.repositoryMountUnitName != "") [
+          cfg.localBackup.repositoryMountUnitName
+        ];
+        requires = mkIf (cfg.localBackup.repositoryMountUnitName != "") [
+          cfg.localBackup.repositoryMountUnitName
+        ];
+      };
+      services."restic-backups-b2" = mkIf cfg.b2Backup.enable {
+        serviceConfig = {
+          SupplementaryGroups = config.users.users.restic.extraGroups;
+        };
       };
     };
 
