@@ -130,4 +130,9 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  "liftosaur-sync-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
 }

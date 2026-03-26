@@ -39,6 +39,11 @@
       url = "github:netbrain/zwift";
       inputs.nixpkgs.follows = "unstable";
     };
+
+    liftosaur-sync = {
+      url = "github:aidengindin/liftosaur-sync";
+      inputs.nixpkgs.follows = "unstable";
+    };
   };
 
   outputs =
@@ -55,6 +60,7 @@
       agenix,
       jovian,
       zwift,
+      liftosaur-sync,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -81,6 +87,7 @@
         impermanence.nixosModules.impermanence
         disko.nixosModules.disko
         jovian.nixosModules.default
+        liftosaur-sync.nixosModules.default
       ];
 
       # special args for all NixOS systems
