@@ -50,8 +50,22 @@ in
             ExecStart = pkgs.writeShellScript "restore-claude-config" ''
               PERSIST="/persist/home/agindin/.claude.json"
               HOME_FILE="/home/agindin/.claude.json"
+              MCP_CONFIG="/etc/mcp-servers.json"
+
               if [ -f "$PERSIST" ]; then
                 ${lib.getExe' pkgs.coreutils "cp"} -f "$PERSIST" "$HOME_FILE"
+                ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME_FILE"
+              fi
+
+              # Inject declarative MCP server config, preserving all other state.
+              if [ -f "$MCP_CONFIG" ]; then
+                if [ -f "$HOME_FILE" ]; then
+                  ${lib.getExe pkgs.jq} -s '.[0] * {"mcpServers": .[1].mcpServers}' \
+                    "$HOME_FILE" "$MCP_CONFIG" > "$HOME_FILE.tmp"
+                else
+                  ${lib.getExe pkgs.jq} '.' "$MCP_CONFIG" > "$HOME_FILE.tmp"
+                fi
+                ${lib.getExe' pkgs.coreutils "mv"} "$HOME_FILE.tmp" "$HOME_FILE"
                 ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME_FILE"
               fi
             '';
