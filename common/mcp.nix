@@ -35,14 +35,15 @@ let
       '';
     };
 
-  githubWrapper = mkIf cfg.servers.github.enable (
-    mkEnvWrapper {
-      name = "github";
-      package = mcpPkgs.github-mcp-server;
-      extraArgs = [ "stdio" ];
-      envFile = cfg.servers.github.envFile;
-    }
-  );
+  githubWrapper = pkgs.writeShellApplication {
+    name = "github-mcp-wrapped";
+    runtimeInputs = [ pkgs.github-mcp-server ];
+    text = ''
+      export GITHUB_PERSONAL_ACCESS_TOKEN
+      GITHUB_PERSONAL_ACCESS_TOKEN=$(cat "${cfg.servers.github.tokenFile}")
+      exec ${getExe pkgs.github-mcp-server} stdio "$@"
+    '';
+  };
 
   # Build the mcpServers attrset from whichever servers are enabled.
   # This becomes /etc/mcp-servers.json and is merged into ~/.claude.json on boot.
@@ -92,9 +93,9 @@ in
 
       github = {
         enable = mkEnableOption "GitHub MCP server";
-        envFile = mkOption {
+        tokenFile = mkOption {
           type = types.path;
-          description = "Path to env file containing GITHUB_PERSONAL_ACCESS_TOKEN.";
+          description = "Path to file containing the raw GitHub personal access token.";
         };
       };
 

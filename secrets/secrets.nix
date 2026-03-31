@@ -130,4 +130,8 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  "khazad-dum-gh-token.age".publicKeys = [
+    khazad-dumUser
+  ];
 }

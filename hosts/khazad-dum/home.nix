@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   imports = [
     ../../common
@@ -12,13 +12,12 @@
       servers = {
         filesystem = {
           enable = true;
-          args = [ "/home/agindin/code" "/home/agindin/documents" ];
+          args = [ "/home/agindin/code" "/home/agindin/Documents" ];
         };
         git.enable = true;
         fetch.enable = true;
         nixos.enable = true;
-        # github and liftosaur disabled until tested
-        # github = { enable = true; envFile = config.age.secrets.github-mcp-env.path; };
+        github = { enable = true; tokenFile = config.age.secrets.khazad-dum-gh-token.path; };
         # liftosaur.enable = true;
       };
     };
@@ -30,6 +29,10 @@
     spotify.enable = true;
     vesktop.enable = true;
   };
+
+  home-manager.users.agindin.home.sessionVariablesExtra = ''
+    export GH_TOKEN=$(cat ${config.age.secrets.khazad-dum-gh-token.path})
+  '';
 
   # this line should not be edited even when upgrading NixOS versions
   home-manager.users.agindin.home.stateVersion = "25.05";
