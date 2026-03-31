@@ -42,6 +42,16 @@
   # Age identity path for agenix
   age.identityPaths = [ "/home/agindin/.ssh/id_ed25519" ];
 
+  age.secrets.khazad-dum-gh-token = {
+    file = ../../secrets/khazad-dum-gh-token.age;
+    owner = "agindin";
+  };
+
+  age.secrets.khazad-dum-intervals-env = {
+    file = ../../secrets/khazad-dum-intervals-env.age;
+    owner = "agindin";
+  };
+
   zramSwap = {
     enable = true;
   };

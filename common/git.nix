@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ ... }:
 {
   config = {
     home-manager.users.agindin = {
@@ -18,6 +13,9 @@
       programs.delta = {
         enable = true;
         enableGitIntegration = true;
+      };
+      programs.gh = {
+        enable = true;
       };
     };
   };
