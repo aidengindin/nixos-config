@@ -45,6 +45,40 @@ let
     '';
   };
 
+  intervalsMcpServer = pkgs.python3Packages.buildPythonPackage {
+    pname = "intervals-mcp-server";
+    version = "0.1.0";
+    pyproject = true;
+
+    src = pkgs.fetchFromGitHub {
+      owner = "mvilanova";
+      repo = "intervals-mcp-server";
+      rev = "d95c790bee8fe66ccb9b0b4fe210308dfa576cc4";
+      hash = "sha256-4RsrR/2Xy+AWOqHgL6u/zWlMOakgIJ8i+kYnD3iEwn0=";
+    };
+
+    build-system = [ pkgs.python3Packages.hatchling ];
+
+    dependencies = with pkgs.python3Packages; [
+      mcp
+      httpx
+      python-dotenv
+    ];
+  };
+
+  intervalsEnv = pkgs.python3.withPackages (_ps: [ intervalsMcpServer ]);
+
+  intervalsWrapper = pkgs.writeShellApplication {
+    name = "intervals-mcp-wrapped";
+    text = ''
+      set -a
+      # shellcheck source=/dev/null
+      source "${cfg.servers.intervals.envFile}"
+      set +a
+      exec ${intervalsEnv}/bin/python -m intervals_mcp_server.server "$@"
+    '';
+  };
+
   # Build the mcpServers attrset from whichever servers are enabled.
   # This becomes /etc/mcp-servers.json and is merged into ~/.claude.json on boot.
   mcpServers =
@@ -71,6 +105,9 @@ let
         type = "http";
         url = "https://www.liftosaur.com/mcp";
       };
+    }
+    // optionalAttrs cfg.servers.intervals.enable {
+      intervals.command = "${intervalsWrapper}/bin/intervals-mcp-wrapped";
     };
 in
 {
@@ -100,6 +137,14 @@ in
       };
 
       liftosaur.enable = mkEnableOption "Liftosaur MCP server (remote HTTP, requires premium subscription)";
+
+      intervals = {
+        enable = mkEnableOption "Intervals.icu MCP server";
+        envFile = mkOption {
+          type = types.path;
+          description = "Path to env file containing API_KEY and ATHLETE_ID for Intervals.icu.";
+        };
+      };
     };
   };
 

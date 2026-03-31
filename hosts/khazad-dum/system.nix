@@ -47,6 +47,11 @@
     owner = "agindin";
   };
 
+  age.secrets.khazad-dum-intervals-env = {
+    file = ../../secrets/khazad-dum-intervals-env.age;
+    owner = "agindin";
+  };
+
   zramSwap = {
     enable = true;
   };

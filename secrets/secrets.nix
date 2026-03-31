@@ -134,4 +134,9 @@ in
   "khazad-dum-gh-token.age".publicKeys = [
     khazad-dumUser
   ];
+
+  "khazad-dum-intervals-env.age".publicKeys = [
+    khazad-dumHost
+    khazad-dumUser
+  ];
 }
