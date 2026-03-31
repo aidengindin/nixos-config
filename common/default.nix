@@ -10,6 +10,7 @@
     ./git.nix
     ./kitty.nix
     ./latex.nix
+    ./lsp.nix
     ./mpv.nix
     ./neomutt.nix
     ./nvim.nix

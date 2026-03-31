@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 {
   config = {
     home-manager.users.agindin = {
@@ -30,18 +25,9 @@
       lua51Packages.lua
       lua51Packages.luarocks
       lazygit
-
-      # LSPs
-      lua-language-server
-      pyright
-      rust-analyzer
-      nixd
-      nixfmt
-      bash-language-server
-      haskell-language-server
     ];
 
-    agindin.impermanence.userDirectories = lib.mkIf config.agindin.impermanence.enable [
+    agindin.impermanence.userDirectories = [
       ".local/share/nvim"
       ".local/state/nvim"
     ];

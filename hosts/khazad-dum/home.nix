@@ -6,6 +6,7 @@
 
   agindin = {
     claude-code.enable = true;
+    lsp.enable = true;
 
     mcp = {
       enable = true;
