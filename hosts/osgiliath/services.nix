@@ -18,6 +18,12 @@
       owner = "restic";
       group = "restic";
     };
+    frigate-reolink-rtsp-password = {
+      file = ../../secrets/frigate-reolink-rtsp-password.age;
+      owner = "frigate";
+      group = "frigate";
+      mode = "0440";
+    };
   };
 
   agindin.services = {
@@ -202,5 +208,21 @@
     octoprint.enable = true;
 
     netalertx.enable = true;
+
+    frigate = {
+      enable = true;
+      acceleration = "intel";
+      cameras = [
+        {
+          name = "reolink";
+          host = "CAMERA_IP_PLACEHOLDER";
+          username = "admin";
+          rtspPort = 554;
+          rtspPath = "/h264Preview_01_main";
+          rtspPasswordEnvVar = "FRIGATE_RTSP_PASSWORD";
+          environmentFile = config.age.secrets.frigate-reolink-rtsp-password.path;
+        }
+      ];
+    };
   };
 }
