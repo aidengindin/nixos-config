@@ -100,6 +100,9 @@ in
     services.frigate = {
       enable = true;
       hostname = config.networking.hostName;
+      # Disable build-time config check: RTSP passwords come from runtime
+      # agenix secrets (EnvironmentFile) and aren't available in the sandbox.
+      checkConfig = false;
       settings =
         {
           cameras = builtins.listToAttrs (
@@ -108,7 +111,7 @@ in
               value = {
                 ffmpeg.inputs = [
                   {
-                    path = ''rtsp://${cam.username}:''${${cam.rtspPasswordEnvVar}}@${cam.host}:${toString cam.rtspPort}${cam.rtspPath}'';
+                    path = ''rtsp://${cam.username}:{${cam.rtspPasswordEnvVar}}@${cam.host}:${toString cam.rtspPort}${cam.rtspPath}'';
                     roles = cam.roles;
                   }
                 ];
