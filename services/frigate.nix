@@ -99,6 +99,7 @@ in
 
     services.frigate = {
       enable = true;
+      hostname = config.networking.hostName;
       settings =
         {
           cameras = builtins.listToAttrs (
