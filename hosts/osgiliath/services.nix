@@ -215,7 +215,7 @@
       cameras = [
         {
           name = "reolink";
-          host = "CAMERA_IP_PLACEHOLDER";
+          host = "10.0.40.154";
           username = "admin";
           rtspPort = 554;
           rtspPath = "/h264Preview_01_main";
