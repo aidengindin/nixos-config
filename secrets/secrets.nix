@@ -131,6 +131,11 @@ in
     khazad-dumUser
   ];
 
+  "frigate-reolink-rtsp-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "khazad-dum-gh-token.age".publicKeys = [
     khazad-dumUser
   ];
