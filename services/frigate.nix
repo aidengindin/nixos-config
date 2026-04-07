@@ -180,6 +180,55 @@ in
       lib.optionals (cfg.mediaLocation == /var/lib/frigate) [ "/var/lib/frigate" ]
     );
 
+    # The upstream Frigate NixOS module configures services.nginx with a vhost
+    # for cfg.hostname. By default NixOS nginx adds "listen 0.0.0.0:80" to
+    # every vhost, but Caddy already owns port 80. Override to bind only the
+    # internal localhost port that Caddy will proxy to.
+    #
+    # The upstream module also puts "listen 127.0.0.1:5000;" in extraConfig
+    # (see nixpkgs#370349). We override extraConfig with lib.mkForce to remove
+    # that line so it doesn't duplicate the listen directive generated below.
+    # Keep this in sync with upstream if the VOD settings change.
+    services.nginx.virtualHosts.${config.networking.hostName} = {
+      listen = [
+        {
+          addr = "127.0.0.1";
+          port = globalVars.ports.frigate;
+        }
+      ];
+      extraConfig = lib.mkForce ''
+        # vod settings
+        vod_base_url "";
+        vod_segments_base_url "";
+        vod_mode mapped;
+        vod_max_mapping_response_size 1m;
+        vod_upstream_location /api;
+        vod_align_segments_to_key_frames on;
+        vod_manifest_segment_durations_mode accurate;
+        vod_ignore_edit_list on;
+        vod_segment_duration 10000;
+        vod_hls_mpegts_align_frames off;
+        vod_hls_mpegts_interleave_frames on;
+
+        # file handle caching / aio
+        open_file_cache max=1000 inactive=5m;
+        open_file_cache_valid 2m;
+        open_file_cache_min_uses 1;
+        open_file_cache_errors on;
+        aio on;
+
+        # https://github.com/kaltura/nginx-vod-module#vod_open_file_thread_pool
+        vod_open_file_thread_pool default;
+
+        # vod caches
+        vod_metadata_cache metadata_cache 512m;
+        vod_mapping_cache mapping_cache 5m 10m;
+
+        # gzip manifest
+        gzip_types application/vnd.apple.mpegurl;
+      '';
+    };
+
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
       {
         domain = cfg.domain;
