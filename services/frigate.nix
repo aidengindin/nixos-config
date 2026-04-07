@@ -27,6 +27,30 @@ in
       description = "Hardware acceleration backend for video decoding.";
     };
 
+    mediaLocation = mkOption {
+      type = types.path;
+      default = /var/lib/frigate;
+      description = ''
+        Path where Frigate stores recordings, clips, and its database.
+        Defaults to /var/lib/frigate (SSD). Set to e.g. /media/frigate
+        to store on a separate HDD. When set to a non-default path, the
+        directory is bind-mounted over /var/lib/frigate so Frigate needs
+        no special configuration.
+      '';
+    };
+
+    retentionDays = mkOption {
+      type = types.ints.positive;
+      default = 30;
+      description = "Number of days to retain recordings.";
+    };
+
+    domain = mkOption {
+      type = types.str;
+      default = "frigate.gindin.xyz";
+      description = "Public domain name for the Frigate web UI (used for Caddy proxy).";
+    };
+
     cameras = mkOption {
       default = [ ];
       description = "List of cameras to configure in Frigate.";
@@ -105,6 +129,11 @@ in
       checkConfig = false;
       settings =
         {
+          record = {
+            enabled = true;
+            retain.days = cfg.retentionDays;
+          };
+
           cameras = builtins.listToAttrs (
             map (cam: {
               name = cam.name;
@@ -135,13 +164,25 @@ in
     systemd.services.frigate.serviceConfig.EnvironmentFile =
       map (cam: cam.environmentFile) cfg.cameras;
 
-    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
-      "/var/lib/frigate"
+    # When using a custom media location, create the directory and bind-mount
+    # it over /var/lib/frigate so all Frigate data lands on the target path.
+    systemd.tmpfiles.rules = lib.mkIf (cfg.mediaLocation != /var/lib/frigate) [
+      "d ${toString cfg.mediaLocation} 0750 frigate frigate - -"
     ];
+
+    systemd.services.frigate.serviceConfig.BindPaths = lib.mkIf (cfg.mediaLocation != /var/lib/frigate) [
+      "${toString cfg.mediaLocation}:/var/lib/frigate"
+    ];
+
+    # Persist /var/lib/frigate only when not bind-mounting an external path
+    # (when using mediaLocation, the target directory persists on its own).
+    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable (
+      lib.optionals (cfg.mediaLocation == /var/lib/frigate) [ "/var/lib/frigate" ]
+    );
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
       {
-        domain = "frigate.gindin.xyz";
+        domain = cfg.domain;
         port = globalVars.ports.frigate;
       }
     ];

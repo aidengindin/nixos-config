@@ -212,6 +212,8 @@
     frigate = {
       enable = true;
       acceleration = "intel";
+      mediaLocation = "/media/frigate";
+      retentionDays = 30;
       cameras = [
         {
           name = "reolink";
