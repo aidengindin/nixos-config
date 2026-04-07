@@ -13,7 +13,7 @@ let
       loki = 10004;
       promtail = 10005;
 
-      frigate = 5001;
+      frigate = 5000;
 
       prowlarr = 8001;
       radarr = 8002;
