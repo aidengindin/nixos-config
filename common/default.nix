@@ -4,11 +4,13 @@
     ./bash.nix
     ./cli.nix
     ./claude-code.nix
+    ./mcp.nix
     ./dev.nix
     ./direnv.nix
     ./git.nix
     ./kitty.nix
     ./latex.nix
+    ./lsp.nix
     ./mpv.nix
     ./neomutt.nix
     ./nvim.nix

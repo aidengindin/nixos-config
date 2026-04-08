@@ -44,6 +44,11 @@
       url = "github:aidengindin/liftosaur-sync";
       inputs.nixpkgs.follows = "unstable";
     };
+
+    mcp-servers-nix = {
+      url = "github:natsukium/mcp-servers-nix";
+      inputs.nixpkgs.follows = "unstable";
+    };
   };
 
   outputs =
@@ -61,6 +66,7 @@
       jovian,
       zwift,
       liftosaur-sync,
+      mcp-servers-nix,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -93,6 +99,7 @@
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
+        mcpServersNix = mcp-servers-nix;
       };
 
       nodeDefaults = {
