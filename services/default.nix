@@ -7,6 +7,7 @@
     ./blocky.nix
     ./caddy.nix
     ./calibre-web.nix
+    ./frigate.nix
     ./grafana.nix
     ./immich.nix
     ./jellyfin.nix
