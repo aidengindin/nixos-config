@@ -23,6 +23,12 @@
       owner = "restic";
       group = "restic";
     };
+    frigate-reolink-rtsp-password = {
+      file = ../../secrets/frigate-reolink-rtsp-password.age;
+      owner = "frigate";
+      group = "frigate";
+      mode = "0440";
+    };
   };
 
   agindin.services = {
@@ -211,6 +217,24 @@
     liftosaur-sync = {
       enable = true;
       environmentFile = config.age.secrets.liftosaur-sync-env.path;
+    };
+
+    frigate = {
+      enable = true;
+      acceleration = "intel";
+      mediaLocation = "/media/frigate";
+      retentionDays = 30;
+      cameras = [
+        {
+          name = "reolink";
+          host = "10.0.40.154";
+          username = "admin";
+          rtspPort = 554;
+          rtspPath = "/h264Preview_01_main";
+          rtspPasswordEnvVar = "FRIGATE_RTSP_PASSWORD";
+          environmentFile = config.age.secrets.frigate-reolink-rtsp-password.path;
+        }
+      ];
     };
   };
 }
