@@ -268,11 +268,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1774900293,
-        "narHash": "sha256-XFIGvfG2xX8esAsN7PtgfUwVEUTOoEaSM4k55aF6QHA=",
+        "lastModified": 1775694889,
+        "narHash": "sha256-YR0ITjwkCH8S4/Mop4VK4FVKKuJa9FvP68jfK3VhBcE=",
         "owner": "aidengindin",
         "repo": "liftosaur-sync",
-        "rev": "e345a47b592c4638a0663c59bf9a30ab8f45b019",
+        "rev": "2057063b9d8ca2553bf8471041203acdca95242d",
         "type": "github"
       },
       "original": {
