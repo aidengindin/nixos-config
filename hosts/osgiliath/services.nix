@@ -217,6 +217,7 @@
     liftosaur-sync = {
       enable = true;
       environmentFile = config.age.secrets.liftosaur-sync-env.path;
+      syncIntervals = "hourly";
     };
 
     frigate = {
