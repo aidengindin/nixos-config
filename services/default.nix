@@ -11,6 +11,7 @@
     ./grafana.nix
     ./immich.nix
     ./jellyfin.nix
+    ./liftosaur-sync.nix
     ./linkwarden.nix
     ./miniflux.nix
     ./netalertx.nix

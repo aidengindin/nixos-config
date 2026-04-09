@@ -7,6 +7,11 @@
   imports = [ ../../services ];
 
   age.secrets = {
+    liftosaur-sync-env = {
+      file = ../../secrets/liftosaur-sync-env.age;
+      owner = "liftosaur-sync";
+      group = "liftosaur-sync";
+    };
     restic-password = {
       file = ../../secrets/osgiliath-restic-password.age;
       owner = "restic";
@@ -208,6 +213,11 @@
     octoprint.enable = true;
 
     netalertx.enable = true;
+
+    liftosaur-sync = {
+      enable = true;
+      environmentFile = config.age.secrets.liftosaur-sync-env.path;
+    };
 
     frigate = {
       enable = true;

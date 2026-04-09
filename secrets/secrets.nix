@@ -131,6 +131,11 @@ in
     khazad-dumUser
   ];
 
+  "liftosaur-sync-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "frigate-reolink-rtsp-password.age".publicKeys = [
     osgiliathHost
     khazad-dumUser

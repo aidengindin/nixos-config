@@ -48,6 +48,8 @@ let
 
       octoprint = 8380;
 
+      liftosaur-sync = 8390;
+
       netalertx = 20211;
       netalertxMetrics = 20212;
     };
