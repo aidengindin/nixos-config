@@ -97,6 +97,10 @@ in
           ${config.services.postgresql.package}/bin/psql -c "GRANT pg_monitor TO postgres_exporter;"
           ${config.services.postgresql.package}/bin/psql -c "GRANT pg_read_all_stats TO postgres_exporter;" || true
         '';
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
       };
     };
 
@@ -111,6 +115,11 @@ in
               > "${backupPath}/$db.dump"
           done
         '';
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
+        ReadWritePaths = [ backupPath ];
       };
     };
 

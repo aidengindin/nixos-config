@@ -94,6 +94,10 @@ in
         ExecStart = ''
           ${config.services.postgresql.package}/bin/psql -d pocket-id -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS "pgcrypto";'
         '';
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
       };
     };
 
