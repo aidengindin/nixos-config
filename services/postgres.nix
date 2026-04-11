@@ -51,13 +51,21 @@ in
       ensureUsers = mkUserList (cfg.ensureUsers ++ [ "postgres_exporter" ]);
       ensureDatabases = cfg.ensureUsers ++ [ "postgres_exporter" ];
       settings.port = globalVars.ports.postgres;
+      # Allow the prometheus postgres-exporter OS user to connect via Unix socket
+      # using peer authentication mapped to the postgres_exporter DB user.
+      authentication = lib.mkAfter ''
+        local   all   postgres_exporter   peer map=exporter
+      '';
+      identMap = ''
+        exporter  postgres-exporter  postgres_exporter
+      '';
     };
 
     services.prometheus.exporters.postgres = {
       enable = true;
       port = globalVars.ports.postgresExporter;
       runAsLocalSuperUser = false;
-      dataSourceName = "postgresql://postgres_exporter:postgres_exporter@localhost:${toString globalVars.ports.postgres}/postgres_exporter?sslmode=disable";
+      dataSourceName = "user=postgres_exporter host=/run/postgresql dbname=postgres_exporter sslmode=disable";
     };
 
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ globalVars.ports.postgresExporter ];
@@ -86,7 +94,6 @@ in
         Type = "oneshot";
         User = "postgres";
         ExecStart = pkgs.writeShellScript "postgres-exporter-setup" ''
-          ${config.services.postgresql.package}/bin/psql -c "ALTER USER postgres_exporter WITH PASSWORD 'postgres_exporter';"
           ${config.services.postgresql.package}/bin/psql -c "GRANT pg_monitor TO postgres_exporter;"
           ${config.services.postgresql.package}/bin/psql -c "GRANT pg_read_all_stats TO postgres_exporter;" || true
         '';
