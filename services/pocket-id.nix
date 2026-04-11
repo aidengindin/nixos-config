@@ -63,6 +63,18 @@ in
       {
         domain = cfg.domain;
         port = uiPort;
+        siteConfig = ''
+          rate_limit {
+            zone pocket_id_auth {
+              match {
+                path /api/oidc/token /api/oidc/authorize /login*
+              }
+              key    {remote_host}
+              events 20
+              window 1m
+            }
+          }
+        '';
         extraConfig = ''
           header_up Host {host}
           header_up X-Real-IP {remote_host}

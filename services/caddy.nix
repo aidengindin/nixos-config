@@ -20,8 +20,9 @@ let
     caddy-cloudflare = unstablePkgs.caddy.withPlugins {
       plugins = [
         "github.com/caddy-dns/cloudflare@v0.2.2"
+        "github.com/mholt/caddy-ratelimit@v0.1.0"
       ];
-      hash = "sha256-7DGnojZvcQBZ6LEjT0e5O9gZgsvEeHlQP9aKaJIs/Zg=";
+      hash = "sha256-uqSPsKNOmU24eQHPln3aTc+k+xy/uFSsiew5Zbdu9iQ=";
     };
   };
 in
@@ -48,6 +49,12 @@ in
             extraConfig = mkOption {
               type = types.str;
               default = "";
+              description = "Extra config inside the reverse_proxy block (e.g. header_up directives)";
+            };
+            siteConfig = mkOption {
+              type = types.str;
+              default = "";
+              description = "Extra config at the site level, before reverse_proxy (e.g. rate_limit)";
             };
           };
         }
@@ -93,6 +100,7 @@ in
           in
           lib.strings.concatMapStringsSep "\n" (host: ''
             ${host.domain} {
+              ${host.siteConfig}
               reverse_proxy ${host.host}:${toString host.port} ${
                 if (host.extraConfig != "") then "{\n${host.extraConfig}\n}" else ""
               }
