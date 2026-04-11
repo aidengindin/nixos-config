@@ -117,11 +117,11 @@ in
         };
       };
 
-      networking.firewall.allowedTCPPorts = [
+      networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
         80
         443
+        globalVars.ports.caddyMetrics
       ];
-      networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ globalVars.ports.caddyMetrics ];
       # Also allow on local interface for scraping
       networking.firewall.interfaces.lo.allowedTCPPorts = [ globalVars.ports.caddyMetrics ];
     })
