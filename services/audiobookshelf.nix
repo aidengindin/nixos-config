@@ -25,7 +25,7 @@ in
   config = mkIf cfg.enable {
     services.audiobookshelf = {
       enable = true;
-      host = "0.0.0.0";
+      host = "127.0.0.1";
       port = globalVars.ports.audiobookshelf;
       dataDir = "audiobookshelf";
     };

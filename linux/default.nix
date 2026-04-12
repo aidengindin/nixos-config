@@ -7,6 +7,7 @@
 {
   imports = [
     ./3dprint.nix
+    ./hardening.nix
     ./avahi.nix
     ./bluetooth.nix
     ./bolt.nix

@@ -34,6 +34,7 @@ in
       extraConfig = {
         REMOTE_USER_AUTH = "0";
         SECRET_KEY_FILE = config.age.secrets.tandoor-secret-key.path;
+        ALLOWED_HOSTS = cfg.domain;
       };
     };
 
