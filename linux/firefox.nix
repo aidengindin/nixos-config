@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  customPkgs,
   ...
 }:
 let
@@ -47,38 +48,8 @@ let
   darkFlavor = "mocha";
   accentColor = "blue";
 
-  catppuccinUserstyles = pkgs.stdenv.mkDerivation {
-    name = "catppuccin-userstyles";
-    version = "unstable";
-
-    src = pkgs.fetchFromGitHub {
-      owner = "catppuccin";
-      repo = "userstyles";
-      rev = "714b153c7022c362a37ab8530286a87e4484a828";
-      hash = "sha256-lftRs+pfcOrqHDtDWX/Vd/CQvDJguCRxlhI/aIkIB/k=";
-    };
-
-    nativeBuildInputs = [ pkgs.lessc ];
-
-    buildPhase = ''
-      mkdir -p $out
-
-      for site in ${pkgs.lib.concatStringsSep " " userstyleSites}; do
-        if [ -d "styles/$site" ] && [ -f "styles/$site/catppuccin.user.less" ]; then
-          echo "Compiling $site..."
-          lessc \
-            --modify-var="lightFlavor=${lightFlavor}" \
-            --modify-var="darkFlavor=${darkFlavor}" \
-            --modify-var="accentColor=${accentColor}" \
-            "styles/$site/catppuccin.user.less" \
-            "$out/$site.css"
-        else
-          echo "Warning: $site not found or missing less file"
-        fi
-      done
-    '';
-
-    installPhase = "true";
+  catppuccinUserstyles = customPkgs.catppuccin-userstyles.override {
+    inherit userstyleSites lightFlavor darkFlavor accentColor;
   };
 in
 {

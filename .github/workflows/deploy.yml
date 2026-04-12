@@ -1,0 +1,53 @@
+name: Deploy to hosts
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Colmena target selector (hostname or @tag)"
+        required: true
+        default: "@server"
+        type: choice
+        options:
+          - "@server"
+          - "@onprem"
+          - lorien
+          - osgiliath
+          - khazad-dum
+          - weathertop
+      ref:
+        description: "Git ref to deploy (branch or SHA)"
+        required: false
+        default: "main"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          tags: tag:ci
+
+      - name: SSH deploy via osgiliath
+        env:
+          SSH_KEY: ${{ secrets.OSGILIATH_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H osgiliath >> ~/.ssh/known_hosts
+
+          # Copy repo to osgiliath and run colmena from there
+          TMPDIR=$(ssh nixos-deploy@osgiliath mktemp -d)
+          rsync -az --delete . nixos-deploy@osgiliath:"$TMPDIR/"
+          ssh nixos-deploy@osgiliath \
+            "cd $TMPDIR && \
+             nix run github:zhaofengli/colmena -- apply \
+               --on '${{ inputs.target }}' \
+               --impure"
+          ssh nixos-deploy@osgiliath "rm -rf $TMPDIR"

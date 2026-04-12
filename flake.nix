@@ -100,6 +100,10 @@
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
         mcpServersNix = mcp-servers-nix;
+        customPkgs = import ./packages {
+          pkgs = stablePkgs;
+          inherit unstablePkgs;
+        };
       };
 
       nodeDefaults = {
@@ -228,6 +232,13 @@
           };
         };
 
-      packages.x86_64-linux.iso = self.nixosConfigurations.iso.config.system.build.isoImage;
+      packages.x86_64-linux =
+        {
+          iso = self.nixosConfigurations.iso.config.system.build.isoImage;
+        }
+        // (import ./packages {
+          pkgs = stablePkgs;
+          inherit unstablePkgs;
+        });
     };
 }
