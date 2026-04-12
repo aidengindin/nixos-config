@@ -235,6 +235,78 @@ in
           groups = [
             {
               orgId = 1;
+              name = "Security";
+              folder = "Infrastructure";
+              interval = "1m";
+              rules = [
+                {
+                  uid = "caddy-rate-limit-exceeded";
+                  title = "Caddy Rate Limit Exceeded";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = { from = 300; to = 0; };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = ''increase(caddy_http_request_duration_seconds_count{code="429",job="caddy-lorien"}[5m])'';
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = { from = 0; to = 0; };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = { params = [ ]; type = "gt"; };
+                            operator.type = "and";
+                            query.params = [ "B" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = { type = "__expr__"; uid = "__expr__"; };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = { from = 0; to = 0; };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = { params = [ 5 ]; type = "gt"; };
+                            operator.type = "and";
+                            query.params = [ "C" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = { type = "__expr__"; uid = "__expr__"; };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "OK";
+                  execErrState = "Error";
+                  for = "0s";
+                  annotations = {
+                    summary = "Rate limit triggered on auth.gindin.xyz: {{ $values.B.Value | printf \"%.0f\" }} requests blocked in the last 5 minutes";
+                  };
+                  labels = { severity = "warning"; };
+                }
+              ];
+            }
+            {
+              orgId = 1;
               name = "Host Monitoring";
               folder = "Infrastructure";
               interval = "1m";
@@ -584,6 +656,93 @@ in
                       for = "2m";
                       annotations = {
                         summary = "Systemd service(s) failed on ${host}";
+                      };
+                      labels = {
+                        host = host;
+                      };
+                    }
+                    {
+                      uid = "${host}-postgres-down";
+                      title = "${host} - PostgreSQL Exporter Down";
+                      condition = "C";
+                      data = [
+                        {
+                          refId = "A";
+                          relativeTimeRange = {
+                            from = 600;
+                            to = 0;
+                          };
+                          datasourceUid = "local-prometheus";
+                          model = {
+                            expr = "pg_up{job=\"postgres-${host}\"}";
+                            refId = "A";
+                          };
+                        }
+                        {
+                          refId = "B";
+                          relativeTimeRange = {
+                            from = 0;
+                            to = 0;
+                          };
+                          datasourceUid = "__expr__";
+                          model = {
+                            conditions = [
+                              {
+                                evaluator = {
+                                  params = [ ];
+                                  type = "gt";
+                                };
+                                operator.type = "and";
+                                query.params = [ "B" ];
+                                reducer.type = "last";
+                                type = "query";
+                              }
+                            ];
+                            datasource = {
+                              type = "__expr__";
+                              uid = "__expr__";
+                            };
+                            expression = "A";
+                            reducer = "last";
+                            refId = "B";
+                            type = "reduce";
+                          };
+                        }
+                        {
+                          refId = "C";
+                          relativeTimeRange = {
+                            from = 0;
+                            to = 0;
+                          };
+                          datasourceUid = "__expr__";
+                          model = {
+                            conditions = [
+                              {
+                                evaluator = {
+                                  params = [ 1 ];
+                                  type = "lt";
+                                };
+                                operator.type = "and";
+                                query.params = [ "C" ];
+                                reducer.type = "last";
+                                type = "query";
+                              }
+                            ];
+                            datasource = {
+                              type = "__expr__";
+                              uid = "__expr__";
+                            };
+                            expression = "B";
+                            refId = "C";
+                            type = "threshold";
+                          };
+                        }
+                      ];
+                      noDataState = "Alerting";
+                      execErrState = "Alerting";
+                      for = "2m";
+                      annotations = {
+                        summary = "PostgreSQL exporter is down on ${host} — database visibility lost";
                       };
                       labels = {
                         host = host;

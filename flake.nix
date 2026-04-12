@@ -40,6 +40,11 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    liftosaur-sync = {
+      url = "github:aidengindin/liftosaur-sync";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     mcp-servers-nix = {
       url = "github:natsukium/mcp-servers-nix";
       inputs.nixpkgs.follows = "unstable";
@@ -60,6 +65,7 @@
       agenix,
       jovian,
       zwift,
+      liftosaur-sync,
       mcp-servers-nix,
     }:
     let
@@ -87,6 +93,7 @@
         impermanence.nixosModules.impermanence
         disko.nixosModules.disko
         jovian.nixosModules.default
+        liftosaur-sync.nixosModules.default
       ];
 
       # special args for all NixOS systems

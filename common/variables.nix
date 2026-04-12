@@ -13,6 +13,8 @@ let
       loki = 10004;
       promtail = 10005;
 
+      frigate = 5000;
+
       prowlarr = 8001;
       radarr = 8002;
       sonarr = 8003;
@@ -45,6 +47,8 @@ let
       immich = 8370;
 
       octoprint = 8380;
+
+      liftosaur-sync = 8390;
 
       netalertx = 20211;
       netalertxMetrics = 20212;

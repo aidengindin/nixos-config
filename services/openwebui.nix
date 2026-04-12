@@ -55,6 +55,10 @@ in
         Type = "oneshot";
         User = "postgres";
         RemainAfterExit = true;
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
       };
 
       script = ''
