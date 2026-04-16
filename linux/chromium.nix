@@ -51,6 +51,13 @@ let
     url = "https://github.com/NeverDecaf/chromium-web-store/releases/download/v1.5.5.3/Chromium.Web.Store.crx";
     sha256 = "sha256-MmRDuuw9IEsTWOumqgJc9r2TDAiguY9nhOejI2UoRFs=";
   };
+
+  # uBlock Origin is no longer on the Chrome Web Store (MV2 removal).
+  # Load it directly from the GitHub release as an unpacked extension.
+  uBlockOrigin = pkgs.fetchzip {
+    url = "https://github.com/gorhill/uBlock/releases/download/1.70.0/uBlock0_1.70.0.chromium.zip";
+    sha256 = "sha256-5q4622eyOMrIj8rHRaVY9bCRr6yIx4PBW1bmULS0lTE=";
+  };
 in
 {
   options.agindin.chromium = {
@@ -100,6 +107,7 @@ in
           "--use-angle=vulkan"
           "--disable-background-networking"
           "--no-default-browser-check"
+          "--load-extension=${uBlockOrigin}"
         ];
       };
 
