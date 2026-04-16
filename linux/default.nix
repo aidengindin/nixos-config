@@ -15,6 +15,7 @@
     ./deploymentUser.nix
     ./desktop.nix
     ./fingerprint.nix
+    ./chromium.nix
     ./firefox.nix
     ./gamingOptimizations.nix
     ./gnome.nix
