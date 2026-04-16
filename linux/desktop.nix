@@ -93,7 +93,6 @@ in
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
       ".config/Bitwarden"
-      ".config/chromium"
       ".config/qt5ct"
       ".config/qt6ct"
       ".local/share/Anki2"

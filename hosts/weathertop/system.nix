@@ -50,6 +50,7 @@
     amd.enable = true;
   };
 
+  agindin.chromium.enable = true;
   agindin.firefox.enable = true;
   agindin.bluetooth.enable = true;
 

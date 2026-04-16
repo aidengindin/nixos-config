@@ -25,6 +25,7 @@
     };
     kitty.enable = true;
     latex.enable = true;
+    chromium.enable = true;
     firefox.enable = true;
     mpv.enable = true;
     neomutt.enable = true;
