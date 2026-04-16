@@ -37,6 +37,9 @@ jobs:
       - name: Update caddy-cloudflare hash
         run: bash scripts/update-caddy-hash.sh
 
+      - name: Update uBlock Origin version and hash
+        run: bash scripts/update-ublock-hash.sh
+
       - name: Check for changes
         id: check
         run: |
@@ -60,6 +63,7 @@ jobs:
           - \`nix flake update\` applied
           - Custom package hashes refreshed via nix-update
           - caddy-cloudflare hash refreshed
+          - uBlock Origin version and hash refreshed
 
           Review diff, verify builds on osgiliath, then merge." \
             --base main \
