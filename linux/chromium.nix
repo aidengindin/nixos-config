@@ -68,6 +68,15 @@ in
     programs.chromium.enable = true;
     programs.chromium.defaultSearchProviderEnabled = true;
     programs.chromium.defaultSearchProviderSearchURL = "https://www.google.com/search?q={searchTerms}";
+    # Developer mode is required to load unpacked extensions (uBlock Origin).
+    # initialPrefs is applied once when Chromium creates a new profile.
+    programs.chromium.initialPrefs = {
+      extensions = {
+        ui = {
+          developer_mode = true;
+        };
+      };
+    };
     programs.chromium.extraOpts = {
       "MetricsReportingEnabled" = false;
       "UrlKeyedAnonymizedDataCollectionEnabled" = false;
@@ -107,6 +116,8 @@ in
           "--use-angle=vulkan"
           "--disable-background-networking"
           "--no-default-browser-check"
+          # Required for chromium-web-store to prompt extension installs in ungoogled-chromium
+          "--extension-mime-request-handling=always-prompt-for-install"
           "--load-extension=${uBlockOrigin}"
         ];
       };
