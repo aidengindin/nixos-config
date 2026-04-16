@@ -92,6 +92,12 @@ in
 
     home-manager = {
       users.agindin = {
+        # Signal dark mode preference to all apps via xdg-desktop-portal-gtk.
+        # Required for Chromium (and others) to report prefers-color-scheme: dark.
+        dconf.settings."org/gnome/desktop/interface" = {
+          color-scheme = "prefer-dark";
+        };
+
         home.pointerCursor = {
           enable = true;
           name = "catppuccin-mocha-dark-cursors";
