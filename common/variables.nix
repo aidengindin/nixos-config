@@ -72,6 +72,11 @@ let
 
       lorienRestic = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICkDpjjWM4ceQL7vsplfuTjGxh/xm/sDSF2HUtpdzgi0 root@lorien";
       lorienCaddy = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDhPFaF9+zV9A/8/Rk1KYT75Y/ROtmAYYYbjYjw4/vP caddy@lorien";
+
+      # Outbound deploy key for osgiliath's nixos-deploy user (used by colmena to SSH to other hosts).
+      # Generate with: ssh-keygen -t ed25519 -f /tmp/osgiliath-nixos-deploy -C "nixos-deploy@osgiliath" -N ""
+      # Then: store private key in secrets/nixos-deploy-osgiliath-ssh-key.age via agenix
+      osgiliathNixosDeploy = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOx/+xRcIUwoChxgFVBDZhl1ClbQOQiox9YpIxpkohLr nixos-deploy@osgiliath";
     };
   };
 in

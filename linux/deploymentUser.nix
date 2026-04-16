@@ -6,9 +6,12 @@
   ...
 }:
 let
-  deployKeys = [
-    globalVars.keys.khazad-dumUser
-  ];
+  cfg = config.agindin.deployment;
+
+  deployKeys =
+    [ globalVars.keys.khazad-dumUser ]
+    # Added once osgiliathNixosDeploy is set in common/variables.nix
+    ++ lib.optional (globalVars.keys ? osgiliathNixosDeploy) globalVars.keys.osgiliathNixosDeploy;
 
   deployWrapper = pkgs.writeShellScript "deploy-wrapper" ''
       export PATH="/run/wrappers/bin:$PATH"
@@ -60,6 +63,16 @@ let
 
 in
 {
+  options.agindin.deployment.additionalKeys = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    description = ''
+      Additional unrestricted SSH authorized keys for the nixos-deploy user.
+      Use this only on the host acting as the Colmena controller (osgiliath),
+      not in the shared module, so that CI keys do not grant access to every machine.
+    '';
+  };
+
   config = {
     users.users.nixos-deploy = {
       isNormalUser = true;
@@ -68,7 +81,7 @@ in
       extraGroups = [ "wheel" ];
       home = "/var/lib/nixos-deploy";
       createHome = true;
-      openssh.authorizedKeys.keys = restrictedKeys;
+      openssh.authorizedKeys.keys = restrictedKeys ++ cfg.additionalKeys;
       shell = "${pkgs.bash}/bin/bash";
       hashedPassword = "!"; # lock account to prevent password auth
     };
@@ -111,6 +124,7 @@ in
     # Ensure the deploy user can write to its home for SSH known_hosts etc.
     systemd.tmpfiles.rules = [
       "d /var/lib/nixos-deploy 0700 nixos-deploy nixos-deploy -"
+      "d /var/lib/nixos-deploy/.ssh 0700 nixos-deploy nixos-deploy -"
     ];
 
     agindin.impermanence.systemFiles = lib.mkIf config.agindin.impermanence.enable [

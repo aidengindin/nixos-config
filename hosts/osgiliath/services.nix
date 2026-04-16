@@ -210,8 +210,6 @@
 
     linkwarden.enable = true;
 
-    octoprint.enable = true;
-
     netalertx.enable = true;
 
     liftosaur-sync = {

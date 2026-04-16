@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  unstablePkgs,
+  customPkgs,
   globalVars,
   ...
 }:
@@ -16,14 +16,8 @@ let
     mkMerge
     ;
 
-  overlay = final: prev: {
-    caddy-cloudflare = unstablePkgs.caddy.withPlugins {
-      plugins = [
-        "github.com/caddy-dns/cloudflare@v0.2.2"
-        "github.com/mholt/caddy-ratelimit@v0.1.0"
-      ];
-      hash = "sha256-uqSPsKNOmU24eQHPln3aTc+k+xy/uFSsiew5Zbdu9iQ=";
-    };
+  overlay = _final: _prev: {
+    caddy-cloudflare = customPkgs.caddy-cloudflare;
   };
 in
 {

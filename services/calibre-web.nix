@@ -1,7 +1,7 @@
 {
   config,
   lib,
-  pkgs,
+  customPkgs,
   globalVars,
   ...
 }:
@@ -14,35 +14,7 @@ let
     types
     ;
 
-  # DeDRM plugin from noDRM fork
-  dedrmPlugin = pkgs.fetchurl {
-    url = "https://github.com/noDRM/DeDRM_tools/releases/download/v10.0.3/DeDRM_tools_10.0.3.zip";
-    sha256 = "8649e30efb0c26e9cca1131df4c9d02d51eccb5028d396cce857f0fa75a62849";
-  };
-
-  # DeACSM plugin - fetch pre-built from releases
-  deacsmPlugin = pkgs.fetchurl {
-    url = "https://github.com/Leseratte10/acsm-calibre-plugin/releases/download/v0.0.16/DeACSM_0.0.16.zip";
-    sha256 = "0l0bhx8kdvmvfn9z0fpkl488kgf1rcv3vchzgjjwwnwzgfi1pxmm";
-  };
-
-  # Combined plugins package
-  calibrePlugins = pkgs.stdenv.mkDerivation {
-    pname = "calibre-drm-plugins";
-    version = "1.0";
-
-    nativeBuildInputs = [ pkgs.unzip ];
-
-    buildCommand = ''
-      mkdir -p $out
-      # Extract DeDRM from the tools archive
-      ${pkgs.unzip}/bin/unzip ${dedrmPlugin}
-      # The zip extracts directly to current directory
-      cp DeDRM_plugin.zip $out/
-      # Copy DeACSM plugin (already a zip)
-      cp ${deacsmPlugin} $out/DeACSM.zip
-    '';
-  };
+  calibrePlugins = customPkgs.calibre-plugins;
 in
 {
   options.agindin.services.calibre-web = {

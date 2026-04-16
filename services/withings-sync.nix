@@ -1,8 +1,7 @@
 {
   config,
   lib,
-  pkgs,
-  unstablePkgs,
+  customPkgs,
   ...
 }:
 let
@@ -16,30 +15,6 @@ let
     nameValuePair
     concatStringsSep
     ;
-
-  # Override python packages to skip tests in dependencies
-  pythonPackagesOverride = unstablePkgs.python312.override {
-    packageOverrides = self: super: {
-      jaraco-test = super.jaraco-test.overridePythonAttrs (old: {
-        doCheck = false;
-        doInstallCheck = false;
-      });
-    };
-  };
-
-  withingsPackage = pythonPackagesOverride.pkgs.withings-sync.overrideAttrs (oldAttrs: {
-    src = pkgs.fetchFromGitHub {
-      owner = "aidengindin";
-      repo = "withings-sync";
-      rev = "feat/credential-file-env-variable";
-      sha256 = "sha256-mZi07BzzyKyAPqF/2AZLegeQxV+1Yx/3fwbN+BT1T/w=";
-    };
-    propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or [ ]) ++ [
-      pythonPackagesOverride.pkgs.setuptools
-    ];
-    doCheck = false;
-    doInstallCheck = false;
-  });
 
   syncOpts =
     { name, ... }:
@@ -105,7 +80,7 @@ in
     };
     package = mkOption {
       type = types.package;
-      default = withingsPackage;
+      default = customPkgs.withings-sync;
       description = "Nix package to use for withings-sync";
     };
   };

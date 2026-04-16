@@ -15,8 +15,7 @@
     ./linkwarden.nix
     ./miniflux.nix
     ./netalertx.nix
-    ./octoprint.nix
-    ./ollama.nix
+./ollama.nix
     ./openwebui.nix
     ./pocket-id.nix
     ./postgres.nix
