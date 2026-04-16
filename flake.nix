@@ -235,6 +235,7 @@
       packages.x86_64-linux =
         {
           iso = self.nixosConfigurations.iso.config.system.build.isoImage;
+          colmena = colmena.packages.x86_64-linux.colmena;
         }
         // (import ./packages {
           pkgs = stablePkgs;

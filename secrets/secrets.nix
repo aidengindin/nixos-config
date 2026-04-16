@@ -149,4 +149,10 @@ in
     khazad-dumHost
     khazad-dumUser
   ];
+
+  # Private SSH key for osgiliath's nixos-deploy user, used by colmena to SSH to other hosts
+  "nixos-deploy-osgiliath-ssh-key.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
 }

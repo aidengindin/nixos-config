@@ -47,7 +47,7 @@ jobs:
           rsync -az --delete . nixos-deploy@osgiliath:"$TMPDIR/"
           ssh nixos-deploy@osgiliath \
             "cd $TMPDIR && \
-             nix run github:zhaofengli/colmena -- apply \
+             nix run .#colmena -- apply \
                --on '${{ inputs.target }}' \
                --impure"
           ssh nixos-deploy@osgiliath "rm -rf $TMPDIR"
