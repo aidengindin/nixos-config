@@ -1,3 +1,22 @@
+# NOTE (2026-04): home-manager master has a programs.claude-code module that could
+# replace much of this file, and a programs.mcp module for the MCP server config.
+# It's not in release-25.11; revisit when 26.05 ships.
+#
+# What it would replace:
+#   - The LSP plugin registration kludge below (lines ~80-141) via lspServers option
+#   - The /etc/mcp-servers.json + jq-merge approach; MCP servers go directly in
+#     programs.claude-code.mcpServers (keeping the existing secret-aware wrappers)
+#   - Package installation
+#
+# What must stay regardless:
+#   - The systemd restore/save services for ~/.claude.json — Claude Code uses atomic
+#     writes (write-temp-then-rename) which break impermanence bind mounts, so we
+#     can't bind-mount .claude.json directly and must copy it in/out manually
+#   - The impermanence userDirectories declarations
+#   - The secret-aware MCP wrappers in mcp.nix (programs.mcp has no secret handling)
+#
+# Known risk: the HM module uses home.file (symlinks) for settings.json; Claude Code
+# has a known bug with symlinked config files — worth testing before committing.
 {
   config,
   lib,
