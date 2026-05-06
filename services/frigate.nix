@@ -160,6 +160,12 @@ in
       lib.mkAfter [ "video" ]
     );
 
+    # Frigate's API reads /var/cache/frigate/preview_frames but doesn't create
+    # it on startup (bug in 0.16.3). The upstream module only declares
+    # CacheDirectory=frigate and CacheDirectory=frigate/model_cache, so add
+    # the missing subdirectory here so systemd creates it on service start.
+    systemd.services.frigate.serviceConfig.CacheDirectory = lib.mkAfter [ "frigate/preview_frames" ];
+
     # Inject RTSP password(s) from agenix secrets into the frigate service
     systemd.services.frigate.serviceConfig.EnvironmentFile =
       map (cam: cam.environmentFile) cfg.cameras;

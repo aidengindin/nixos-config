@@ -144,7 +144,7 @@ Secret public keys are defined in `secrets/secrets.nix`. Age identity paths are 
 
 ### Impermanence
 
-Hosts khazad-dum uses impermanent root filesystems (btrfs with subvolume wiping on boot). Configuration is in `linux/impermanence.nix`.
+Hosts khazad-dum, osgiliath, and weathertop use impermanent root filesystems (btrfs with subvolume wiping on boot). Configuration is in `linux/impermanence.nix`. Note: weathertop persists all of `/home`.
 
 Key concepts:
 - Root filesystem is wiped on every boot

@@ -45,6 +45,8 @@ let
       open-webui = 8360;
 
       immich = 8370;
+      immichApiMetrics = 8371;
+      immichMicroservicesMetrics = 8372;
 
       octoprint = 8380;
 

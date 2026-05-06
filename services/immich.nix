@@ -41,6 +41,10 @@ in
       environment = {
         IMMICH_METRICS = "true";
         IMMICH_TELEMETRY_INCLUDE = "all";
+        # Relocate metrics ports away from 8082/8081, which Frigate's
+        # output process hardcodes for its jsmpeg WebSocket server.
+        IMMICH_API_METRICS_PORT = toString globalVars.ports.immichApiMetrics;
+        IMMICH_MICROSERVICES_METRICS_PORT = toString globalVars.ports.immichMicroservicesMetrics;
       };
 
       # Use upstream module's database management

@@ -84,11 +84,14 @@ in
       nerd-fonts.hasklug
     ];
 
+    services.printing.enable = true;
+
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       anki
       bitwarden-desktop
       ungoogled-chromium
+      lprint
     ];
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
@@ -97,6 +100,7 @@ in
       ".config/qt6ct"
       ".local/share/Anki2"
       ".local/state/wireplumber"
+      ".config/lprint"
     ];
   };
 }

@@ -119,6 +119,7 @@ in
           # Required for chromium-web-store to prompt extension installs in ungoogled-chromium
           "--extension-mime-request-handling=always-prompt-for-install"
           "--load-extension=${uBlockOrigin}"
+          "--autoplay-policy=document-user-activation-required"
         ];
       };
 
