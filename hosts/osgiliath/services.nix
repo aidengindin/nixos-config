@@ -232,6 +232,7 @@
         tableId = "tbl7fY07el677Jm1L";
         fieldMap = {
           sleep_score = "Sleep score";
+          sleep_duration = "Sleep duration";
           hrv = "HRV";
           resting_hr = "RHR";
           tss = "TSS";

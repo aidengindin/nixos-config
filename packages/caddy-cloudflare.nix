@@ -4,5 +4,5 @@ unstablePkgs.caddy.withPlugins {
     "github.com/caddy-dns/cloudflare@v0.2.2"
     "github.com/mholt/caddy-ratelimit@v0.1.0"
   ];
-  hash = "sha256-uqSPsKNOmU24eQHPln3aTc+k+xy/uFSsiew5Zbdu9iQ=";
+  hash = "sha256-2eyq05WbFz0cA9kcYQoCjgFWh4E6waPuhr5/Of4X10I=";
 }

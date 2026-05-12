@@ -12,6 +12,53 @@ let
     mkIf
     types
     ;
+  wipeScript = ''
+    mkdir -p /mnt
+    ${
+      if cfg.useLuks then
+        "mount -o subvol=/ /dev/mapper/cryptroot /mnt"
+      else
+        "mount -o subvol=/ /dev/disk/by-label/${cfg.deviceLabel} /mnt"
+    }
+
+    # Unmount nested subvolumes
+    for dir in home nix persist; do
+      umount "/mnt/root/$dir" 2>/dev/null || true
+    done
+
+    # Delete automatically created nested subvolumes
+    for subvol in srv var/lib/portables var/lib/machines tmp var/tmp; do
+      btrfs subvolume delete --commit-after "/mnt/root/$subvol" 2>/dev/null || true
+    done
+
+    # Delete subvolumes
+    if [ -e /mnt/root ]; then
+      btrfs subvolume delete --commit-after /mnt/root
+    fi
+    ${
+      if cfg.wipeHome then
+        ''
+          if [ -e /mnt/home ]; then
+            btrfs subvolume delete --commit-after /mnt/home
+          fi
+        ''
+      else
+        ""
+    }
+
+    # Create empty subvolumes
+    btrfs subvolume create /mnt/root
+    ${
+      if cfg.wipeHome then
+        ''
+          btrfs subvolume create /mnt/home
+        ''
+      else
+        ""
+    }
+
+    umount /mnt
+  '';
 in
 {
   options.agindin.impermanence = {
@@ -142,53 +189,18 @@ in
       };
     };
 
-    boot.initrd.postDeviceCommands = ''
-      mkdir -p /mnt
-      ${
-        if cfg.useLuks then
-          "mount -o subvol=/ /dev/mapper/cryptroot /mnt"
-        else
-          "mount -o subvol=/ /dev/disk/by-label/${cfg.deviceLabel} /mnt"
-      }
+    # For traditional (non-systemd) initrd
+    boot.initrd.postDeviceCommands = mkIf (!config.boot.initrd.systemd.enable) wipeScript;
 
-      # Unmount nested subvolumes
-      for dir in home nix persist; do
-        umount "/mnt/root/$dir" 2>/dev/null || true
-      done
-
-      # Delete automatically created nested subvolumes
-      for subvol in srv var/lib/portables var/lib/machines tmp var/tmp; do
-        btrfs subvolume delete --commit-after "/mnt/root/$subvol" 2>/dev/null || true
-      done
-
-      # Delete subvolumes
-      if [ -e /mnt/root ]; then
-        btrfs subvolume delete --commit-after /mnt/root
-      fi
-      ${
-        if cfg.wipeHome then
-          ''
-            if [ -e /mnt/home ]; then
-              btrfs subvolume delete --commit-after /mnt/home
-            fi
-          ''
-        else
-          ""
-      }
-
-      # Create empty subvolumes
-      btrfs subvolume create /mnt/root
-      ${
-        if cfg.wipeHome then
-          ''
-            btrfs subvolume create /mnt/home
-          ''
-        else
-          ""
-      }
-
-      umount /mnt
-    '';
+    # For systemd stage 1 initrd (e.g. when jovian-nixos enables it)
+    boot.initrd.systemd.services.wipe-root = mkIf config.boot.initrd.systemd.enable {
+      description = "Wipe BTRFS root subvolume";
+      wantedBy = [ "initrd.target" ];
+      before = [ "sysroot.mount" ];
+      unitConfig.DefaultDependencies = "no";
+      serviceConfig.Type = "oneshot";
+      script = wipeScript;
+    };
 
     age.identityPaths = [
       "/persist/etc/ssh/ssh_host_ed25519_key"
