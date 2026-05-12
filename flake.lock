@@ -30,11 +30,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1778611901,
-        "narHash": "sha256-yja8BJR1NJyTkPRAVb4Ei9qx1soTpCML066zREh2Mms=",
+        "lastModified": 1778612870,
+        "narHash": "sha256-GSyKvcD7UQJZfS9mTDEfl2HKjo5+vV67+1dUjqDqmFI=",
         "ref": "refs/heads/main",
-        "rev": "9e24337a6b6a717c1d6ab90fd3d966826c53b3cb",
-        "revCount": 1,
+        "rev": "2767d0028e913239e3d5cefd3465f0cbfe8a6391",
+        "revCount": 2,
         "type": "git",
         "url": "ssh://git@github.com/aidengindin/auto-headache-tracker.git"
       },
