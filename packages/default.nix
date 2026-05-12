@@ -1,12 +1,14 @@
 {
   pkgs,
   unstablePkgs,
+  auto-headache-tracker,
   ...
 }:
 {
   caddy-cloudflare = pkgs.callPackage ./caddy-cloudflare.nix { inherit unstablePkgs; };
   calibre-plugins = pkgs.callPackage ./calibre-plugins.nix { };
-withings-sync = pkgs.callPackage ./withings-sync.nix { inherit unstablePkgs; };
+  withings-sync = pkgs.callPackage ./withings-sync.nix { inherit unstablePkgs; };
   catppuccin-userstyles = pkgs.callPackage ./catppuccin-userstyles.nix { };
   intervals-mcp-server = pkgs.callPackage ./intervals-mcp-server.nix { };
+  headache-sync = auto-headache-tracker.packages.${pkgs.system}.headache-sync;
 }

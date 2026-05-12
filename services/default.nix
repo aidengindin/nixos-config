@@ -9,6 +9,7 @@
     ./calibre-web.nix
     ./frigate.nix
     ./grafana.nix
+    ./headache-sync.nix
     ./immich.nix
     ./jellyfin.nix
     ./liftosaur-sync.nix

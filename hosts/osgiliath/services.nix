@@ -12,6 +12,11 @@
       owner = "liftosaur-sync";
       group = "liftosaur-sync";
     };
+    headache-sync-env = {
+      file = ../../secrets/headache-sync-env.age;
+      owner = "headache-sync";
+      group = "headache-sync";
+    };
     restic-password = {
       file = ../../secrets/osgiliath-restic-password.age;
       owner = "restic";
@@ -216,6 +221,29 @@
       enable = true;
       environmentFile = config.age.secrets.liftosaur-sync-env.path;
       syncIntervals = "hourly";
+    };
+
+    headache-sync = {
+      enable = true;
+      environmentFile = config.age.secrets.headache-sync-env.path;
+      intervals.athleteId = "i95355";
+      airtable = {
+        baseId = "app6w70TNVJDxqulT";
+        tableId = "tbl7fY07el677Jm1L";
+        fieldMap = {
+          sleep_score = "Sleep score";
+          hrv = "HRV";
+          resting_hr = "RHR";
+          tss = "TSS";
+          barometric_pressure = "Barometric pressure (inHg)";
+          us_aqi = "AQI";
+          pm2_5 = "PM2.5";
+          tree_pollen = "Tree pollen (UPI)";
+          grass_pollen = "Grass pollen (UPI)";
+          weed_pollen = "Weed pollen (UPI)";
+        };
+      };
+      location.default = "Jersey City, NJ";
     };
 
     frigate = {

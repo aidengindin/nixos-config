@@ -49,6 +49,11 @@
       url = "github:natsukium/mcp-servers-nix";
       inputs.nixpkgs.follows = "unstable";
     };
+
+    auto-headache-tracker = {
+      url = "git+ssh://git@github.com/aidengindin/auto-headache-tracker.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -67,6 +72,7 @@
       zwift,
       liftosaur-sync,
       mcp-servers-nix,
+      auto-headache-tracker,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -102,7 +108,7 @@
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
-          inherit unstablePkgs;
+          inherit unstablePkgs auto-headache-tracker;
         };
       };
 
@@ -239,7 +245,7 @@
         }
         // (import ./packages {
           pkgs = stablePkgs;
-          inherit unstablePkgs;
+          inherit unstablePkgs auto-headache-tracker;
         });
     };
 }
