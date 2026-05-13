@@ -68,6 +68,7 @@ in
         LOG_LEVEL = "info";
         METRICS_COLLECTOR = "1";
         METRICS_ALLOWED_NETWORKS = "127.0.0.1/32,100.0.0.0/8";
+        POLLING_PARSING_ERROR_LIMIT = "48";
       };
     };
 
