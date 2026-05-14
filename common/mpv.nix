@@ -25,13 +25,19 @@ in
         "k" = "add volume -2";
         "l" = "add volume 2";
       };
-      config = {
-        background-color = "#1e1e2e";
-        osd-back-color = "#11111b";
-        osd-border-color = "#11111b";
-        osd-color = "#cdd6f4";
-        osd-shadow-color = "#1e1e2e";
-      };
+        config = {
+          # Default video output processor settings for HDR compatibility
+          vo = "gpu-next";
+          target-primary = "bt.709";
+          target-trc = "srgb";
+          tone-mapping = "bt.2446a";
+          
+          background-color = "#1e1e2e";
+          osd-back-color = "#11111b";
+          osd-border-color = "#11111b";
+          osd-color = "#cdd6f4";
+          osd-shadow-color = "#1e1e2e";
+        };
       scriptOpts = {
         stats = {
           border_color = "251818";
