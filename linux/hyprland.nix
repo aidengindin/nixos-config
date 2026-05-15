@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  hyprlandFlake,
   ...
 }:
 let
@@ -48,6 +49,8 @@ in
     programs.hyprland = {
       enable = true;
       withUWSM = true;
+      package = hyprlandFlake.packages.${pkgs.system}.hyprland;
+      portalPackage = hyprlandFlake.packages.${pkgs.system}.xdg-desktop-portal-hyprland;
     };
 
     services.greetd = {
@@ -65,7 +68,6 @@ in
       enable = true;
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
-        xdg-desktop-portal-hyprland
       ];
     };
 
@@ -150,7 +152,7 @@ in
         };
 
         xdg.configFile = {
-          "hypr/hyprland.conf".source = ./hypr/hyprland.conf;
+          "hypr/hyprland.lua".source = ./hypr/hyprland.lua;
           "hypr/hypridle.conf".source = ./hypr/hypridle.conf;
           "hypr/hyprpaper.conf".source = ./hypr/hyprpaper.conf;
           "hypr/hyprlock.conf".source = ./hypr/hyprlock.conf;

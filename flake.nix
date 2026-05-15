@@ -3,6 +3,11 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     # managing user environments - both stable & unstable modules
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
@@ -73,6 +78,7 @@
       liftosaur-sync,
       mcp-servers-nix,
       auto-headache-tracker,
+      hyprland,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -105,6 +111,7 @@
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
+        hyprlandFlake = hyprland;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
