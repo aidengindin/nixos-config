@@ -40,6 +40,11 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    dms = {
+      url = "github:AvengeMedia/DankMaterialShell/stable";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     zwift = {
       url = "github:netbrain/zwift";
       inputs.nixpkgs.follows = "unstable";
@@ -79,6 +84,7 @@
       mcp-servers-nix,
       auto-headache-tracker,
       hyprland,
+      dms,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -112,6 +118,7 @@
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
         hyprlandFlake = hyprland;
+        dmsFlake = dms;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
@@ -153,6 +160,7 @@
           allowLocalDeployment = true;
           modules = [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
+            dms.nixosModules.greeter
             ./hosts/khazad-dum
           ];
         };
