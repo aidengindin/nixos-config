@@ -18,6 +18,7 @@ in
       enable = true;
       scripts = with pkgs.mpvScripts; [
         sponsorblock
+        mpris
       ];
       bindings = {
         "j" = "seek -5";
