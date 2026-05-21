@@ -4,6 +4,7 @@
     ./bash.nix
     ./cli.nix
     ./claude-code.nix
+    ./claude-desktop.nix
     ./mcp.nix
     ./dev.nix
     ./direnv.nix

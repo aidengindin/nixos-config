@@ -94,6 +94,13 @@ in
   options.agindin.mcp = {
     enable = mkEnableOption "MCP servers for Claude Code";
 
+    serversConfig = mkOption {
+      type = types.attrs;
+      internal = true;
+      readOnly = true;
+      description = "Generated mcpServers attrset, shared by Claude Code and Claude Desktop.";
+    };
+
     servers = {
       filesystem = {
         enable = mkEnableOption "filesystem MCP server";
@@ -129,6 +136,8 @@ in
   };
 
   config = mkIf cfg.enable {
+    agindin.mcp.serversConfig = mcpServers;
+
     # Write declarative MCP config to /etc so it exists before any user services run.
     # claude-code.nix merges this into ~/.claude.json on boot via the restore script.
     environment.etc."mcp-servers.json" = {

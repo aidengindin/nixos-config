@@ -64,6 +64,11 @@
       url = "git+ssh://git@github.com/aidengindin/auto-headache-tracker.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    claude-desktop = {
+      url = "github:aaddrick/claude-desktop-debian";
+      inputs.nixpkgs.follows = "unstable";
+    };
   };
 
   outputs =
@@ -85,6 +90,7 @@
       auto-headache-tracker,
       hyprland,
       dms,
+      claude-desktop,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -119,6 +125,7 @@
         inherit agenix colmena unstablePkgs;
         hyprlandFlake = hyprland;
         dmsFlake = dms;
+        claudeDesktopFlake = claude-desktop;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
