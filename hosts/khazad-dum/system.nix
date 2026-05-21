@@ -1,8 +1,14 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   imports = [
     ../../linux
   ];
+
+  # Travel laptop: derive the timezone from location via geoclue2 (live).
+  # automatic-timezoned requires time.timeZone to be unset, so override the
+  # global static value from linux/locale.nix for this host.
+  services.automatic-timezoned.enable = true;
+  time.timeZone = lib.mkForce null;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelParams = [

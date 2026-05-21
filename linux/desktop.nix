@@ -91,7 +91,7 @@ in
       anki
       bitwarden-desktop
       ungoogled-chromium
-      lprint
+      yt-dlp
     ];
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [

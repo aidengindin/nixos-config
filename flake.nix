@@ -3,6 +3,11 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     # managing user environments - both stable & unstable modules
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
@@ -35,6 +40,11 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    dms = {
+      url = "github:AvengeMedia/DankMaterialShell/stable";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     zwift = {
       url = "github:netbrain/zwift";
       inputs.nixpkgs.follows = "unstable";
@@ -53,6 +63,11 @@
     auto-headache-tracker = {
       url = "git+ssh://git@github.com/aidengindin/auto-headache-tracker.git";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    claude-desktop = {
+      url = "github:aaddrick/claude-desktop-debian";
+      inputs.nixpkgs.follows = "unstable";
     };
   };
 
@@ -73,6 +88,9 @@
       liftosaur-sync,
       mcp-servers-nix,
       auto-headache-tracker,
+      hyprland,
+      dms,
+      claude-desktop,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -105,6 +123,9 @@
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
+        hyprlandFlake = hyprland;
+        dmsFlake = dms;
+        claudeDesktopFlake = claude-desktop;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
@@ -146,6 +167,7 @@
           allowLocalDeployment = true;
           modules = [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
+            dms.nixosModules.greeter
             ./hosts/khazad-dum
           ];
         };
