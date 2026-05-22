@@ -52,6 +52,10 @@ let
 
       liftosaur-sync = 8390;
 
+      zigbee2mqtt = 8400;
+
+      mosquitto = 1883;
+
       netalertx = 20211;
       netalertxMetrics = 20212;
     };

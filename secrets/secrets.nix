@@ -146,6 +146,21 @@ in
     khazad-dumUser
   ];
 
+  "mosquitto-zigbee2mqtt-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
+  "mosquitto-homeassistant-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
+  "zigbee2mqtt-mqtt-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "khazad-dum-gh-token.age".publicKeys = [
     khazad-dumUser
   ];

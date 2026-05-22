@@ -118,6 +118,7 @@
         disko.nixosModules.disko
         jovian.nixosModules.default
         liftosaur-sync.nixosModules.default
+        dms.nixosModules.greeter
       ];
 
       # special args for all NixOS systems
@@ -167,7 +168,6 @@
           allowLocalDeployment = true;
           modules = [
             nixos-hardware.nixosModules.framework-amd-ai-300-series
-            dms.nixosModules.greeter
             ./hosts/khazad-dum
           ];
         };
@@ -260,14 +260,13 @@
           };
         };
 
-      packages.x86_64-linux =
-        {
-          iso = self.nixosConfigurations.iso.config.system.build.isoImage;
-          colmena = colmena.packages.x86_64-linux.colmena;
-        }
-        // (import ./packages {
-          pkgs = stablePkgs;
-          inherit unstablePkgs auto-headache-tracker;
-        });
+      packages.x86_64-linux = {
+        iso = self.nixosConfigurations.iso.config.system.build.isoImage;
+        colmena = colmena.packages.x86_64-linux.colmena;
+      }
+      // (import ./packages {
+        pkgs = stablePkgs;
+        inherit unstablePkgs auto-headache-tracker;
+      });
     };
 }

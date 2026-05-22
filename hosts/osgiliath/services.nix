@@ -34,6 +34,15 @@
       group = "frigate";
       mode = "0440";
     };
+    mosquitto-zigbee2mqtt-password = {
+      file = ../../secrets/mosquitto-zigbee2mqtt-password.age;
+    };
+    mosquitto-homeassistant-password = {
+      file = ../../secrets/mosquitto-homeassistant-password.age;
+    };
+    zigbee2mqtt-mqtt-env = {
+      file = ../../secrets/zigbee2mqtt-mqtt-env.age;
+    };
   };
 
   agindin.services = {
@@ -245,6 +254,31 @@
         };
       };
       location.default = "Jersey City, NJ";
+    };
+
+    mosquitto = {
+      enable = true;
+      users = {
+        zigbee2mqtt = {
+          passwordFile = config.age.secrets.mosquitto-zigbee2mqtt-password.path;
+          acl = [ "readwrite zigbee2mqtt/#" ];
+        };
+        homeassistant = {
+          passwordFile = config.age.secrets.mosquitto-homeassistant-password.path;
+          acl = [
+            "readwrite zigbee2mqtt/#"
+            "readwrite homeassistant/#"
+          ];
+        };
+      };
+    };
+
+    zigbee2mqtt = {
+      enable = true;
+      # TODO: replace with the actual /dev/serial/by-id/... path of the ZBT-2
+      # after plugging it into osgiliath (`ls -l /dev/serial/by-id/`).
+      serialPort = "/dev/serial/by-id/CHANGE_ME";
+      mqtt.credentialsFile = config.age.secrets.zigbee2mqtt-mqtt-env.path;
     };
 
     frigate = {

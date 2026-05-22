@@ -15,8 +15,9 @@
     ./liftosaur-sync.nix
     ./linkwarden.nix
     ./miniflux.nix
+    ./mosquitto.nix
     ./netalertx.nix
-./ollama.nix
+    ./ollama.nix
     ./openwebui.nix
     ./pocket-id.nix
     ./postgres.nix
@@ -25,5 +26,6 @@
     ./restic.nix
     ./tandoor.nix
     ./withings-sync.nix
+    ./zigbee2mqtt.nix
   ];
 }
