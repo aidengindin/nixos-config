@@ -275,9 +275,7 @@
 
     zigbee2mqtt = {
       enable = true;
-      # TODO: replace with the actual /dev/serial/by-id/... path of the ZBT-2
-      # after plugging it into osgiliath (`ls -l /dev/serial/by-id/`).
-      serialPort = "/dev/serial/by-id/CHANGE_ME";
+      serialPort = "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_E072A1FAACDC-if00";
       mqtt.credentialsFile = config.age.secrets.zigbee2mqtt-mqtt-env.path;
     };
 
