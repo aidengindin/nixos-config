@@ -42,6 +42,25 @@ in
       '';
     };
 
+    baudrate = mkOption {
+      type = types.nullOr types.int;
+      default = null;
+      example = 460800;
+      description = ''
+        Serial baudrate. Leave null to use the adapter's default. The
+        Nabu Casa ZBT-2 requires 460800.
+      '';
+    };
+
+    rtscts = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Enable hardware (RTS/CTS) flow control. Required for the Nabu
+        Casa ZBT-2.
+      '';
+    };
+
     mqtt = {
       server = mkOption {
         type = types.str;
@@ -101,7 +120,8 @@ in
         serial = {
           port = cfg.serialPort;
           adapter = cfg.serialAdapter;
-        };
+          rtscts = cfg.rtscts;
+        } // lib.optionalAttrs (cfg.baudrate != null) { baudrate = cfg.baudrate; };
         mqtt = {
           server = cfg.mqtt.server;
           base_topic = cfg.mqtt.baseTopic;

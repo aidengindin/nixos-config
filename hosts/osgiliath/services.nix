@@ -261,7 +261,10 @@
       users = {
         zigbee2mqtt = {
           passwordFile = config.age.secrets.mosquitto-zigbee2mqtt-password.path;
-          acl = [ "readwrite zigbee2mqtt/#" ];
+          acl = [
+            "readwrite zigbee2mqtt/#"
+            "readwrite homeassistant/#"
+          ];
         };
         homeassistant = {
           passwordFile = config.age.secrets.mosquitto-homeassistant-password.path;
@@ -276,6 +279,8 @@
     zigbee2mqtt = {
       enable = true;
       serialPort = "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_E072A1FAACDC-if00";
+      baudrate = 460800;
+      rtscts = true;
       mqtt.credentialsFile = config.age.secrets.zigbee2mqtt-mqtt-env.path;
     };
 

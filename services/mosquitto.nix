@@ -73,6 +73,11 @@ in
 
     networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [ cfg.port ];
 
+    # Upstream mosquitto module doesn't use StateDirectory, so /var/lib/mosquitto
+    # doesn't get auto-chowned. With impermanence the persisted dir is created
+    # root:root and the pre-start script fails to write passwd-0.
+    systemd.tmpfiles.rules = [ "d /var/lib/mosquitto 0700 mosquitto mosquitto - -" ];
+
     agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
       "/var/lib/mosquitto"
     ];
