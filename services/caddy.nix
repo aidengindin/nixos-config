@@ -124,6 +124,10 @@ in
         443
         globalVars.ports.caddyMetrics
       ];
+
+      # Open udp/443 for http/3 
+      networking.firewall.interfaces.tailscale0.allowedUDPPorts = [ 443 ];
+
       # Also allow on local interface for scraping
       networking.firewall.interfaces.lo.allowedTCPPorts = [ globalVars.ports.caddyMetrics ];
     })
