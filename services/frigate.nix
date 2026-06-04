@@ -13,10 +13,77 @@ let
     mkOption
     types
     ;
+
+  yamlFormat = pkgs.formats.yaml { };
+
+  mkCameraInputs =
+    cam:
+    let
+      mkInput = path: roles: {
+        path = ''rtsp://${cam.username}:{${cam.rtspPasswordEnvVar}}@${cam.host}:${toString cam.rtspPort}${path}'';
+        inherit roles;
+      };
+    in
+    if cam.subRtspPath != null then
+      [
+        (mkInput cam.rtspPath [ "record" ])
+        (mkInput cam.subRtspPath [ "detect" ])
+      ]
+    else
+      [ (mkInput cam.rtspPath cam.roles) ];
+
+  cameraSettings = builtins.listToAttrs (
+    map (cam: {
+      name = cam.name;
+      value =
+        {
+          ffmpeg.inputs = mkCameraInputs cam;
+        }
+        // lib.optionalAttrs (cam.detectWidth != null || cam.detectHeight != null) {
+          detect = lib.filterAttrs (_: v: v != null) {
+            width = cam.detectWidth;
+            height = cam.detectHeight;
+          };
+        };
+    }) cfg.cameras
+  );
+
+  frigateSettings =
+    {
+      mqtt.enabled = false;
+      record = {
+        enabled = true;
+        retain.days = cfg.retentionDays;
+      };
+      cameras = cameraSettings;
+    }
+    // lib.optionalAttrs (cfg.acceleration == "intel") {
+      ffmpeg.hwaccel_args = "preset-vaapi";
+      detectors.ov = {
+        type = "openvino";
+        device = "GPU";
+      };
+      model = {
+        width = 300;
+        height = 300;
+        input_tensor = "nhwc";
+        input_pixel_format = "bgr";
+        path = "/openvino-model/ssdlite_mobilenet_v2.xml";
+        labelmap_path = "/openvino-model/coco_91cl_bkgr.txt";
+      };
+    };
+
+  configFile = yamlFormat.generate "frigate-config.yml" frigateSettings;
 in
 {
   options.agindin.services.frigate = {
     enable = mkEnableOption "frigate NVR";
+
+    image = mkOption {
+      type = types.str;
+      default = "ghcr.io/blakeblackshear/frigate:0.17.1";
+      description = "Container image to use.";
+    };
 
     acceleration = mkOption {
       type = types.enum [
@@ -24,19 +91,23 @@ in
         "intel"
       ];
       default = "none";
-      description = "Hardware acceleration backend for video decoding.";
+      description = ''
+        Hardware acceleration backend. "intel" enables VAAPI for ffmpeg
+        decoding AND OpenVINO on the iGPU for object detection. Requires
+        /dev/dri to be present.
+      '';
+    };
+
+    dataDir = mkOption {
+      type = types.str;
+      default = "/var/lib/frigate";
+      description = "Host directory for Frigate's config and database.";
     };
 
     mediaLocation = mkOption {
-      type = types.path;
-      default = /var/lib/frigate;
-      description = ''
-        Path where Frigate stores recordings, clips, and its database.
-        Defaults to /var/lib/frigate (SSD). Set to e.g. /media/frigate
-        to store on a separate HDD. When set to a non-default path, the
-        directory is bind-mounted over /var/lib/frigate so Frigate needs
-        no special configuration.
-      '';
+      type = types.str;
+      default = "/var/lib/frigate/media";
+      description = "Host directory for recordings, clips, and snapshots.";
     };
 
     retentionDays = mkOption {
@@ -48,18 +119,33 @@ in
     domain = mkOption {
       type = types.str;
       default = "frigate.gindin.xyz";
-      description = "Public domain name for the Frigate web UI (used for Caddy proxy).";
+      description = "Public domain name for the Frigate web UI.";
+    };
+
+    shmSize = mkOption {
+      type = types.str;
+      default = "256m";
+      description = ''
+        Shared memory size for the container. Frigate uses shm for IPC
+        between processes; the docker default of 64m is too small.
+      '';
+    };
+
+    cacheSize = mkOption {
+      type = types.str;
+      default = "1g";
+      description = "Size of the tmpfs mounted at /tmp/cache inside the container.";
     };
 
     cameras = mkOption {
       default = [ ];
-      description = "List of cameras to configure in Frigate.";
+      description = "Cameras to configure in Frigate.";
       type = types.listOf (
         types.submodule {
           options = {
             name = mkOption {
               type = types.str;
-              description = "Unique camera identifier used in Frigate config and MQTT topics.";
+              description = "Unique camera identifier.";
             };
             host = mkOption {
               type = types.str;
@@ -78,26 +164,41 @@ in
             rtspPath = mkOption {
               type = types.str;
               description = ''
-                RTSP stream path. For Reolink cameras:
+                RTSP stream path. For Reolink:
                   main stream: /h264Preview_01_main
                   sub stream:  /h264Preview_01_sub
               '';
             };
+            subRtspPath = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                Optional substream path. When set, main → record, sub →
+                detect. The `roles` option is ignored when this is set.
+                `detectWidth`/`detectHeight` should match the substream
+                resolution to avoid Frigate rescaling frames.
+              '';
+            };
+            detectWidth = mkOption {
+              type = types.nullOr types.ints.positive;
+              default = null;
+              description = "Width of frames passed to the detect pipeline.";
+            };
+            detectHeight = mkOption {
+              type = types.nullOr types.ints.positive;
+              default = null;
+              description = "Height of frames passed to the detect pipeline.";
+            };
             rtspPasswordEnvVar = mkOption {
               type = types.str;
               default = "FRIGATE_RTSP_PASSWORD";
-              description = ''
-                Name of the environment variable that holds the RTSP password.
-                This variable must be present in the systemd EnvironmentFile
-                provided via the environmentFile option.
-              '';
+              description = "Env var name holding the RTSP password.";
             };
             environmentFile = mkOption {
               type = types.path;
               description = ''
-                Path to a file (typically an agenix secret) containing the
-                RTSP password env var in KEY=VALUE format, e.g.:
-                  FRIGATE_RTSP_PASSWORD=mysecretpassword
+                File containing the RTSP password env var in KEY=VALUE
+                format, typically an agenix secret.
               '';
             };
             roles = mkOption {
@@ -106,7 +207,7 @@ in
                 "detect"
                 "record"
               ];
-              description = "Roles assigned to this camera's input stream.";
+              description = "Roles for the input stream when no substream is configured.";
             };
           };
         }
@@ -115,125 +216,58 @@ in
   };
 
   config = mkIf cfg.enable {
-    # Intel VAAPI hardware acceleration
+    virtualisation.oci-containers.containers.frigate = {
+      image = cfg.image;
+      volumes = [
+        "${configFile}:/config/config.yml:ro"
+        "${cfg.dataDir}:/config"
+        "${cfg.mediaLocation}:/media/frigate"
+        "/etc/localtime:/etc/localtime:ro"
+      ];
+      environmentFiles = map (cam: cam.environmentFile) cfg.cameras;
+      environment = {
+        TZ = config.time.timeZone;
+      };
+      ports = [
+        # Bind to localhost; Caddy reverse-proxies the public domain.
+        "127.0.0.1:${toString globalVars.ports.frigate}:5000"
+      ];
+      extraOptions =
+        [
+          "--shm-size=${cfg.shmSize}"
+          "--tmpfs=/tmp/cache:size=${cfg.cacheSize}"
+        ]
+        ++ lib.optionals (cfg.acceleration == "intel") [
+          "--device=/dev/dri:/dev/dri"
+          # render group GID on the host; needed so the container's frigate
+          # user can open /dev/dri/renderD128 (mode 0660, owned by render).
+          "--group-add=${toString config.users.groups.render.gid}"
+        ];
+    };
+
+    # render group is needed on the host for /dev/dri access by container.
+    users.groups.render = mkIf (cfg.acceleration == "intel") { };
+
     hardware.graphics = mkIf (cfg.acceleration == "intel") {
       enable = true;
-      extraPackages = [ pkgs.intel-media-driver ];
-    };
-
-    services.frigate = {
-      enable = true;
-      hostname = config.networking.hostName;
-      # Disable build-time config check: RTSP passwords come from runtime
-      # agenix secrets (EnvironmentFile) and aren't available in the sandbox.
-      checkConfig = false;
-      settings =
-        {
-          record = {
-            enabled = true;
-            retain.days = cfg.retentionDays;
-          };
-
-          cameras = builtins.listToAttrs (
-            map (cam: {
-              name = cam.name;
-              value = {
-                ffmpeg.inputs = [
-                  {
-                    path = ''rtsp://${cam.username}:{${cam.rtspPasswordEnvVar}}@${cam.host}:${toString cam.rtspPort}${cam.rtspPath}'';
-                    roles = cam.roles;
-                  }
-                ];
-              };
-            }) cfg.cameras
-          );
-        }
-        // lib.optionalAttrs (cfg.acceleration == "intel") {
-          ffmpeg.hwaccel_args = "preset-vaapi";
-        };
-    };
-
-    # Grant frigate process access to /dev/dri for hardware acceleration.
-    # The upstream module already sets SupplementaryGroups = ["render"]; we
-    # extend it to also include "video" so all DRI devices are accessible.
-    systemd.services.frigate.serviceConfig.SupplementaryGroups = mkIf (cfg.acceleration == "intel") (
-      lib.mkAfter [ "video" ]
-    );
-
-    # Frigate's API reads /var/cache/frigate/preview_frames but doesn't create
-    # it on startup (bug in 0.16.3). The upstream module only declares
-    # CacheDirectory=frigate and CacheDirectory=frigate/model_cache, so add
-    # the missing subdirectory here so systemd creates it on service start.
-    systemd.services.frigate.serviceConfig.CacheDirectory = lib.mkAfter [ "frigate/preview_frames" ];
-
-    # Inject RTSP password(s) from agenix secrets into the frigate service
-    systemd.services.frigate.serviceConfig.EnvironmentFile =
-      map (cam: cam.environmentFile) cfg.cameras;
-
-    # When using a custom media location, create the directory and bind-mount
-    # it over /var/lib/frigate so all Frigate data lands on the target path.
-    systemd.tmpfiles.rules = lib.mkIf (cfg.mediaLocation != /var/lib/frigate) [
-      "d ${toString cfg.mediaLocation} 0750 frigate frigate - -"
-    ];
-
-    systemd.services.frigate.serviceConfig.BindPaths = lib.mkIf (cfg.mediaLocation != /var/lib/frigate) [
-      "${toString cfg.mediaLocation}:/var/lib/frigate"
-    ];
-
-    # Persist /var/lib/frigate only when not bind-mounting an external path
-    # (when using mediaLocation, the target directory persists on its own).
-    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable (
-      lib.optionals (cfg.mediaLocation == /var/lib/frigate) [ "/var/lib/frigate" ]
-    );
-
-    # The upstream Frigate NixOS module configures services.nginx with a vhost
-    # for cfg.hostname. By default NixOS nginx adds "listen 0.0.0.0:80" to
-    # every vhost, but Caddy already owns port 80. Override to bind only the
-    # internal localhost port that Caddy will proxy to.
-    #
-    # The upstream module also puts "listen 127.0.0.1:5000;" in extraConfig
-    # (see nixpkgs#370349). We override extraConfig with lib.mkForce to remove
-    # that line so it doesn't duplicate the listen directive generated below.
-    # Keep this in sync with upstream if the VOD settings change.
-    services.nginx.virtualHosts.${config.networking.hostName} = {
-      listen = [
-        {
-          addr = "127.0.0.1";
-          port = globalVars.ports.frigate;
-        }
+      extraPackages = with pkgs; [
+        intel-media-driver
+        # OpenCL runtime — required for OpenVINO GPU plugin
+        intel-compute-runtime
       ];
-      extraConfig = lib.mkForce ''
-        # vod settings
-        vod_base_url "";
-        vod_segments_base_url "";
-        vod_mode mapped;
-        vod_max_mapping_response_size 1m;
-        vod_upstream_location /api;
-        vod_align_segments_to_key_frames on;
-        vod_manifest_segment_durations_mode accurate;
-        vod_ignore_edit_list on;
-        vod_segment_duration 10000;
-        vod_hls_mpegts_align_frames off;
-        vod_hls_mpegts_interleave_frames on;
-
-        # file handle caching / aio
-        open_file_cache max=1000 inactive=5m;
-        open_file_cache_valid 2m;
-        open_file_cache_min_uses 1;
-        open_file_cache_errors on;
-        aio on;
-
-        # https://github.com/kaltura/nginx-vod-module#vod_open_file_thread_pool
-        vod_open_file_thread_pool default;
-
-        # vod caches
-        vod_metadata_cache metadata_cache 512m;
-        vod_mapping_cache mapping_cache 5m 10m;
-
-        # gzip manifest
-        gzip_types application/vnd.apple.mpegurl;
-      '';
     };
+
+    systemd.tmpfiles.rules = [
+      "d ${cfg.dataDir} 0755 root root - -"
+      "d ${cfg.mediaLocation} 0755 root root - -"
+    ];
+
+    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable (
+      [ cfg.dataDir ]
+      # Only persist mediaLocation if it's not on a separately-mounted disk
+      # (which is the typical reason to override it).
+      ++ lib.optional (lib.hasPrefix cfg.dataDir cfg.mediaLocation) cfg.mediaLocation
+    );
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
       {

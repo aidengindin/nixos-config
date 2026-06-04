@@ -30,9 +30,7 @@
     };
     frigate-reolink-rtsp-password = {
       file = ../../secrets/frigate-reolink-rtsp-password.age;
-      owner = "frigate";
-      group = "frigate";
-      mode = "0440";
+      mode = "0400";
     };
     mosquitto-zigbee2mqtt-password = {
       file = ../../secrets/mosquitto-zigbee2mqtt-password.age;
@@ -296,6 +294,9 @@
           username = "admin";
           rtspPort = 554;
           rtspPath = "/h264Preview_01_main";
+          subRtspPath = "/h264Preview_01_sub";
+          detectWidth = 896;
+          detectHeight = 512;
           rtspPasswordEnvVar = "FRIGATE_RTSP_PASSWORD";
           environmentFile = config.age.secrets.frigate-reolink-rtsp-password.path;
         }
