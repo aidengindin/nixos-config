@@ -39,8 +39,8 @@ in
 
     services.ollama = {
       enable = true;
+      # 26.05: acceleration option removed; select via package instead.
       package = if cfg.enableRocm then unstablePkgs.ollama-rocm else unstablePkgs.ollama;
-      acceleration = mkIf cfg.enableRocm "rocm";
       rocmOverrideGfx = mkIf cfg.enableRocm "11.0.0";
     };
 

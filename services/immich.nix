@@ -47,16 +47,13 @@ in
         IMMICH_MICROSERVICES_METRICS_PORT = toString globalVars.ports.immichMicroservicesMetrics;
       };
 
-      # Use upstream module's database management
+      # Use upstream module's database management. VectorChord is always
+      # enabled upstream as of 26.05 (pgvecto.rs alternative removed).
       database = {
         enable = true;
         createDB = true;
         name = "immich";
         user = "immich";
-
-        # Use VectorChord stack
-        enableVectors = false;
-        enableVectorChord = true;
       };
 
       redis.enable = true;

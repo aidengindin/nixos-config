@@ -22,7 +22,7 @@
     ./pocket-id.nix
     ./postgres.nix
     ./prometheusExporter.nix
-    ./promtail.nix
+    ./alloy.nix
     ./restic.nix
     ./tandoor.nix
     ./withings-sync.nix

@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  hyprlandFlake,
   dmsFlake,
   unstablePkgs,
   ...
@@ -44,8 +43,6 @@ in
     programs.hyprland = {
       enable = true;
       withUWSM = true;
-      package = hyprlandFlake.packages.${pkgs.system}.hyprland;
-      portalPackage = hyprlandFlake.packages.${pkgs.system}.xdg-desktop-portal-hyprland;
     };
 
     # greetd is enabled and its session command is set by the DMS greeter module

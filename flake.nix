@@ -1,16 +1,11 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    hyprland = {
-      url = "github:hyprwm/Hyprland";
-      inputs.nixpkgs.follows = "unstable";
-    };
 
     # managing user environments - both stable & unstable modules
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hm-unstable = {
@@ -88,7 +83,6 @@
       liftosaur-sync,
       mcp-servers-nix,
       auto-headache-tracker,
-      hyprland,
       dms,
       claude-desktop,
     }:
@@ -97,7 +91,11 @@
 
       pkgsConfig = {
         system = "x86_64-linux";
-        config.allowUnfree = true;
+        config = {
+          allowUnfree = true;
+          # claude-desktop-debian pins electron 39, which 26.05 marks insecure.
+          permittedInsecurePackages = [ "electron-39.8.10" ];
+        };
       };
 
       # pre-configured pkgs instances
@@ -124,7 +122,6 @@
       # special args for all NixOS systems
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
-        hyprlandFlake = hyprland;
         dmsFlake = dms;
         claudeDesktopFlake = claude-desktop;
         mcpServersNix = mcp-servers-nix;

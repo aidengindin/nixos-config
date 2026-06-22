@@ -11,7 +11,7 @@ let
       caddyMetrics = 10007;
       blockyHttp = 4000;
       loki = 10004;
-      promtail = 10005;
+      alloy = 10005;
 
       frigate = 5000;
 

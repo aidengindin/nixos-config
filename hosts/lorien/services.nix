@@ -122,7 +122,7 @@
       openPort = true;
     };
 
-    promtail = {
+    alloy = {
       enable = true;
       lokiHost = "osgiliath";
     };

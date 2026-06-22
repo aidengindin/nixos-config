@@ -80,9 +80,15 @@ in
       };
     };
 
-    fonts.packages = with pkgs; [
-      nerd-fonts.hasklug
-    ];
+    fonts = {
+      enableDefaultPackages = true;
+      fontDir.enable = true;
+      packages = with pkgs; [
+        nerd-fonts.hasklug
+        noto-fonts
+        noto-fonts-color-emoji
+      ];
+    };
 
     services.printing.enable = true;
 

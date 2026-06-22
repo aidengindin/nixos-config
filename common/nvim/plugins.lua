@@ -524,7 +524,7 @@ require("lazy").setup({
             api_key = "TERM",
             name = "Ollama",
             end_point = "http://localhost:11434/v1/completions",
-            model = "qwen2.5-coder:3b",
+            model = "gemma4:e2b",
             optional = {
               max_tokens = 50,
               top_p = 0.9,

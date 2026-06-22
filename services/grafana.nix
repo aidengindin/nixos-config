@@ -43,7 +43,7 @@ in
       );
     };
 
-    openLokiPort = mkEnableOption "Whether to open the Loki port for external promtail instances";
+    openLokiPort = mkEnableOption "Whether to open the Loki port for external alloy instances";
 
     dashboards = mkOption {
       description = "Dashboard files to provision";
@@ -146,6 +146,10 @@ in
           user = "grafana";
           host = "/run/postgresql"; # apparently doesn't support specifying a port, so don't change it!
         };
+        # 26.05 removed the default value. Keep the previous nixpkgs default so
+        # existing DB-encrypted secrets (OAuth tokens, datasource passwords) stay
+        # decryptable. Rotate via a 3rd-party tool if/when needed.
+        security.secret_key = "SW2YcwTIb9zpOOhoPsMm";
         "auth.basic".enabled = false;
         "auth.generic_oauth" = {
           enabled = true;

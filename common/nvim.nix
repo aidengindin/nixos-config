@@ -7,7 +7,7 @@
         defaultEditor = true;
 
         # Move config from home.file to neovim module to avoid conflicts
-        extraLuaConfig = builtins.readFile ./nvim/init.lua;
+        initLua = builtins.readFile ./nvim/init.lua;
       };
 
       # Use xdg.configFile instead of home.file to manage neovim config files

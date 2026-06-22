@@ -74,7 +74,7 @@
       openPort = false;
     };
 
-    promtail.enable = true;
+    alloy.enable = true;
 
     grafana = {
       enable = true;
@@ -148,14 +148,14 @@
           port = globalVars.ports.loki;
         }
         {
-          name = "promtail-osgiliath";
+          name = "alloy-osgiliath";
           host = "127.0.0.1";
-          port = globalVars.ports.promtail;
+          port = globalVars.ports.alloy;
         }
         {
-          name = "promtail-lorien";
+          name = "alloy-lorien";
           host = "lorien";
-          port = globalVars.ports.promtail;
+          port = globalVars.ports.alloy;
         }
       ];
       dashboards = [
