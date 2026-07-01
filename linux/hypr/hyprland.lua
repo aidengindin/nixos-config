@@ -30,8 +30,8 @@ local crust     = "rgba(11111bff)"
 ---- MONITORS ----
 --------------------
 
-hl.monitor({ output = "eDP-1", mode = "2880x1920@120.0",  position = "0x0",  scale = 1.67 })
-hl.monitor({ output = "DP-8",  mode = "3440x1440@165.00", position = "auto", scale = 1.25 })
+hl.monitor({ output = "eDP-1", mode = "2880x1920@120.0",  position = "0x0",  scale = 1.5 })
+hl.monitor({ output = "desc:HP Inc. OMEN 34c CNC3321M7R", mode = "3440x1440@165.00", position = "auto", scale = 1 })
 
 --------------------
 ---- ENVIRONMENT ----
