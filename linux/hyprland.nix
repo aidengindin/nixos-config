@@ -71,7 +71,15 @@ in
     security.pam.services = {
       greetd.fprintAuth = false;
       dankshell.fprintAuth = false;
+      # Unlock the login keyring at greetd login using the entered password, so
+      # gnome-keyring's Secret Service is already unlocked for the session. Without
+      # this (and services.gnome.gnome-keyring below) there's no Secret Service, so
+      # libsecret apps like Claude Desktop / Electron fall back to plaintext ("basic
+      # text") credential storage and warn about it.
+      greetd.enableGnomeKeyring = true;
     };
+
+    services.gnome.gnome-keyring.enable = true;
 
     xdg.portal = {
       enable = true;
@@ -213,6 +221,9 @@ in
       ".config/DankMaterialShell"
       ".local/state/DankMaterialShell"
       ".cache/DankMaterialShell"
+      # gnome-keyring stores the encrypted login keyring here; without persistence
+      # it'd be recreated empty every boot, discarding saved credentials.
+      ".local/share/keyrings"
     ];
 
     # DankGreeter has no user dropdown / default-user option; it auto-prefills

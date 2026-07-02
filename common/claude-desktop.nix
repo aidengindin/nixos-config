@@ -2,25 +2,39 @@
   config,
   lib,
   pkgs,
-  claudeDesktopFlake,
+  customPkgs,
   ...
 }:
 let
   cfg = config.agindin.claude.desktop;
   inherit (lib) mkEnableOption mkIf filterAttrs;
 
-  basePkg = claudeDesktopFlake.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  basePkg = customPkgs.claude-desktop;
 
-  # The upstream launcher defaults to XWayland (--ozone-platform=x11); on Hyprland
-  # with fractional scaling that means bitmap-scaled, blurry text. Setting
-  # CLAUDE_USE_WAYLAND=1 makes it emit native Wayland flags. Cost (upstream-noted):
+  # Path of the setuid chrome-sandbox wrapper declared in config below. The vendored
+  # chrome-sandbox can't be setuid in the read-only Nix store, so we point Electron at
+  # this wrapper via CHROME_DEVEL_SANDBOX instead of resorting to --no-sandbox.
+  sandboxWrapper = "/run/wrappers/bin/claude-desktop-chrome-sandbox";
+
+  # Cowork boots a QEMU microVM. The app locates qemu-system-x86_64 by scanning PATH
+  # (so we add qemu to the wrapper's PATH below) and ships its own virtiofsd, but it
+  # hardcodes the UEFI firmware lookup to the Debian FHS path /usr/share/OVMF/… — which
+  # doesn't exist on NixOS. That gap is bridged with tmpfiles symlinks in config below.
+  qemuPkg = pkgs.qemu_kvm;
+
+  # The official Electron build defaults to XWayland; on Hyprland with fractional scaling
+  # that means bitmap-scaled, blurry text. --ozone-platform-hint=auto makes Electron pick
+  # native Wayland when available (falling back to X11 elsewhere). Cost (upstream-noted):
   # global hotkeys stop working under native Wayland — fine for menu-launched use.
   claudeDesktop = pkgs.symlinkJoin {
     name = "claude-desktop-wayland";
     paths = [ basePkg ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
-      wrapProgram $out/bin/claude-desktop --set CLAUDE_USE_WAYLAND 1
+      wrapProgram $out/bin/claude-desktop \
+        --add-flags "--ozone-platform-hint=auto" \
+        --set CHROME_DEVEL_SANDBOX ${sandboxWrapper} \
+        --prefix PATH : ${lib.makeBinPath [ qemuPkg ]}
     '';
   };
 
@@ -34,6 +48,45 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = [ claudeDesktop ];
+
+    # Setuid-root helper for Chromium's sandbox. The store copy can't carry the setuid
+    # bit, so expose it here; CHROME_DEVEL_SANDBOX (set in the wrapper above) points at it.
+    security.wrappers.claude-desktop-chrome-sandbox = {
+      source = "${basePkg}/lib/claude-desktop/chrome-sandbox";
+      owner = "root";
+      group = "root";
+      setuid = true;
+    };
+
+    # Cowork's QEMU VM needs KVM plus UEFI firmware and virtiofsd. The app only
+    # probes Debian FHS paths for these, so bridge them with tmpfiles symlinks into
+    # the store:
+    #   * OVMF firmware: a 4M split-flash build — CODE_4M is the app's first-choice
+    #     candidate; it derives the VARS path by replacing CODE→VARS. Both point at
+    #     one matching store pair.
+    #   * virtiofsd: the app ships its own copy but only falls back to it on Ubuntu
+    #     22; everywhere else it looks solely at /usr/libexec|/usr/bin/virtiofsd, so
+    #     provide it there from nixpkgs.
+    # /dev/kvm and /dev/vhost-vsock are already 0666 on this host; the kvm group add
+    # is just defensive in case those perms ever tighten to the usual root:kvm 0660.
+    users.users.agindin.extraGroups = [ "kvm" ];
+    systemd.tmpfiles.rules =
+      let
+        ovmf = pkgs.OVMF.fd;
+      in
+      [
+        "L+ /usr/share/OVMF/OVMF_CODE_4M.fd - - - - ${ovmf}/FV/OVMF_CODE.fd"
+        "L+ /usr/share/OVMF/OVMF_VARS_4M.fd - - - - ${ovmf}/FV/OVMF_VARS.fd"
+        "L+ /usr/libexec/virtiofsd - - - - ${pkgs.virtiofsd}/bin/virtiofsd"
+      ];
+
+    # Claude Desktop's agent loop (both local agent mode and the Cowork host side)
+    # downloads the Claude Code CLI at runtime to ~/.config/Claude/claude-code/<ver>/
+    # and runs it on the host. That's a generic-linux, dynamically-linked glibc binary
+    # whose ELF interpreter /lib64/ld-linux-x86-64.so.2 NixOS points at a stub that
+    # just errors — so it exits 127 ("Could not start dynamically linked executable").
+    # nix-ld swaps in a real loader (+ library path) for such runtime-fetched binaries.
+    programs.nix-ld.enable = true;
 
     # Share the stdio MCP servers used by the Claude Code TUI. Claude Desktop
     # only reads mcpServers from this file; it writes its own auth/session state

@@ -14,14 +14,23 @@
       servers = {
         filesystem = {
           enable = true;
-          args = [ "/home/agindin/code" "/home/agindin/Documents" ];
+          args = [
+            "/home/agindin/code"
+            "/home/agindin/Documents"
+          ];
         };
         git.enable = true;
         fetch.enable = true;
         nixos.enable = true;
-        github = { enable = true; tokenFile = config.age.secrets.khazad-dum-gh-token.path; };
+        github = {
+          enable = true;
+          tokenFile = config.age.secrets.khazad-dum-gh-token.path;
+        };
         liftosaur.enable = true;
-        intervals = { enable = true; envFile = config.age.secrets.khazad-dum-intervals-env.path; };
+        intervals = {
+          enable = true;
+          envFile = config.age.secrets.khazad-dum-intervals-env.path;
+        };
       };
     };
     kitty.enable = true;
@@ -31,7 +40,6 @@
     mpv.enable = true;
     neomutt.enable = true;
     spotify.enable = true;
-    vesktop.enable = true;
   };
 
   home-manager.users.agindin.home.sessionVariablesExtra = ''

@@ -59,11 +59,6 @@
       url = "git+ssh://git@github.com/aidengindin/auto-headache-tracker.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    claude-desktop = {
-      url = "github:aaddrick/claude-desktop-debian";
-      inputs.nixpkgs.follows = "unstable";
-    };
   };
 
   outputs =
@@ -84,7 +79,6 @@
       mcp-servers-nix,
       auto-headache-tracker,
       dms,
-      claude-desktop,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -93,7 +87,7 @@
         system = "x86_64-linux";
         config = {
           allowUnfree = true;
-          # claude-desktop-debian pins electron 39, which 26.05 marks insecure.
+          # bitwarden-desktop pins electron 39, which 26.05 marks insecure.
           permittedInsecurePackages = [ "electron-39.8.10" ];
         };
       };
@@ -123,7 +117,6 @@
       standardSpecialArgs = {
         inherit agenix colmena unstablePkgs;
         dmsFlake = dms;
-        claudeDesktopFlake = claude-desktop;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
