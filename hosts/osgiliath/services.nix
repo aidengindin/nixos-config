@@ -6,6 +6,14 @@
 {
   imports = [ ../../services ];
 
+  # calibre-web-automated imports books as uid 1000 with a umask that leaves its
+  # library subdirectories group-unwritable. This default ACL makes everything
+  # created under the library group-writable by `media`, so the calibre-news
+  # runner (a member of `media`) can prune old Economist issues.
+  systemd.tmpfiles.rules = [
+    "A+ ${config.agindin.services.calibre-web.calibreLibrary} - - - - d:group:media:rwx"
+  ];
+
   age.secrets = {
     liftosaur-sync-env = {
       file = ../../secrets/liftosaur-sync-env.age;
@@ -219,6 +227,21 @@
     };
 
     calibre-web.enable = true;
+
+    calibre-news = {
+      enable = true;
+      # Runs as the dedicated `calibre-news` system user (member of `media`).
+      recipes.economist = {
+        recipe = ../../packages/economist-recipe/economist.recipe;
+        schedule = "Fri *-*-* 04:00:00";
+        outputDir = config.agindin.services.calibre-web.ingestDir;
+        cleanup = {
+          enable = true;
+          directory = "${config.agindin.services.calibre-web.calibreLibrary}/The Economist";
+          keep = 4;
+        };
+      };
+    };
 
     linkwarden.enable = true;
 

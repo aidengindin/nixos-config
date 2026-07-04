@@ -3,3 +3,7 @@
 result
 
 **/.claude/settings.local.json
+
+# Python bytecode (e.g. from calibre recipe tooling)
+__pycache__/
+*.pyc
