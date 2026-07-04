@@ -127,8 +127,19 @@ in
       "d /var/lib/nixos-deploy/.ssh 0700 nixos-deploy nixos-deploy -"
     ];
 
-    agindin.impermanence.systemFiles = lib.mkIf config.agindin.impermanence.enable [
-      "/var/lib/nixos-deploy/commands.log"
+    # Persist the deploy user's home (audit log + SSH known_hosts) with correct
+    # ownership. Persisting the whole *directory* — rather than commands.log as a
+    # standalone file — is what makes the log writable: the file-level persist put
+    # the /persist target under a root-owned parent, so the wrapper (running as
+    # nixos-deploy) got EACCES appending to it. A directory persist lets us own
+    # the persistent copy.
+    environment.persistence."/persist".directories = lib.mkIf config.agindin.impermanence.enable [
+      {
+        directory = "/var/lib/nixos-deploy";
+        user = "nixos-deploy";
+        group = "nixos-deploy";
+        mode = "0700";
+      }
     ];
   };
 }
