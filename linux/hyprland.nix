@@ -9,6 +9,21 @@
 let
   cfg = config.agindin.hyprland;
   inherit (lib) mkIf mkEnableOption;
+
+  # Two DMS plugins we install live in monorepos; fetch each repo once and
+  # point the individual plugin `src`s at the relevant subdirectory.
+  avengeDmsPlugins = pkgs.fetchFromGitHub {
+    owner = "AvengeMedia";
+    repo = "dms-plugins";
+    rev = "f4583449f12920e0a2f16808b00a860c27f0173d";
+    hash = "sha256-QkQPqP7Wmo5DLRyKNSY5NuOau4LSaSfz3DYdHDLxluA=";
+  };
+  nderscoreDmsPlugins = pkgs.fetchFromGitHub {
+    owner = "nderscore";
+    repo = "dms-plugins";
+    rev = "851e06ca204f17a97414a666728246fd3acad3c6";
+    hash = "sha256-7sirKRVHVibRJFco4uqPpC7sfwIIqG7bqvDG6EAJSRw=";
+  };
 in
 {
   options.agindin.hyprland = {
@@ -31,6 +46,10 @@ in
       libnotify
       playerctl
       wl-clipboard
+
+      # Runtime dependency of the amdGpuMonitorRevive DMS plugin. (mpv, needed
+      # by the ambientSound plugin, is already installed via common/mpv.nix.)
+      amdgpu_top
 
       glib
       gsettings-desktop-schemas
@@ -109,8 +128,10 @@ in
     # enable it here or the bar shows no battery.
     services.upower.enable = true;
 
-    # TODO: get kde connect working
-    # programs.kdeconnect.enable = true;
+    # KDE Connect: opens TCP/UDP 1714-1764 for phone pairing. Consumed by the
+    # DankKDEConnect ("Phone Connect") DMS plugin, which drives kdeconnectd
+    # over D-Bus.
+    programs.kdeconnect.enable = true;
 
     home-manager = {
       # DMS writes settings.json/clsettings.json itself; when these become
@@ -133,6 +154,53 @@ in
           # after intentional GUI tuning, then rebuild.
           settings = lib.importJSON ./dms/settings.json;
 
+          # Third-party DMS plugins. Each attr name MUST equal the plugin's
+          # manifest `id` (from its plugin.json): the module installs the source
+          # to ~/.config/DankMaterialShell/plugins/<name> AND keys the generated
+          # plugin_settings.json by <name>, and DMS matches enabled-state by
+          # manifest id — a mismatch installs the plugin but never enables it.
+          # Bar-widget plugins also need a layout entry in dms/settings.json
+          # (barConfigs); launcher plugins are reached by their trigger string.
+          managePluginSettings = true;
+          plugins = {
+            # Launchers (spotlight triggers): ":e" emoji, "=" calc, "nix" pkgs.
+            emojiLauncher.src = pkgs.fetchFromGitHub {
+              owner = "devnullvoid";
+              repo = "dms-emoji-launcher";
+              rev = "8ff394e3ddfcb2fd755ed2e7b4c6f01f3e26e596";
+              hash = "sha256-fmIddCvACwO8wbAtLBMtDnEXXQJjb7+o2s4jW3f8VIU=";
+            };
+            calculator.src = pkgs.fetchFromGitHub {
+              owner = "rochacbruno";
+              repo = "DankCalculator";
+              rev = "1db5865419a40a33171a475855a59e0b8bf7187f";
+              hash = "sha256-j8C62+sevr6b+akzVSAqUVysIhb6Vbr8jnWcTXeOtE8=";
+            };
+            nixPackageRunner.src = pkgs.fetchFromGitHub {
+              owner = "iahccc";
+              repo = "NixPackageRunner";
+              rev = "829ad93c15b7c0ec82a6d7483728029037442601";
+              hash = "sha256-ur+1oN+QmTu7p5ZMpL3rCd4JGYbkerko4twa+tH6uvg=";
+            };
+
+            # Bar widgets (placed in dms/settings.json barConfigs).
+            amdGpuMonitorRevive.src = pkgs.fetchFromGitHub {
+              owner = "JDKamalakar";
+              repo = "DMS-AMD_GPU_Monitor_Revive";
+              rev = "d99d4f0673635a7e71bc457fbbd3319f84c18b52";
+              hash = "sha256-/NceDiewqhi55w8psJvOhEhscME/s4bxqykcobCdgtI=";
+            };
+            ambientSound.src = pkgs.fetchFromGitHub {
+              owner = "hthienloc";
+              repo = "dms-ambient-sound";
+              rev = "d1db2c49ec410a601f2611d805cbfb97aaa7c0cb";
+              hash = "sha256-PwmKzTVgEsL8NYuaPXav3gMZtQzSiEdyp1LvuEQX8AU=";
+            };
+            hyprlandSubmapIndicator.src = "${nderscoreDmsPlugins}/HyprlandSubmapIndicator";
+            dankKDEConnect.src = "${avengeDmsPlugins}/DankKDEConnect";
+            dankPomodoroTimer.src = "${avengeDmsPlugins}/DankPomodoroTimer";
+          };
+
           session = {
             # DMS only applies monitorWallpapers when perMonitorWallpaper is
             # true; otherwise it uses the (empty) global wallpaperPath.
@@ -144,6 +212,11 @@ in
             };
 
             # Night mode: 2500K (DMS minimum), auto on a 19:00–05:00 schedule.
+            # nightModeEnabled is the master switch — with it off, DMS never
+            # evaluates the schedule (DisplayService.evaluateNightMode returns
+            # early). With master + auto both on, the gamma daemon holds 6500K
+            # (neutral) during the day, so this doesn't tint daytime hours.
+            nightModeEnabled = true;
             nightModeTemperature = 2500;
             nightModeAutoEnabled = true;
             nightModeAutoMode = "time";
@@ -152,6 +225,54 @@ in
             nightModeEndHour = 5;
             nightModeEndMinute = 0;
           };
+        };
+
+        # DMS bug: gamma control (night mode) is only applied to outputs that
+        # exist when the shell starts, so a hotplugged monitor never gets night
+        # mode. Until that's fixed upstream, watch Hyprland's event socket and
+        # restart DMS whenever a monitor is connected.
+        systemd.user.services.dms-monitor-restart = {
+          Unit = {
+            Description = "Restart DMS when a monitor is connected";
+            After = [ "graphical-session.target" ];
+            PartOf = [ "graphical-session.target" ];
+          };
+          Service = {
+            ExecStart = lib.getExe (
+              pkgs.writeShellApplication {
+                name = "dms-monitor-restart";
+                runtimeInputs = [ pkgs.socat ];
+                text = ''
+                  socket="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2"
+
+                  # The socket can appear slightly after graphical-session.target.
+                  for _ in $(seq 1 50); do
+                    [[ -S $socket ]] && break
+                    sleep 0.2
+                  done
+                  [[ -S $socket ]]
+
+                  socat -u "UNIX-CONNECT:$socket" - | while IFS= read -r line; do
+                    case $line in
+                    "monitoradded>>"*)
+                      # Let the output settle, then drain the pipe so a burst of
+                      # events (e.g. a dock with several displays) coalesces
+                      # into a single restart.
+                      sleep 2
+                      while IFS= read -r -t 0.1 line; do :; done
+                      systemctl --user try-restart dms.service
+                      ;;
+                    esac
+                  done
+                '';
+              }
+            );
+            # socat exits when Hyprland goes away; always come back up so a
+            # compositor restart doesn't leave us dead.
+            Restart = "always";
+            RestartSec = 2;
+          };
+          Install.WantedBy = [ "graphical-session.target" ];
         };
 
         # Signal dark mode preference to all apps via xdg-desktop-portal-gtk.

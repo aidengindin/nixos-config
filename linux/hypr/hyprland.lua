@@ -267,6 +267,7 @@ hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
 
 -- Utilities
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("dms ipc control-center toggle"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"))
 
 -- Common apps
@@ -274,9 +275,3 @@ hl.bind(mainMod .. " + space",  hl.dsp.exec_cmd("dms ipc call spotlight toggle")
 hl.bind(mainMod .. " + return", hl.dsp.exec_cmd("kitty --title kitty"))
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd("kitty --detach yazi"))
 
--- Hyper key apps
-hl.bind(hyper .. " + A", hl.dsp.exec_cmd("firefox"))
-hl.bind(hyper .. " + S", hl.dsp.exec_cmd("anki"))
-hl.bind(hyper .. " + D", hl.dsp.exec_cmd("zwift"))
-hl.bind(hyper .. " + F", hl.dsp.exec_cmd("kitty --detach spotify_player"))
-hl.bind(hyper .. " + M", hl.dsp.exec_cmd("kitty --detach neomutt"))

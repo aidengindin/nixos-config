@@ -122,6 +122,16 @@
       "id": "darkMode",
       "enabled": true,
       "width": 50
+    },
+    {
+      "id": "doNotDisturb",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "idleInhibitor",
+      "enabled": true,
+      "width": 50
     }
   ],
   "showWorkspaceIndex": true,
@@ -236,9 +246,9 @@
   "soundNewNotification": true,
   "soundVolumeChanged": true,
   "soundPluggedIn": true,
-  "acMonitorTimeout": 0,
+  "acMonitorTimeout": 900,
   "acLockTimeout": 600,
-  "acSuspendTimeout": 0,
+  "acSuspendTimeout": 1800,
   "acSuspendBehavior": 0,
   "acProfileName": "",
   "batteryMonitorTimeout": 0,
@@ -406,6 +416,7 @@
       "showOnLastDisplay": true,
       "leftWidgets": [
         "workspaceSwitcher",
+        "hyprlandSubmapIndicator",
         "focusedWindow"
       ],
       "centerWidgets": [
@@ -427,6 +438,10 @@
           "enabled": true
         },
         {
+          "id": "dankKDEConnect",
+          "enabled": true
+        },
+        {
           "id": "clipboard",
           "enabled": true
         },
@@ -436,6 +451,18 @@
         },
         {
           "id": "memUsage",
+          "enabled": true
+        },
+        {
+          "id": "amdGpuMonitorRevive",
+          "enabled": true
+        },
+        {
+          "id": "ambientSound",
+          "enabled": true
+        },
+        {
+          "id": "dankPomodoroTimer",
           "enabled": true
         },
         {
