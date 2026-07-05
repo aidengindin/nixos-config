@@ -196,6 +196,11 @@ in
     boot.initrd.systemd.services.wipe-root = mkIf config.boot.initrd.systemd.enable {
       description = "Wipe BTRFS root subvolume";
       wantedBy = [ "initrd.target" ];
+      # DefaultDependencies=no strips systemd's implicit ordering, so we must
+      # explicitly wait for LUKS decryption; otherwise the script races the
+      # cryptsetup unit and tries to mount /dev/mapper/cryptroot before it exists.
+      after = lib.optionals cfg.useLuks [ "systemd-cryptsetup@cryptroot.service" ];
+      requires = lib.optionals cfg.useLuks [ "systemd-cryptsetup@cryptroot.service" ];
       before = [ "sysroot.mount" ];
       unitConfig.DefaultDependencies = "no";
       serviceConfig.Type = "oneshot";
