@@ -32,15 +32,15 @@
       "locked": {
         "lastModified": 1778796605,
         "narHash": "sha256-3zAoDIyq0w4iNyLmjZItD7B0/ieDshk5SdEgI8QZNec=",
-        "ref": "refs/heads/main",
+        "owner": "aidengindin",
+        "repo": "auto-headache-tracker",
         "rev": "86e0ffd0e9bd213a895b47cc08c8bde22c3421cd",
-        "revCount": 4,
-        "type": "git",
-        "url": "ssh://git@github.com/aidengindin/auto-headache-tracker.git"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "ssh://git@github.com/aidengindin/auto-headache-tracker.git"
+        "owner": "aidengindin",
+        "repo": "auto-headache-tracker",
+        "type": "github"
       }
     },
     "colmena": {

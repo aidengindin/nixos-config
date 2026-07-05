@@ -56,7 +56,7 @@
     };
 
     auto-headache-tracker = {
-      url = "git+ssh://git@github.com/aidengindin/auto-headache-tracker.git";
+      url = "github:aidengindin/auto-headache-tracker";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
