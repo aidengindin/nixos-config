@@ -27,10 +27,10 @@ jobs:
 
       - name: Update custom package hashes (nix-update)
         run: |
-          nix run nixpkgs#nix-update -- --flake .#calibre-plugins
-          nix run nixpkgs#nix-update -- --flake .#withings-sync --version=branch
-          nix run nixpkgs#nix-update -- --flake .#catppuccin-userstyles --version=unstable
-          nix run nixpkgs#nix-update -- --flake .#intervals-mcp-server --version=unstable
+          nix run nixpkgs#nix-update -- --flake calibre-plugins
+          nix run nixpkgs#nix-update -- --flake withings-sync --version=branch
+          nix run nixpkgs#nix-update -- --flake catppuccin-userstyles --version=unstable
+          nix run nixpkgs#nix-update -- --flake intervals-mcp-server --version=unstable
 
       - name: Update caddy-cloudflare hash
         run: bash scripts/update-caddy-hash.sh
