@@ -35,7 +35,8 @@ jobs:
         #     not this repo, so nix-update can't locate/rewrite it.
         run: |
           nix run nixpkgs#nix-update -- --flake catppuccin-userstyles --version=unstable
-          nix run nixpkgs#nix-update -- --flake intervals-mcp-server --version=unstable
+          # intervals-mcp-server has no releases/tags; track the default branch.
+          nix run nixpkgs#nix-update -- --flake intervals-mcp-server --version=branch
 
       - name: Update caddy-cloudflare hash
         run: bash scripts/update-caddy-hash.sh
