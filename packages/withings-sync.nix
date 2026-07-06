@@ -9,16 +9,20 @@ let
     };
   };
 in
-pythonPackagesOverride.pkgs.withings-sync.overrideAttrs (_oldAttrs: {
+pythonPackagesOverride.pkgs.withings-sync.overrideAttrs (oldAttrs: {
   src = unstablePkgs.fetchFromGitHub {
     owner = "aidengindin";
     repo = "withings-sync";
     rev = "feat/credential-file-env-variable";
     sha256 = "sha256-mZi07BzzyKyAPqF/2AZLegeQxV+1Yx/3fwbN+BT1T/w=";
   };
-  propagatedBuildInputs = (_oldAttrs.propagatedBuildInputs or [ ]) ++ [
+  propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or [ ]) ++ [
     pythonPackagesOverride.pkgs.setuptools
   ];
   doCheck = false;
   doInstallCheck = false;
+  # Upstream meta.changelog interpolates `src.tag`, which is null since we pin
+  # a branch via `rev`; drop it so meta evaluation (e.g. nix-update) doesn't
+  # fail on coercing null to a string.
+  meta = (oldAttrs.meta or { }) // { changelog = null; };
 })
