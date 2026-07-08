@@ -13,6 +13,12 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    # declarative Neovim (release matched to nixpkgs 26.05)
+    nixvim = {
+      url = "github:nix-community/nixvim/nixos-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     colmena.url = "github:zhaofengli/colmena";
 
     disko = {
@@ -79,6 +85,7 @@
       mcp-servers-nix,
       auto-headache-tracker,
       dms,
+      nixvim,
     }:
     let
       inherit (nixpkgs.lib) mapAttrs;
@@ -115,7 +122,7 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix colmena unstablePkgs;
+        inherit agenix colmena unstablePkgs nixvim;
         dmsFlake = dms;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
