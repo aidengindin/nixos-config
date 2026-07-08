@@ -58,7 +58,6 @@ in
             };
           };
           web-devicons.enable = true;
-          telescope.enable = true;
           snacks = {
             enable = true;
             settings = {
@@ -82,6 +81,7 @@ in
               input.enabled = true;
               picker = {
                 enabled = true;
+                ui_select = true;
                 sources.explorer.win.list.keys = {
                   "j" = "explorer_close";
                   "k" = "list_down";
@@ -157,7 +157,7 @@ in
 
     environment.systemPackages = with pkgs; [
       fzf
-      ripgrep # telescope live_grep / grep_string
+      ripgrep # snacks picker grep / files
       lazygit
     ];
 

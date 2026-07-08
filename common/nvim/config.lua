@@ -101,7 +101,6 @@ require("catppuccin").setup({
       enabled = true,
       indent_scope_color = "text",
     },
-    telescope = true,
     treesitter = true,
     which_key = true
   }
@@ -139,7 +138,7 @@ require("minuet").setup({
   },
   virtualtext = {
     auto_trigger_ft = { "*" },
-    auto_trigger_ignore_ft = { "TelescopePrompt", "snacks_picker" },
+    auto_trigger_ignore_ft = { "snacks_picker_input", "snacks_picker" },
     keymap = {
       accept = "<A-j>",
       accept_line = "<A-k>",
@@ -385,19 +384,11 @@ local minuet_models = {
 }
 
 local choose_model = function()
-  require("telescope.pickers").new({}, {
-    prompt_title = "Minuet Model",
-    finder = require("telescope.finders").new_table({ results = minuet_models }),
-    sorter = require("telescope.config").values.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr)
-      require("telescope.actions").select_default:replace(function()
-        local selection = require("telescope.actions.state").get_selected_entry()
-        require("telescope.actions").close(prompt_bufnr)
-        require("minuet").config.provider_options.openai_fim_compatible.model = selection[1]
-      end)
-      return true
-    end,
-  }):find()
+  vim.ui.select(minuet_models, { prompt = "Minuet Model" }, function(choice)
+    if choice then
+      require("minuet").config.provider_options.openai_fim_compatible.model = choice
+    end
+  end)
 end
 
 local snacks = require("snacks")
@@ -422,7 +413,7 @@ wk.add({
   { "<leader>a.c", choose_model,                                  desc = "choose completion model" },
 
   { "<leader>b",  desc = "buffer",                                mode = "n" },
-  { "<leader>bb", "<cmd>Telescope buffers<cr>",                   desc = "list buffers" },
+  { "<leader>bb", function() snacks.picker.buffers() end,         desc = "list buffers" },
   { "<leader>bd", "<cmd>bdelete<cr>",                             desc = "delete buffer" },
   { "<leader>bn", "<cmd>bnext<cr>",                               desc = "next buffer" },
   { "<leader>bp", "<cmd>bprevious<cr>",                           desc = "previous buffer" },
@@ -430,17 +421,17 @@ wk.add({
   { "<leader>c",  desc = "code",                                  mode = "n" },
   { "<leader>cc", "<cmd>lua vim.lsp.buf.code_action()<cr>",       desc = "code actions" },
   { "<leader>cf", "<cmd>lua vim.lsp.buf.format()<cr>",            desc = "format" },
-  { "<leader>cr", "<cmd>Telescope lsp_references<cr>",            desc = "references" },
-  { "<leader>cd", "<cmd>Telescope lsp_definitions<cr>",           desc = "definitions" },
-  { "<leader>ci", "<cmd>Telescope lsp_implementations<cr>",       desc = "implementations" },
-  { "<leader>ct", "<cmd>Telescope lsp_type_definitions<cr>",      desc = "type definitions" },
-  { "<leader>cs", "<cmd>Telescope lsp_document_symbols<cr>",      desc = "document symbols" },
+  { "<leader>cr", function() snacks.picker.lsp_references() end,  desc = "references" },
+  { "<leader>cd", function() snacks.picker.lsp_definitions() end, desc = "definitions" },
+  { "<leader>ci", function() snacks.picker.lsp_implementations() end, desc = "implementations" },
+  { "<leader>ct", function() snacks.picker.lsp_type_definitions() end, desc = "type definitions" },
+  { "<leader>cs", function() snacks.picker.lsp_symbols() end,     desc = "document symbols" },
   { "<leader>cS", "<cmd>Trouble symbols toggle focus=false<cr>",  desc = "symbols (trouble)" },
-  { "<leader>cw", "<cmd>Telescope lsp_workspace_symbols<cr>",     desc = "workspace symbols" },
+  { "<leader>cw", function() snacks.picker.lsp_workspace_symbols() end, desc = "workspace symbols" },
   { "<leader>cx", "<cmd>Trouble diagnostics toggle<cr>",          desc = "diagnostics" },
 
   { "<leader>d",  desc = "diagnostics",                           mode = "n" },
-  { "<leader>dd", "<cmd>Telescope diagnostics<cr>",               desc = "list diagnostics" },
+  { "<leader>dd", function() snacks.picker.diagnostics() end,     desc = "list diagnostics" },
   { "<leader>dn", "<cmd>lua vim.diagnostic.goto_next()<cr>",      desc = "next diagnostic" },
   { "<leader>dp", "<cmd>lua vim.diagnostic.goto_prev()<cr>",      desc = "prev diagnostic" },
   { "<leader>df", "<cmd>lua vim.diagnostic.open_float()<cr>",     desc = "float diagnostic" },
@@ -449,28 +440,28 @@ wk.add({
   { "<leader>e",  "<cmd>lua Snacks.explorer()<cr>",               desc = "explorer" },
 
   { "<leader>f",  desc = "file",                                  mode = "n" },
-  { "<leader>ff", "<cmd>Telescope find_files<cr>",                desc = "find files" },
-  { "<leader>fg", "<cmd>Telescope live_grep<cr>",                 desc = "live grep" },
-  { "<leader>fr", "<cmd>Telescope oldfiles<cr>",                  desc = "recent files" },
+  { "<leader>ff", function() snacks.picker.files() end,           desc = "find files" },
+  { "<leader>fg", function() snacks.picker.grep() end,            desc = "live grep" },
+  { "<leader>fr", function() snacks.picker.recent() end,          desc = "recent files" },
   { "<leader>fn", "<cmd>enew<cr>",                                desc = "new file" },
 
   { "<leader>g",  desc = "git",                                   mode = "n" },
   { "<leader>gg", "<cmd>Neogit<cr>",                              desc = "neogit" },
   { "<leader>gc", "<cmd>Neogit commit<cr>",                       desc = "commit" },
-  { "<leader>gb", "<cmd>Telescope git_branches<cr>",              desc = "branches" },
-  { "<leader>gf", "<cmd>Telescope git_files<cr>",                 desc = "git files" },
-  { "<leader>gs", "<cmd>Telescope git_status<cr>",                desc = "status" },
-  { "<leader>gl", "<cmd>Telescope git_commits<cr>",               desc = "log/commits" },
+  { "<leader>gb", function() snacks.picker.git_branches() end,    desc = "branches" },
+  { "<leader>gf", function() snacks.picker.git_files() end,       desc = "git files" },
+  { "<leader>gs", function() snacks.picker.git_status() end,      desc = "status" },
+  { "<leader>gl", function() snacks.picker.git_log() end,         desc = "log/commits" },
 
   { "<leader>s",  desc = "search",                                mode = "n" },
-  { "<leader>sf", "<cmd>Telescope find_files<cr>",                desc = "find files" },
-  { "<leader>sg", "<cmd>Telescope live_grep<cr>",                 desc = "live grep" },
-  { "<leader>sb", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "buffer" },
-  { "<leader>ss", "<cmd>Telescope grep_string<cr>",               desc = "search string" },
-  { "<leader>sh", "<cmd>Telescope help_tags<cr>",                 desc = "help tags" },
-  { "<leader>sm", "<cmd>Telescope marks<cr>",                     desc = "marks" },
-  { "<leader>sr", "<cmd>Telescope registers<cr>",                 desc = "registers" },
-  { "<leader>sk", "<cmd>Telescope keymaps<cr>",                   desc = "keymaps" },
+  { "<leader>sf", function() snacks.picker.files() end,           desc = "find files" },
+  { "<leader>sg", function() snacks.picker.grep() end,            desc = "live grep" },
+  { "<leader>sb", function() snacks.picker.lines() end,           desc = "buffer" },
+  { "<leader>ss", function() snacks.picker.grep_word() end,       desc = "search string" },
+  { "<leader>sh", function() snacks.picker.help() end,            desc = "help tags" },
+  { "<leader>sm", function() snacks.picker.marks() end,           desc = "marks" },
+  { "<leader>sr", function() snacks.picker.registers() end,       desc = "registers" },
+  { "<leader>sk", function() snacks.picker.keymaps() end,         desc = "keymaps" },
 
   { "<leader>T",  desc = "terminal",                              mode = "n" },
   { "<leader>Tt", function() snacks.terminal.toggle() end,        desc = "open terminal" },
