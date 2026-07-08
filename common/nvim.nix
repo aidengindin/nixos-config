@@ -80,7 +80,15 @@ in
               explorer.enabled = true;
               indent.enabled = true;
               input.enabled = true;
-              picker.enabled = true;
+              picker = {
+                enabled = true;
+                sources.explorer.win.list.keys = {
+                  "j" = "explorer_close";
+                  "k" = "list_down";
+                  "l" = "list_up";
+                  ";" = "confirm";
+                };
+              };
               notifier.enabled = true;
               quickfile.enabled = true;
               scope.enabled = true;
@@ -89,7 +97,6 @@ in
               words.enabled = true;
             };
           };
-          yazi.enable = true;
           flash.enable = true;
           indent-blankline.enable = true;
           undotree.enable = true;

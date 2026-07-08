@@ -446,7 +446,7 @@ wk.add({
   { "<leader>df", "<cmd>lua vim.diagnostic.open_float()<cr>",     desc = "float diagnostic" },
   { "<leader>dl", "<cmd>lua vim.diagnostic.setloclist()<cr>",     desc = "diagnostics loclist" },
 
-  { "<leader>e",  "<cmd>Yazi<cr>",                                desc = "yazi" },
+  { "<leader>e",  "<cmd>lua Snacks.explorer()<cr>",               desc = "explorer" },
 
   { "<leader>f",  desc = "file",                                  mode = "n" },
   { "<leader>ff", "<cmd>Telescope find_files<cr>",                desc = "find files" },
