@@ -133,7 +133,10 @@ let
       base=${lib.escapeShellArg recipe.outputName}
       stamp="$(date +%Y-%m-%d)"
       final="$out_dir/$base-$stamp.epub"
-      tmp="$out_dir/.$base-$stamp.epub.tmp"
+      # Hidden dotfile so a directory watcher (calibre-web ingest) ignores it
+      # until the atomic rename, but keep the .epub extension so ebook-convert
+      # infers the output format.
+      tmp="$out_dir/.$base-$stamp.epub"
 
       rm -f "$tmp"
       ebook-convert ${recipe.recipe} "$tmp" --output-profile=${lib.escapeShellArg recipe.outputProfile}
