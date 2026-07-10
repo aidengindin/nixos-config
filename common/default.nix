@@ -5,6 +5,7 @@
     ./cli.nix
     ./claude-code.nix
     ./claude-desktop.nix
+    ./codex.nix
     ./mcp.nix
     ./dev.nix
     ./direnv.nix

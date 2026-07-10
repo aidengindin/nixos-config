@@ -7,6 +7,7 @@
   agindin = {
     claude-code.enable = true;
     claude.desktop.enable = true;
+    codex.enable = true;
     lsp.enable = true;
     neovim.enable = true;
 
