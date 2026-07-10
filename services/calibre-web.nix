@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   customPkgs,
   globalVars,
   ...
@@ -165,6 +166,23 @@ in
       cfg.dataDir
       cfg.ingestDir
     ];
+
+    # Force the ingest dir group-writable (setgid) so external tools like
+    # calibre-news (members of the media group) can drop books in. calibre-web's
+    # own `d … 0775` tmpfiles rule doesn't stick: with impermanence the per-dir
+    # bind-mount lands after systemd-tmpfiles runs, leaving the 0755 /persist
+    # source showing through. A root oneshot after the mounts settles it
+    # unambiguously.
+    systemd.services.calibre-web-ingest-perms = {
+      description = "Ensure calibre-web ingest dir is group-writable";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "local-fs.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.coreutils}/bin/install -d -o agindin -g media -m 2775 ${cfg.ingestDir}";
+      };
+    };
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
       {
