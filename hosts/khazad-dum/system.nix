@@ -21,6 +21,8 @@
     enable = true;
     fileSystem = "btrfs";
     useLuks = true;
+    # Downloads is a throwaway landing spot: exists on every boot, contents wiped.
+    ephemeralUserDirectories = [ "Downloads" ];
   };
 
   agindin.ssh = {

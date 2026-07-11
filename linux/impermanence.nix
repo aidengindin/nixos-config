@@ -121,6 +121,15 @@ in
       default = [ ];
       description = "User files to persist (relative to `/home/agindin`)";
     };
+    ephemeralUserDirectories = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = ''
+        User directories (relative to `/home/agindin`) that should always exist
+        but whose contents are NOT persisted. Recreated empty on every boot —
+        useful as scratch space for temporary downloads.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -188,6 +197,13 @@ in
         files = cfg.userFiles;
       };
     };
+
+    # Recreate ephemeral scratch dirs (e.g. Downloads) empty on every boot. They
+    # aren't persisted, so their contents are wiped with the root/home subvolume;
+    # this just guarantees the directory itself exists as a landing spot.
+    systemd.tmpfiles.rules = map (
+      dir: "d /home/agindin/${dir} 0755 agindin users -"
+    ) cfg.ephemeralUserDirectories;
 
     # For traditional (non-systemd) initrd
     boot.initrd.postDeviceCommands = mkIf (!config.boot.initrd.systemd.enable) wipeScript;
