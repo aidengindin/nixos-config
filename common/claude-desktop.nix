@@ -26,6 +26,14 @@ let
   # that means bitmap-scaled, blurry text. --ozone-platform-hint=auto makes Electron pick
   # native Wayland when available (falling back to X11 elsewhere). Cost (upstream-noted):
   # global hotkeys stop working under native Wayland — fine for menu-launched use.
+  #
+  # --password-store=gnome-libsecret forces Electron's safeStorage onto libsecret
+  # (gnome-keyring). Without it, Electron auto-detects and picks the freedesktop
+  # Secret *portal* backend, which has no implementation under Hyprland and fails to
+  # init (os_crypt.portal.prev_init_success=false in Local State). The encrypted auth
+  # token then can't be decrypted after a reboot, forcing re-login on first request —
+  # while plaintext chat history (unencrypted in the profile) survives. See the login
+  # keyring note below: secrets must also land in the PAM-unlocked `login` keyring.
   claudeDesktop = pkgs.symlinkJoin {
     name = "claude-desktop-wayland";
     paths = [ basePkg ];
@@ -33,6 +41,7 @@ let
     postBuild = ''
       wrapProgram $out/bin/claude-desktop \
         --add-flags "--ozone-platform-hint=auto" \
+        --add-flags "--password-store=gnome-libsecret" \
         --set CHROME_DEVEL_SANDBOX ${sandboxWrapper} \
         --prefix PATH : ${lib.makeBinPath [ qemuPkg ]}
     '';
