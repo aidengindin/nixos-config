@@ -6,6 +6,18 @@ let
         doCheck = false;
         doInstallCheck = false;
       });
+      logfire = super.logfire.overridePythonAttrs (_old: {
+        dontCheckRuntimeDeps = true;
+        pythonImportsCheck = [ ];
+      });
+      garth = super.garth.overridePythonAttrs (_old: {
+        doCheck = false;
+        doInstallCheck = false;
+      });
+      inline-snapshot = super.inline-snapshot.overridePythonAttrs (_old: {
+        doCheck = false;
+        doInstallCheck = false;
+      });
     };
   };
 in
