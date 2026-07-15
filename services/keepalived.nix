@@ -107,6 +107,21 @@ in
     };
     users.groups.${scriptUser} = { };
 
+    # NixOS reverse-path filtering (mangle PREROUTING) drops inbound VRRP
+    # multicast adverts before they reach the filter-table accept or keepalived's
+    # socket, so each node hears only itself and both become MASTER (split brain).
+    # Exempt VRRP (proto 112) from rpfilter; RPF still applies to everything else.
+    # The rpfilter chain is rebuilt on every firewall start, and extraCommands
+    # runs afterwards, so the RETURN is re-inserted each time.
+    networking.firewall = lib.mkIf cfg.openFirewall {
+      extraCommands = ''
+        ip46tables -t mangle -I nixos-fw-rpfilter -p vrrp -j RETURN
+      '';
+      extraStopCommands = ''
+        ip46tables -t mangle -D nixos-fw-rpfilter -p vrrp -j RETURN 2>/dev/null || true
+      '';
+    };
+
     services.keepalived = {
       enable = true;
       openFirewall = cfg.openFirewall;
