@@ -20,10 +20,18 @@ let
 
   mcpPkgs = mcpServersNix.packages.${pkgs.system};
 
-  # Wrapper that sources an agenix env file before exec'ing a binary,
-  # keeping secrets out of world-readable /etc/mcp-servers.json.
+  # Wrapper that sources an agenix env file before exec'ing a binary, keeping secrets
+  # out of world-readable config. Only needed for `serversConfig`, the plain
+  # secrets-already-resolved view consumed by Claude Desktop (which reads raw
+  # command/args and can't resolve home-manager's file-backed env mechanism used
+  # for Claude Code/Codex below).
   mkEnvWrapper =
-    { name, package, extraArgs ? [ ] , envFile }:
+    {
+      name,
+      package,
+      extraArgs ? [ ],
+      envFile,
+    }:
     pkgs.writeShellApplication {
       name = "${name}-mcp-wrapped";
       runtimeInputs = [ package ];
@@ -48,6 +56,10 @@ let
 
   intervalsEnv = pkgs.python3.withPackages (_ps: [ customPkgs.intervals-mcp-server ]);
 
+  # intervals-mcp-server needs a `python -m` invocation, which programs.mcp.servers can't
+  # express directly, so it keeps a thin wrapper regardless of the secret-handling approach.
+  # Its envFile holds multiple KEY=value pairs (API_KEY, ATHLETE_ID), which doesn't map
+  # cleanly onto the one-file-per-var env.<VAR>.file mechanism, so we source it manually.
   intervalsWrapper = pkgs.writeShellApplication {
     name = "intervals-mcp-wrapped";
     text = ''
@@ -59,9 +71,10 @@ let
     '';
   };
 
-  # Build the mcpServers attrset from whichever servers are enabled.
-  # This becomes /etc/mcp-servers.json and is merged into ~/.claude.json on boot.
-  mcpServers =
+  # Stdio MCP servers with secrets already resolved, for consumers that read raw
+  # command/args and can't resolve home-manager's file-backed env mechanism
+  # (e.g. Claude Desktop, see common/claude-desktop.nix).
+  desktopServers =
     optionalAttrs cfg.servers.filesystem.enable {
       filesystem = {
         command = getExe mcpPkgs.mcp-server-filesystem;
@@ -98,7 +111,7 @@ in
       type = types.attrs;
       internal = true;
       readOnly = true;
-      description = "Generated mcpServers attrset, shared by Claude Code and Claude Desktop.";
+      description = "Stdio MCP servers with secrets resolved, shared with consumers like Claude Desktop that can't use home-manager's file-backed env mechanism.";
     };
 
     servers = {
@@ -136,13 +149,43 @@ in
   };
 
   config = mkIf cfg.enable {
-    agindin.mcp.serversConfig = mcpServers;
+    agindin.mcp.serversConfig = desktopServers;
 
-    # Write declarative MCP config to /etc so it exists before any user services run.
-    # claude-code.nix merges this into ~/.claude.json on boot via the restore script.
-    environment.etc."mcp-servers.json" = {
-      text = builtins.toJSON { inherit mcpServers; };
-      mode = "0444";
+    # Declarative MCP servers for Claude Code/Codex, wired via home-manager's shared
+    # programs.mcp module (home-manager release-26.05). Both agindin.claude-code and
+    # agindin.codex opt into this set via enableMcpIntegration.
+    home-manager.users.agindin.programs.mcp = {
+      enable = true;
+
+      servers =
+        optionalAttrs cfg.servers.filesystem.enable {
+          filesystem = {
+            command = getExe mcpPkgs.mcp-server-filesystem;
+            args = cfg.servers.filesystem.args;
+          };
+        }
+        // optionalAttrs cfg.servers.git.enable {
+          git.command = getExe mcpPkgs.mcp-server-git;
+        }
+        // optionalAttrs cfg.servers.fetch.enable {
+          fetch.command = getExe mcpPkgs.mcp-server-fetch;
+        }
+        // optionalAttrs cfg.servers.nixos.enable {
+          nixos.command = getExe unstablePkgs.mcp-nixos;
+        }
+        // optionalAttrs cfg.servers.github.enable {
+          github = {
+            command = getExe pkgs.github-mcp-server;
+            args = [ "stdio" ];
+            env.GITHUB_PERSONAL_ACCESS_TOKEN.file = cfg.servers.github.tokenFile;
+          };
+        }
+        // optionalAttrs cfg.servers.liftosaur.enable {
+          liftosaur.url = "https://www.liftosaur.com/mcp";
+        }
+        // optionalAttrs cfg.servers.intervals.enable {
+          intervals.command = "${intervalsWrapper}/bin/intervals-mcp-wrapped";
+        };
     };
   };
 }
