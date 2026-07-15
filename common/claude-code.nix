@@ -1,22 +1,17 @@
-# NOTE (2026-04): home-manager master has a programs.claude-code module that could
-# replace much of this file, and a programs.mcp module for the MCP server config.
-# It's not in release-25.11; revisit when 26.05 ships.
+# Migrated to home-manager's programs.claude-code / programs.mcp modules (home-manager
+# release-26.05, locked rev 3cd22efe). MCP and LSP servers are now baked into a generated
+# Nix-store plugin loaded via `claude --plugin-dir`, instead of the old /etc/mcp-servers.json +
+# /etc/claude-lsp-config.json + jq-into-marketplace.json boot-time kludge.
 #
-# What it would replace:
-#   - The LSP plugin registration kludge below (lines ~80-141) via lspServers option
-#   - The /etc/mcp-servers.json + jq-merge approach; MCP servers go directly in
-#     programs.claude-code.mcpServers (keeping the existing secret-aware wrappers)
-#   - Package installation
-#
-# What must stay regardless:
+# What stays regardless of the HM migration:
 #   - The systemd restore/save services for ~/.claude.json — Claude Code uses atomic
 #     writes (write-temp-then-rename) which break impermanence bind mounts, so we
 #     can't bind-mount .claude.json directly and must copy it in/out manually
 #   - The impermanence userDirectories declarations
-#   - The secret-aware MCP wrappers in mcp.nix (programs.mcp has no secret handling)
 #
-# Known risk: the HM module uses home.file (symlinks) for settings.json; Claude Code
-# has a known bug with symlinked config files — worth testing before committing.
+# NOT migrated yet: programs.claude-code.settings (writes settings.json via home.file, i.e. a
+# symlink into the nix store). Claude Code has a known bug with symlinked config files — needs
+# dedicated testing before adopting it, so settings.json is still hand-managed for now.
 {
   config,
   lib,
@@ -32,7 +27,65 @@ in
   options.agindin.claude-code.enable = mkEnableOption "claude-code";
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [ unstablePkgs.claude-code ];
+    home-manager.users.agindin.programs.claude-code = {
+      enable = true;
+      package = unstablePkgs.claude-code;
+      enableMcpIntegration = true;
+
+      lspServers = {
+        lua-language-server = {
+          command = "${pkgs.lua-language-server}/bin/lua-language-server";
+          extensionToLanguage = {
+            ".lua" = "lua";
+          };
+        };
+        pyright = {
+          command = "${pkgs.pyright}/bin/pyright-langserver";
+          args = [ "--stdio" ];
+          extensionToLanguage = {
+            ".py" = "python";
+          };
+        };
+        rust-analyzer = {
+          command = "${pkgs.rust-analyzer}/bin/rust-analyzer";
+          extensionToLanguage = {
+            ".rs" = "rust";
+          };
+        };
+        nixd = {
+          command = "${pkgs.nixd}/bin/nixd";
+          extensionToLanguage = {
+            ".nix" = "nix";
+          };
+        };
+        bash-language-server = {
+          command = "${pkgs.bash-language-server}/bin/bash-language-server";
+          args = [ "start" ];
+          extensionToLanguage = {
+            ".sh" = "shellscript";
+            ".bash" = "shellscript";
+          };
+        };
+        haskell-language-server = {
+          command = "${pkgs.haskell-language-server}/bin/haskell-language-server-wrapper";
+          args = [ "--lsp" ];
+          extensionToLanguage = {
+            ".hs" = "haskell";
+            ".lhs" = "haskell";
+          };
+        };
+      };
+    };
+
+    environment.systemPackages = [
+      pkgs.nixfmt
+      pkgs.lua-language-server
+      pkgs.pyright
+      pkgs.rust-analyzer
+      pkgs.nixd
+      pkgs.bash-language-server
+      pkgs.haskell-language-server
+    ];
 
     agindin.impermanence = mkIf config.agindin.impermanence.enable {
       userDirectories = [
@@ -69,94 +122,10 @@ in
             ExecStart = pkgs.writeShellScript "restore-claude-config" ''
               PERSIST="/persist/home/agindin/.claude.json"
               HOME_FILE="/home/agindin/.claude.json"
-              MCP_CONFIG="/etc/mcp-servers.json"
-              LSP_CONFIG="/etc/claude-lsp-config.json"
-              PLUGINS_FILE="/home/agindin/.claude/plugins/installed_plugins.json"
-              SETTINGS_FILE="/home/agindin/.claude/settings.json"
 
               if [ -f "$PERSIST" ]; then
                 ${lib.getExe' pkgs.coreutils "cp"} -f "$PERSIST" "$HOME_FILE"
                 ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME_FILE"
-              fi
-
-              # Inject declarative MCP server config, preserving all other state.
-              if [ -f "$MCP_CONFIG" ]; then
-                if [ -f "$HOME_FILE" ]; then
-                  ${lib.getExe pkgs.jq} -s '.[0] * {"mcpServers": .[1].mcpServers}' \
-                    "$HOME_FILE" "$MCP_CONFIG" > "$HOME_FILE.tmp"
-                else
-                  ${lib.getExe pkgs.jq} '.' "$MCP_CONFIG" > "$HOME_FILE.tmp"
-                fi
-                ${lib.getExe' pkgs.coreutils "mv"} "$HOME_FILE.tmp" "$HOME_FILE"
-                ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME_FILE"
-              fi
-
-              # Inject declarative LSP plugins via the official marketplace.
-              # Claude Code reads lspServers from marketplace.json entries, so we:
-              # 1. Inject custom plugins (nix, bash, haskell) into the official marketplace
-              # 2. Create cache dirs for all desired LSPs
-              # 3. Register in installed_plugins.json and settings.json
-              if [ -f "$LSP_CONFIG" ]; then
-                JQ="${lib.getExe pkgs.jq}"
-                CP="${lib.getExe' pkgs.coreutils "cp"}"
-                MV="${lib.getExe' pkgs.coreutils "mv"}"
-                MKDIR="${lib.getExe' pkgs.coreutils "mkdir"}"
-                MARKETPLACE=$($JQ -r '.marketplace' "$LSP_CONFIG")
-                MARKETPLACE_JSON="/home/agindin/.claude/plugins/marketplaces/$MARKETPLACE/.claude-plugin/marketplace.json"
-                CACHE_BASE="/home/agindin/.claude/plugins/cache/$MARKETPLACE"
-
-                # Step 1: Inject custom plugin entries into official marketplace.json
-                # and create stub source directories for them.
-                if [ -f "$MARKETPLACE_JSON" ]; then
-                  CUSTOM_ENTRIES=$($JQ '.customMarketplaceEntries' "$LSP_CONFIG")
-                  $JQ --argjson entries "$CUSTOM_ENTRIES" \
-                    '.plugins = (.plugins | map(select(.name as $n | ($entries | map(.name) | index($n) | not)))) + $entries' \
-                    "$MARKETPLACE_JSON" > "$MARKETPLACE_JSON.tmp"
-                  $MV "$MARKETPLACE_JSON.tmp" "$MARKETPLACE_JSON"
-
-                  # Create stub plugin source directories in the marketplace
-                  MARKETPLACE_DIR="/home/agindin/.claude/plugins/marketplaces/$MARKETPLACE"
-                  for CUSTOM_NAME in $($JQ -r '.customMarketplaceEntries[].name' "$LSP_CONFIG"); do
-                    $MKDIR -p "$MARKETPLACE_DIR/plugins/$CUSTOM_NAME"
-                  done
-                fi
-
-                # Step 2: Create cache dirs + register each plugin
-                $MKDIR -p "$CACHE_BASE"
-                PLUGINS=$($JQ -r '.plugins[]' "$LSP_CONFIG")
-                NEW_INSTALLED="{}"
-                NEW_ENABLED="{}"
-                for PLUGIN in $PLUGINS; do
-                  PLUGIN_DIR="$CACHE_BASE/$PLUGIN/1.0.0"
-                  $MKDIR -p "$PLUGIN_DIR"
-                  NEW_INSTALLED=$($JQ --arg name "''${PLUGIN}@''${MARKETPLACE}" --arg path "$PLUGIN_DIR" \
-                    '. + {($name): [{"scope":"user","installPath":$path,"version":"1.0.0","isLocal":false,"installedAt":"2026-01-01T00:00:00.000Z","lastUpdated":"2026-01-01T00:00:00.000Z"}]}' \
-                    <<< "$NEW_INSTALLED")
-                  NEW_ENABLED=$($JQ --arg name "''${PLUGIN}@''${MARKETPLACE}" \
-                    '. + {($name): true}' <<< "$NEW_ENABLED")
-                done
-
-                # Step 3: Merge into installed_plugins.json
-                if [ -f "$PLUGINS_FILE" ]; then
-                  $JQ --argjson new "$NEW_INSTALLED" \
-                    '{version: .version, plugins: (.plugins + $new)}' \
-                    "$PLUGINS_FILE" > "$PLUGINS_FILE.tmp"
-                else
-                  $JQ -n --argjson new "$NEW_INSTALLED" \
-                    '{version: 2, plugins: $new}' > "$PLUGINS_FILE.tmp"
-                fi
-                $MV "$PLUGINS_FILE.tmp" "$PLUGINS_FILE"
-
-                # Step 4: Merge into settings.json
-                if [ -f "$SETTINGS_FILE" ]; then
-                  $JQ --argjson new "$NEW_ENABLED" \
-                    '. + {enabledPlugins: ((.enabledPlugins // {}) + $new)}' \
-                    "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
-                else
-                  $JQ -n --argjson new "$NEW_ENABLED" \
-                    '{enabledPlugins: $new}' > "$SETTINGS_FILE.tmp"
-                fi
-                $MV "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
               fi
             '';
           };

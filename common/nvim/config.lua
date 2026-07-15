@@ -294,7 +294,7 @@ require("blink.cmp").setup {
 }
 
 --------------------------------------------------------------------------------
--- LSP (native vim.lsp.config / vim.lsp.enable; servers installed via agindin.lsp)
+-- LSP (native vim.lsp.config / vim.lsp.enable; servers installed via agindin.claude-code)
 --------------------------------------------------------------------------------
 vim.lsp.config('lua_ls', {
   filetypes = { 'lua' },
