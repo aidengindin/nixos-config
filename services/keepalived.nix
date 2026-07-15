@@ -107,24 +107,36 @@ in
     };
     users.groups.${scriptUser} = { };
 
-    # NixOS reverse-path filtering (mangle PREROUTING) drops inbound VRRP
-    # multicast adverts before they reach the filter-table accept or keepalived's
-    # socket, so each node hears only itself and both become MASTER (split brain).
-    # Exempt VRRP (proto 112) from rpfilter; RPF still applies to everything else.
-    # The rpfilter chain is rebuilt on every firewall start, and extraCommands
-    # runs afterwards, so the RETURN is re-inserted each time.
+    # We open the firewall for VRRP ourselves rather than via
+    # services.keepalived.openFirewall, because that module's extraStopCommands
+    # delete their rules without `|| true`. On the first firewall reload after
+    # keepalived is introduced those rules don't exist yet, the delete fails,
+    # and `set -e` aborts the whole reload — so firewall changes silently don't
+    # apply until a manual `systemctl restart firewall`. Our deletes are guarded.
+    #
+    # Two rules are needed for inbound VRRP adverts (proto 112, multicast):
+    #   1. filter: accept them (they'd otherwise hit the default refuse).
+    #   2. mangle: exempt them from reverse-path filtering, which runs first in
+    #      PREROUTING and otherwise drops the multicast before the accept, making
+    #      every node hear only itself and become MASTER (split brain).
+    # ip46tables covers IPv4 and IPv6. The rpfilter/nixos-fw chains are rebuilt
+    # on every firewall start and extraCommands runs afterwards, so both are
+    # re-applied each time.
     networking.firewall = lib.mkIf cfg.openFirewall {
       extraCommands = ''
+        ip46tables -A nixos-fw -p vrrp -j ACCEPT
         ip46tables -t mangle -I nixos-fw-rpfilter -p vrrp -j RETURN
       '';
       extraStopCommands = ''
+        ip46tables -D nixos-fw -p vrrp -j ACCEPT 2>/dev/null || true
         ip46tables -t mangle -D nixos-fw-rpfilter -p vrrp -j RETURN 2>/dev/null || true
       '';
     };
 
     services.keepalived = {
       enable = true;
-      openFirewall = cfg.openFirewall;
+      # Firewall handled above with guarded rules; see the comment there.
+      openFirewall = false;
       # Don't run tracking scripts as root; the store path is root-owned and
       # not writable by non-root, so keepalived accepts it under this policy.
       enableScriptSecurity = true;
