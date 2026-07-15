@@ -54,6 +54,16 @@
   agindin.services = {
     blocky.enable = true;
 
+    # Floating DNS VIP (10.88.88.8) shared with lorien via keepalived/VRRP.
+    # osgiliath is the backup holder (lower priority).
+    dnsFailover = {
+      enable = true;
+      virtualIp = "10.88.88.8/24";
+      interface = "eno1";
+      state = "BACKUP";
+      priority = 100;
+    };
+
     postgres.enable = true;
 
     restic = {

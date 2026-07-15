@@ -27,7 +27,12 @@ let
     }
   ];
 
-  customDNS = { };
+  customDNS = {
+    # Canary record for the dnsFailover (keepalived) health check. Lets the VRRP
+    # tracking script confirm blocky is answering DNS locally without depending
+    # on upstream reachability. See services/keepalived.nix.
+    "dns-health.local" = "127.0.0.1";
+  };
 
   blacklist = [
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
