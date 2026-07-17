@@ -123,6 +123,17 @@ let
       RuntimeDirectory = "calibre-news-${name}";
       WorkingDirectory = "/run/calibre-news-${name}";
       Environment = [ "HOME=/run/calibre-news-${name}" ];
+      # Re-assert group-write on the output dir immediately before each run, as
+      # root (the `+` prefix). The runner writes there as a member of `group`,
+      # but a co-owning service may reset the dir's mode between runs — e.g.
+      # calibre-web-automated chmods its ingest dir back to 0755 on container
+      # start. Doing this per-run (not just at boot) makes the build robust to
+      # that regardless of when it last happened.
+      ExecStartPre = "+${pkgs.writeShellScript "calibre-news-${name}-ensure-writable" ''
+        ${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg recipe.outputDir}
+        ${pkgs.coreutils}/bin/chgrp ${lib.escapeShellArg cfg.group} ${lib.escapeShellArg recipe.outputDir}
+        ${pkgs.coreutils}/bin/chmod 2775 ${lib.escapeShellArg recipe.outputDir}
+      ''}";
     };
 
     script = ''
