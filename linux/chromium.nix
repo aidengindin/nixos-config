@@ -55,8 +55,8 @@ let
   # uBlock Origin is no longer on the Chrome Web Store (MV2 removal).
   # Load it directly from the GitHub release as an unpacked extension.
   uBlockOrigin = pkgs.fetchzip {
-    url = "https://github.com/gorhill/uBlock/releases/download/1.70.0/uBlock0_1.70.0.chromium.zip";
-    sha256 = "sha256-5q4622eyOMrIj8rHRaVY9bCRr6yIx4PBW1bmULS0lTE=";
+    url = "https://github.com/gorhill/uBlock/releases/download/1.72.2/uBlock0_1.72.2.chromium.zip";
+    sha256 = "sha256-KvNObtLQzuivaKgFPChMOxcRImfCXraTAHAsEVWY/gU=";
   };
 in
 {
