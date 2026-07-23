@@ -256,14 +256,49 @@ require("bufferline").setup({
 --------------------------------------------------------------------------------
 -- qmk
 --------------------------------------------------------------------------------
-require("qmk").setup({
-  name = "LAYOUT_split_3x5_3",
-  layout = {
-    "x x x x x _ x x x x x",
-    "x x x x x _ x x x x x",
-    "x x x x x _ x x x x x",
-    "_ _ x x x _ x x x _ _"
-  }
+-- qmk.nvim only holds one layout at a time, so we (re)apply the right config on
+-- BufEnter based on the keymap file path. See the plugin's "Using Multiple
+-- Configurations" docs. Each config's auto_format_pattern must match the same
+-- path so QMKFormat-on-save uses the correct layout.
+local qmk_group = vim.api.nvim_create_augroup("qmk_layouts", {})
+
+-- holykeebs spankbd: split 3x5+3
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = qmk_group,
+  pattern = "*spankbd/keymaps/*keymap.c",
+  callback = function()
+    require("qmk").setup({
+      name = "LAYOUT_split_3x5_3",
+      auto_format_pattern = "*spankbd/keymaps/*keymap.c",
+      layout = {
+        "x x x x x _ x x x x x",
+        "x x x x x _ x x x x x",
+        "x x x x x _ x x x x x",
+        "_ _ x x x _ x x x _ _"
+      }
+    })
+  end,
+})
+
+-- Keychron C3 Pro 8K: TKL ANSI (87 keys, LAYOUT_tkl_ansi)
+-- rows: 16 / 17 / 17 / 13 / 13 / 11 = 87
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = qmk_group,
+  pattern = "*c3_pro_8k/*keymap.c",
+  callback = function()
+    require("qmk").setup({
+      name = "LAYOUT_tkl_ansi",
+      auto_format_pattern = "*c3_pro_8k/*keymap.c",
+      layout = {
+        "x _ x x x x x x x x x x x x _ x x x",
+        "x x x x x x x x x x x x x x _ x x x",
+        "x x x x x x x x x x x x x x _ x x x",
+        "x x x x x x x x x x x x x _ _ _ _ _",
+        "x x x x x x x x x x x x _ _ _ _ x _",
+        "x x x _ x _ _ _ x x x x _ _ _ x x x"
+      }
+    })
+  end,
 })
 
 --------------------------------------------------------------------------------
