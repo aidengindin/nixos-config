@@ -23,6 +23,26 @@
         "type": "github"
       }
     },
+    "anduin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784812084,
+        "narHash": "sha256-NoUEzjBpJWixwpwGoYjKZQLAYMXFcrgsSVd2Z7d/t3c=",
+        "owner": "aidengindin",
+        "repo": "anduin",
+        "rev": "29e02608744bb4249578dc164d8a6e2d9eee6961",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aidengindin",
+        "repo": "anduin",
+        "type": "github"
+      }
+    },
     "auto-headache-tracker": {
       "inputs": {
         "nixpkgs": [
@@ -532,6 +552,7 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "anduin": "anduin",
         "auto-headache-tracker": "auto-headache-tracker",
         "colmena": "colmena",
         "disko": "disko",

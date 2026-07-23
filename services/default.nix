@@ -2,6 +2,8 @@
 
 {
   imports = [
+    ./anduin.nix
+    ./anduin-postgres.nix
     ./arr.nix
     ./audiobookshelf.nix
     ./blocky.nix

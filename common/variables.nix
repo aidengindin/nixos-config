@@ -52,6 +52,8 @@ let
 
       liftosaur-sync = 8390;
 
+      anduinWeb = 8410;
+
       zigbee2mqtt = 8400;
 
       mosquitto = 1883;

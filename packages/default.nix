@@ -2,6 +2,7 @@
   pkgs,
   unstablePkgs,
   auto-headache-tracker,
+  anduin,
   ...
 }:
 {
@@ -12,4 +13,5 @@
   claude-desktop = pkgs.callPackage ./claude-desktop.nix { };
   intervals-mcp-server = pkgs.callPackage ./intervals-mcp-server.nix { };
   headache-sync = auto-headache-tracker.packages.${pkgs.system}.headache-sync;
+  anduin = anduin.packages.${pkgs.system}.anduin;
 }
