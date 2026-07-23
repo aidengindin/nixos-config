@@ -65,6 +65,11 @@
       url = "github:aidengindin/auto-headache-tracker";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    anduin = {
+      url = "github:aidengindin/anduin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -84,6 +89,7 @@
       liftosaur-sync,
       mcp-servers-nix,
       auto-headache-tracker,
+      anduin,
       dms,
       nixvim,
     }:
@@ -122,12 +128,17 @@
 
       # special args for all NixOS systems
       standardSpecialArgs = {
-        inherit agenix colmena unstablePkgs nixvim;
+        inherit
+          agenix
+          colmena
+          unstablePkgs
+          nixvim
+          ;
         dmsFlake = dms;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
-          inherit unstablePkgs auto-headache-tracker;
+          inherit unstablePkgs auto-headache-tracker anduin;
         };
       };
 
@@ -263,7 +274,7 @@
       }
       // (import ./packages {
         pkgs = stablePkgs;
-        inherit unstablePkgs auto-headache-tracker;
+        inherit unstablePkgs auto-headache-tracker anduin;
       });
     };
 }

@@ -250,7 +250,10 @@ in
                   data = [
                     {
                       refId = "A";
-                      relativeTimeRange = { from = 300; to = 0; };
+                      relativeTimeRange = {
+                        from = 300;
+                        to = 0;
+                      };
                       datasourceUid = "local-prometheus";
                       model = {
                         expr = ''increase(caddy_http_request_duration_seconds_count{code="429",job="caddy-lorien"}[5m])'';
@@ -259,19 +262,28 @@ in
                     }
                     {
                       refId = "B";
-                      relativeTimeRange = { from = 0; to = 0; };
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
                       datasourceUid = "__expr__";
                       model = {
                         conditions = [
                           {
-                            evaluator = { params = [ ]; type = "gt"; };
+                            evaluator = {
+                              params = [ ];
+                              type = "gt";
+                            };
                             operator.type = "and";
                             query.params = [ "B" ];
                             reducer.type = "last";
                             type = "query";
                           }
                         ];
-                        datasource = { type = "__expr__"; uid = "__expr__"; };
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
                         expression = "A";
                         reducer = "last";
                         refId = "B";
@@ -280,19 +292,28 @@ in
                     }
                     {
                       refId = "C";
-                      relativeTimeRange = { from = 0; to = 0; };
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
                       datasourceUid = "__expr__";
                       model = {
                         conditions = [
                           {
-                            evaluator = { params = [ 5 ]; type = "gt"; };
+                            evaluator = {
+                              params = [ 5 ];
+                              type = "gt";
+                            };
                             operator.type = "and";
                             query.params = [ "C" ];
                             reducer.type = "last";
                             type = "query";
                           }
                         ];
-                        datasource = { type = "__expr__"; uid = "__expr__"; };
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
                         expression = "B";
                         refId = "C";
                         type = "threshold";
@@ -305,7 +326,9 @@ in
                   annotations = {
                     summary = "Rate limit triggered on auth.gindin.xyz: {{ $values.B.Value | printf \"%.0f\" }} requests blocked in the last 5 minutes";
                   };
-                  labels = { severity = "warning"; };
+                  labels = {
+                    severity = "warning";
+                  };
                 }
               ];
             }
@@ -842,6 +865,109 @@ in
                   ]) cfg.alerting.monitoredHosts
                 )
               );
+            }
+          ]
+          # Only when a host wires up the anduin web UI scrape target. Alerts on
+          # daily-cadence ingest going stale (>26h). Withings/Liftosaur freshness
+          # just reflects when you last weighed in or lifted, so they are excluded
+          # here — their run failures are covered by the systemd-failed alert.
+          ++ lib.optionals (lib.any (t: t.name == "anduin-web") cfg.prometheusScrapeTargets) [
+            {
+              orgId = 1;
+              name = "anduin";
+              folder = "Infrastructure";
+              interval = "1m";
+              rules = [
+                {
+                  uid = "anduin-google-health-stale";
+                  title = "anduin - Google Health ingest stale";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = ''time() - anduin_source_last_ingest_timestamp_seconds{source="google_health"}'';
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ ];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "B" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ 93600 ]; # 26h
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "C" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  # OK on NoData: before the first successful (seeded) pull the
+                  # metric is absent, and that window is expected — see INTEGRATION.md.
+                  noDataState = "OK";
+                  execErrState = "Error";
+                  for = "10m";
+                  annotations = {
+                    summary = "anduin Google Health ingest is stale: no new rows in over 26h";
+                  };
+                  labels = {
+                    severity = "warning";
+                  };
+                }
+              ];
             }
           ];
         };

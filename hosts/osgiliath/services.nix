@@ -25,6 +25,11 @@
       owner = "headache-sync";
       group = "headache-sync";
     };
+    anduin-env = {
+      file = ../../secrets/anduin-env.age;
+      owner = "anduin";
+      group = "anduin";
+    };
     restic-password = {
       file = ../../secrets/osgiliath-restic-password.age;
       owner = "restic";
@@ -55,6 +60,22 @@
     blocky.enable = true;
 
     postgres.enable = true;
+
+    anduin-postgres.enable = true;
+
+    anduin = {
+      enable = true;
+      environmentFile = config.age.secrets.anduin-env.path;
+      google-health.enable = true;
+      withings.enable = true;
+      intervals.enable = true;
+      liftosaur.enable = true;
+      web = {
+        enable = true;
+        domain = "anduin.gindin.xyz";
+        port = globalVars.ports.anduinWeb;
+      };
+    };
 
     restic = {
       enable = true;
@@ -164,6 +185,12 @@
           name = "alloy-lorien";
           host = "lorien";
           port = globalVars.ports.alloy;
+        }
+        {
+          name = "anduin-web";
+          host = "127.0.0.1";
+          port = globalVars.ports.anduinWeb;
+          metrics_path = "/-/metrics";
         }
       ];
       dashboards = [

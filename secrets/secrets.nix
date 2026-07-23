@@ -141,6 +141,12 @@ in
     khazad-dumUser
   ];
 
+  "anduin-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser # so you can `agenix -e` from osgiliath
+    khazad-dumUser
+  ];
+
   "frigate-reolink-rtsp-password.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
