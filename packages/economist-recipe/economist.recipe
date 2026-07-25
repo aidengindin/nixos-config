@@ -52,10 +52,18 @@ _BROWSER_HEADERS = {
     'Upgrade-Insecure-Requests': '1',
 }
 
+_COOKIE_FILE_ENV = 'ECONOMIST_COOKIE_FILE'
+
 
 def _curl_cmd(url, headers, extra=()):
-    cmd = ['curl', '-sSL', '--compressed']
+    cmd = [
+        'curl', '-sS', '--fail-with-body', '-L', '--compressed',
+        '--retry', '5', '--retry-delay', '10', '--retry-all-errors',
+    ]
     cmd.extend(extra)
+    cookie_file = os.environ.get(_COOKIE_FILE_ENV)
+    if cookie_file:
+        cmd.extend(['--cookie', cookie_file])
     for k, v in headers.items():
         # Let --compressed manage Accept-Encoding / decompression.
         if k.lower() == 'accept-encoding':
@@ -407,18 +415,17 @@ class Economist(BasicNewsRecipe):
                     section = component['name']
                     self.log(section)
                     for article in component['articles']:
-                        for article in component['articles']:
-                            if article['id'] in seen:
-                                continue
-                            seen.add(article['id'])
-                            title = article['headline']
-                            url = process_url(article['url'])
-                            sub = article.get('flyTitle') or ''
-                            desc = article.get('rubric') or ''
-                            if sub and section != sub:
-                                desc = sub + ' :: ' + desc
-                            self.log('\t', title, '\n\t', desc, '\n\t\t', url)
-                            articles.append({'title': title, 'url': url, 'description': desc})
+                        if article['id'] in seen:
+                            continue
+                        seen.add(article['id'])
+                        title = article['headline']
+                        url = process_url(article['url'])
+                        sub = article.get('flyTitle') or ''
+                        desc = article.get('rubric') or ''
+                        if sub and section != sub:
+                            desc = sub + ' :: ' + desc
+                        self.log('\t', title, '\n\t', desc, '\n\t\t', url)
+                        articles.append({'title': title, 'url': url, 'description': desc})
                     if articles:
                         feeds.append((section, articles))
 
@@ -494,6 +501,17 @@ class Economist(BasicNewsRecipe):
         return raw
 
     def print_version(self, url):
+        if os.environ.get(_COOKIE_FILE_ENV):
+            self.from_web = True
+            # Calibre resolves print versions in a burst before downloading
+            # article assets. Pace these requests to avoid Economist's 429
+            # rate limit; curl's retry policy handles transient responses.
+            time.sleep(self.delay)
+            art_cont = _curl_get(url)
+            pt = PersistentTemporaryFile('.html')
+            pt.write(art_cont)
+            pt.close()
+            return 'file:///' + pt.name
         if self.from_web:
             return url
         art_cont = self.get_article(url)

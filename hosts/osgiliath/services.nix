@@ -54,6 +54,12 @@
     zigbee2mqtt-mqtt-env = {
       file = ../../secrets/zigbee2mqtt-mqtt-env.age;
     };
+    economist-cookies = {
+      file = ../../secrets/economist-cookies.age;
+      owner = "calibre-news";
+      group = "calibre-news";
+      mode = "0400";
+    };
   };
 
   agindin.services = {
@@ -271,6 +277,7 @@
       recipes.economist = {
         recipe = ../../packages/economist-recipe/economist.recipe;
         schedule = "Fri *-*-* 04:00:00";
+        cookieFile = config.age.secrets.economist-cookies.path;
         outputDir = config.agindin.services.calibre-web.ingestDir;
         cleanup = {
           enable = true;

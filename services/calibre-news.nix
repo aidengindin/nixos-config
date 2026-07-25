@@ -73,6 +73,28 @@ let
           description = "systemd `TimeoutStartSec` for the conversion (recipes can take several minutes).";
         };
 
+        retryCount = mkOption {
+          type = types.ints.unsigned;
+          default = 2;
+          description = "Number of times systemd retries a failed build after the initial attempt.";
+        };
+
+        retryDelay = mkOption {
+          type = types.str;
+          default = "15min";
+          description = "Delay between failed build attempts.";
+        };
+
+        cookieFile = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = ''
+            Optional Netscape-format cookie file exposed to the recipe as
+            `ECONOMIST_COOKIE_FILE`. Use a runtime secret path, not a Nix store
+            path, because browser cookies are credentials.
+          '';
+        };
+
         cleanup = {
           enable = mkOption {
             type = types.bool;
@@ -113,6 +135,7 @@ let
       pkgs.curl
       pkgs.coreutils
       pkgs.findutils
+      pkgs.unzip
     ];
     serviceConfig = {
       Type = "oneshot";
@@ -122,7 +145,12 @@ let
       # calibre needs a writable HOME for its config/cache; keep it ephemeral.
       RuntimeDirectory = "calibre-news-${name}";
       WorkingDirectory = "/run/calibre-news-${name}";
-      Environment = [ "HOME=/run/calibre-news-${name}" ];
+      Environment = [
+        "HOME=/run/calibre-news-${name}"
+      ]
+      ++ lib.optional (recipe.cookieFile != null) "ECONOMIST_COOKIE_FILE=${recipe.cookieFile}";
+      Restart = mkIf (recipe.retryCount > 0) "on-failure";
+      RestartSec = recipe.retryDelay;
       # Re-assert group-write on the output dir immediately before each run, as
       # root (the `+` prefix). The runner writes there as a member of `group`,
       # but a co-owning service may reset the dir's mode between runs — e.g.
@@ -149,9 +177,24 @@ let
       # infers the output format.
       tmp="$out_dir/.$base-$stamp.epub"
 
+      trap 'rm -f "$tmp"' EXIT
       rm -f "$tmp"
       ebook-convert ${recipe.recipe} "$tmp" --output-profile=${lib.escapeShellArg recipe.outputProfile}
+
+      article_count="$(
+        unzip -Z1 "$tmp" \
+          | grep -Ec '^feed_[^/]+/article_[^/]+/' \
+          || true
+      )"
+      if [ "$article_count" -eq 0 ]; then
+        echo "Refusing to publish unusable EPUB: no downloaded articles were found" >&2
+        rm -f "$tmp"
+        exit 1
+      fi
+
+      echo "Validated $article_count downloaded article files"
       mv -f "$tmp" "$final"
+      trap - EXIT
       echo "Wrote $final"
     ''
     + lib.optionalString recipe.cleanup.enable ''
@@ -178,6 +221,11 @@ let
       OnCalendar = recipe.schedule;
       Persistent = recipe.persistent;
     };
+  };
+
+  mkStartLimit = recipe: {
+    StartLimitIntervalSec = "24h";
+    StartLimitBurst = recipe.retryCount + 1;
   };
 in
 {
@@ -236,7 +284,17 @@ in
       ${cfg.user} = { };
     };
 
-    systemd.services = mapAttrs' (name: recipe: nameValuePair "calibre-news-${name}" (mkService name recipe)) cfg.recipes;
-    systemd.timers = mapAttrs' (name: recipe: nameValuePair "calibre-news-${name}" (mkTimer name recipe)) cfg.recipes;
+    systemd.services = mapAttrs' (
+      name: recipe:
+      nameValuePair "calibre-news-${name}" (
+        mkService name recipe
+        // {
+          unitConfig = mkStartLimit recipe;
+        }
+      )
+    ) cfg.recipes;
+    systemd.timers = mapAttrs' (
+      name: recipe: nameValuePair "calibre-news-${name}" (mkTimer name recipe)
+    ) cfg.recipes;
   };
 }

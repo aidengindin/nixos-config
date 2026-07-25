@@ -167,6 +167,18 @@ in
     khazad-dumUser
   ];
 
+  # Refresh from the signed-in Firefox profile on khazad-dum when the Economist
+  # session expires. Close Firefox first (otherwise cookies.sqlite may be
+  # locked), enter `nix shell nixpkgs#sqlite`, then run from the repository root:
+  #
+  # sqlite3 -readonly ~/.mozilla/firefox/default/cookies.sqlite \
+  #   "SELECT '# Netscape HTTP Cookie File'; SELECT host || char(9) || CASE WHEN substr(host,1,1)='.' THEN 'TRUE' ELSE 'FALSE' END || char(9) || path || char(9) || CASE WHEN isSecure THEN 'TRUE' ELSE 'FALSE' END || char(9) || expiry || char(9) || name || char(9) || value FROM moz_cookies WHERE host = 'economist.com' OR host LIKE '%.economist.com';" \
+  #   | (cd secrets && agenix -e economist-cookies.age -i ~/.ssh/id_ed25519)
+  "economist-cookies.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "khazad-dum-gh-token.age".publicKeys = [
     khazad-dumUser
   ];
