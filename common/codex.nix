@@ -33,6 +33,10 @@ in
     home-manager.users.agindin.programs.codex = {
       enable = true;
       package = unstablePkgs.codex;
+      settings = {
+        sandbox_mode = "workspace-write";
+        approvals_reviewer = "auto_review";
+      };
     };
 
     environment.etc."codex-mcp-servers.json".source = mcpServersJson;
