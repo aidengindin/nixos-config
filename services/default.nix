@@ -15,6 +15,7 @@
     ./headache-sync.nix
     ./immich.nix
     ./jellyfin.nix
+    ./keepalived.nix
     ./liftosaur-sync.nix
     ./linkwarden.nix
     ./miniflux.nix

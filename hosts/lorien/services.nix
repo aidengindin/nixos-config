@@ -79,6 +79,16 @@
       ];
     };
 
+    # Floating DNS VIP (10.88.88.8) shared with osgiliath via keepalived/VRRP.
+    # lorien is the preferred holder (higher priority).
+    dnsFailover = {
+      enable = true;
+      virtualIp = "10.88.88.8/24";
+      interface = "enp1s0";
+      state = "MASTER";
+      priority = 150;
+    };
+
     caddy.enable = true;
 
     postgres.enable = true;
