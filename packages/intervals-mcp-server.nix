@@ -1,14 +1,14 @@
 { pkgs, ... }:
 pkgs.python3Packages.buildPythonPackage {
   pname = "intervals-mcp-server";
-  version = "0-unstable-2026-05-21";
+  version = "0-unstable-2026-08-02";
   pyproject = true;
 
   src = pkgs.fetchFromGitHub {
     owner = "mvilanova";
     repo = "intervals-mcp-server";
-    rev = "7512cdf8f75dda9784f2dea3d4c2c93d2b33df54";
-    hash = "sha256-mXJbdcj3atKnbpa2E9o30E6SJqw9JPT4EmA8wLwxn64=";
+    rev = "cb1fbcac81095cf3e094e995decf04b8b1f259f8";
+    hash = "sha256-YSE1YdOAlz4+IsEbwIHpcR9N7ngFfHqYjxGbYkti8OA=";
   };
 
   build-system = [ pkgs.python3Packages.hatchling ];
