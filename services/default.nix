@@ -13,6 +13,7 @@
     ./frigate.nix
     ./grafana.nix
     ./headache-sync.nix
+    ./hermes.nix
     ./immich.nix
     ./jellyfin.nix
     ./keepalived.nix

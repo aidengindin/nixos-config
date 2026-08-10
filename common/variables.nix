@@ -54,6 +54,8 @@ let
 
       anduinWeb = 8410;
 
+      hermesDashboard = 9119;
+
       zigbee2mqtt = 8400;
 
       mosquitto = 1883;

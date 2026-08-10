@@ -60,10 +60,33 @@
       group = "calibre-news";
       mode = "0400";
     };
+    hermes-env = {
+      file = ../../secrets/hermes-env.age;
+      owner = "hermes";
+      group = "hermes";
+      mode = "0440";
+    };
+    hermes-github-token = {
+      file = ../../secrets/github-token.age;
+      owner = "hermes";
+      group = "hermes";
+      mode = "0440";
+    };
+    hermes-intervals-env = {
+      file = ../../secrets/intervals-env.age;
+      owner = "hermes";
+      group = "hermes";
+      mode = "0440";
+    };
   };
 
   agindin.services = {
     blocky.enable = true;
+
+    hermes = {
+      enable = true;
+      environmentFile = config.age.secrets.hermes-env.path;
+    };
 
     # Floating DNS VIP (10.88.88.8) shared with lorien via keepalived/VRRP.
     # osgiliath is the backup holder (lower priority).

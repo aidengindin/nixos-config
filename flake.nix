@@ -61,6 +61,10 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    # Pin Hermes to a tagged release: its upstream Nix support is Tier 2 and
+    # main may break between releases.
+    hermes-agent.url = "github:NousResearch/hermes-agent/v2026.8.3";
+
     auto-headache-tracker = {
       url = "github:aidengindin/auto-headache-tracker";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -88,6 +92,7 @@
       zwift,
       liftosaur-sync,
       mcp-servers-nix,
+      hermes-agent,
       auto-headache-tracker,
       anduin,
       dms,
@@ -135,6 +140,7 @@
           nixvim
           ;
         dmsFlake = dms;
+        hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;

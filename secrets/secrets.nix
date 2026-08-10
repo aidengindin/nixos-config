@@ -179,12 +179,20 @@ in
     khazad-dumUser
   ];
 
-  "khazad-dum-gh-token.age".publicKeys = [
+  "github-token.age".publicKeys = [
+    osgiliathHost
     khazad-dumUser
   ];
 
-  "khazad-dum-intervals-env.age".publicKeys = [
+  "intervals-env.age".publicKeys = [
+    osgiliathHost
     khazad-dumHost
+    khazad-dumUser
+  ];
+
+  "hermes-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
     khazad-dumUser
   ];
 

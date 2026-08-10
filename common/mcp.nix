@@ -102,6 +102,15 @@ let
     // optionalAttrs cfg.servers.intervals.enable {
       intervals.command = "${intervalsWrapper}/bin/intervals-mcp-wrapped";
     };
+
+  # Hermes accepts the same stdio/HTTP server definitions, except that its
+  # module does not have the home-manager-specific `type` field. Liftosaur
+  # also needs to opt into Hermes' OAuth flow explicitly.
+  hermesServers = lib.mapAttrs (
+    name: server:
+    (lib.filterAttrs (field: _: field != "type") server)
+    // optionalAttrs (name == "liftosaur") { auth = "oauth"; }
+  ) desktopServers;
 in
 {
   options.agindin.mcp = {
@@ -112,6 +121,13 @@ in
       internal = true;
       readOnly = true;
       description = "Stdio MCP servers with secrets resolved, shared with consumers like Claude Desktop that can't use home-manager's file-backed env mechanism.";
+    };
+
+    hermesServersConfig = mkOption {
+      type = types.attrs;
+      internal = true;
+      readOnly = true;
+      description = "MCP server definitions adapted for Hermes Agent.";
     };
 
     servers = {
@@ -150,6 +166,7 @@ in
 
   config = mkIf cfg.enable {
     agindin.mcp.serversConfig = desktopServers;
+    agindin.mcp.hermesServersConfig = hermesServers;
 
     # Declarative MCP servers for Claude Code/Codex, wired via home-manager's shared
     # programs.mcp module (home-manager release-26.05). Both agindin.claude-code and
