@@ -16,10 +16,15 @@ let
   # "failed to persist config.toml" — see the codex.nix migration in claude-code.nix's NOTE.
   #
   # So instead: keep programs.codex.settings unmanaged (config.toml stays a real, mutable
-  # file Codex owns), and merge our mcp_servers into it at boot via a systemd service,
+  # file Codex owns), and merge our declarative settings into it at boot via a systemd service,
   # the same pattern claude-code.nix uses for ~/.claude.json.
-  mcpServersJson = pkgs.writeText "codex-mcp-servers.json" (
+  # Settings that we own declaratively are merged into Codex's mutable config by
+  # the service below. Do not put these in programs.codex.settings: that would
+  # make Home Manager replace config.toml with a read-only store symlink.
+  declarativeConfigJson = pkgs.writeText "codex-declarative-config.json" (
     builtins.toJSON {
+      sandbox_mode = "workspace-write";
+      approvals_reviewer = "auto_review";
       mcp_servers = lib.mapAttrs (
         _: lib.filterAttrs (n: _: n != "type")
       ) config.agindin.mcp.serversConfig;
@@ -33,20 +38,16 @@ in
     home-manager.users.agindin.programs.codex = {
       enable = true;
       package = unstablePkgs.codex;
-      settings = {
-        sandbox_mode = "workspace-write";
-        approvals_reviewer = "auto_review";
-      };
     };
 
-    environment.etc."codex-mcp-servers.json".source = mcpServersJson;
+    environment.etc."codex-declarative-config.json".source = declarativeConfigJson;
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
       ".codex"
     ];
 
-    systemd.services.codex-merge-mcp-servers = {
-      description = "Merge declarative MCP server config into ~/.codex/config.toml";
+    systemd.services.codex-merge-config = {
+      description = "Merge declarative settings into ~/.codex/config.toml";
       wantedBy = [ "multi-user.target" ];
       after = [
         "local-fs.target"
@@ -60,7 +61,7 @@ in
           set -euo pipefail
           CONFIG_DIR="/home/agindin/.codex"
           CONFIG_FILE="$CONFIG_DIR/config.toml"
-          MCP_SERVERS="/etc/codex-mcp-servers.json"
+          DECLARATIVE_CONFIG="/etc/codex-declarative-config.json"
 
           ${lib.getExe' pkgs.coreutils "mkdir"} -p "$CONFIG_DIR"
 
@@ -70,7 +71,7 @@ in
             EXISTING_JSON="{}"
           fi
 
-          ${lib.getExe pkgs.jq} -s '.[0] * .[1]' <(echo "$EXISTING_JSON") "$MCP_SERVERS" \
+          ${lib.getExe pkgs.jq} -s '.[0] * .[1]' <(echo "$EXISTING_JSON") "$DECLARATIVE_CONFIG" \
             | ${lib.getExe' pkgs.remarshal "json2toml"} - "$CONFIG_FILE.tmp"
           ${lib.getExe' pkgs.coreutils "mv"} "$CONFIG_FILE.tmp" "$CONFIG_FILE"
         '';
