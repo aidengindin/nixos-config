@@ -5,6 +5,7 @@
   ];
 
   agindin = {
+    chatgpt.desktop.enable = true;
     claude-code.enable = true;
     claude.desktop.enable = true;
     codex.enable = true;

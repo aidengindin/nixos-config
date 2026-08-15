@@ -3,6 +3,7 @@
   imports = [
     ./bash.nix
     ./cli.nix
+    ./chatgpt-desktop.nix
     ./claude-code.nix
     ./claude-desktop.nix
     ./codex.nix
