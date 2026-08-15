@@ -9,6 +9,9 @@ let
   cfg = config.agindin.steam;
   inherit (lib) mkIf mkEnableOption;
 
+  # Hosts that boot the Jovian Steam session rather than a desktop compositor.
+  jovianSession = cfg.deck.enable || cfg.machine.enable;
+
   gamescopeSteam = pkgs.writeShellApplication {
     name = "gamescope-steam";
     runtimeInputs = [
@@ -68,20 +71,24 @@ in
 
     programs.gamemode.enable = true;
 
-    programs.gamescope = {
+    # Jovian's steam module ships its own Deck-patched gamescope and defines
+    # security.wrappers.gamescope itself, so leave it alone on those hosts.
+    programs.gamescope = mkIf (!jovianSession) {
       enable = true;
       package = unstablePkgs.gamescope;
       capSysNice = true;
     };
 
-    environment.systemPackages = [
+    # gamescope-steam asks hyprctl for the active monitor's geometry, so it only
+    # works on desktop hosts; Jovian hosts get Steam from the session itself.
+    environment.systemPackages = lib.optionals (!jovianSession) [
       gamescopeSteam
       gamescopeSteamDesktop
     ];
 
     hardware.steam-hardware.enable = true;
 
-    jovian = mkIf (cfg.deck.enable || cfg.machine.enable) {
+    jovian = mkIf jovianSession {
       devices.steamdeck = mkIf cfg.deck.enable {
         enable = true;
         autoUpdate = true;
@@ -96,7 +103,7 @@ in
       };
     };
 
-    agindin.gnome = mkIf (cfg.deck.enable || cfg.machine.enable) {
+    agindin.gnome = mkIf jovianSession {
       enable = true;
       gdm.enable = false;
     };
