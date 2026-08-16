@@ -46,6 +46,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/update-ublock-hash.sh
 
+      - name: Update Claude Desktop
+        run: bash scripts/update-claude-desktop.sh
+
+      - name: Update ChatGPT Desktop
+        run: bash scripts/update-chatgpt-desktop.sh
+
       - name: Check for changes
         id: check
         run: |
@@ -70,6 +76,7 @@ jobs:
           - Custom package hashes refreshed via nix-update
           - caddy-cloudflare hash refreshed
           - uBlock Origin version and hash refreshed
+          - Custom packages updated
 
           Review diff, verify builds on osgiliath, then merge." \
             --base main \
