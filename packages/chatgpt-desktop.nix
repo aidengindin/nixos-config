@@ -81,10 +81,14 @@ pkgs.stdenv.mkDerivation {
   # dlopen()'d at runtime rather than linked, so they never appear in DT_NEEDED and
   # autoPatchelf won't add them to RPATH from buildInputs alone. libGL in particular is
   # loaded by ANGLE during GPU init; without it the app logs a flood of
-  # "Could not dlopen libGL.so.1" and falls back off hardware acceleration.
+  # "Could not dlopen libGL.so.1" and falls back off hardware acceleration. libsecret is
+  # loaded by Chromium's gnome-libsecret os_crypt backend; without it safeStorage reports
+  # isEncryptionAvailable=false and the session token is never persisted, so every launch
+  # asks for a fresh login.
   runtimeDependencies = [
     (lib.getLib pkgs.systemd)
     pkgs.libglvnd
+    (lib.getLib pkgs.libsecret)
   ];
 
   # The app bundles a large pile of third-party native helpers under resources/ —

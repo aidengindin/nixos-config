@@ -72,8 +72,19 @@ pkgs.stdenv.mkDerivation {
     libxshmfence
   ];
 
-  # dlopen()'d at runtime, not linked — keep autoPatchelf from failing and ensure present.
-  runtimeDependencies = [ (lib.getLib pkgs.systemd) ];
+  # dlopen()'d at runtime, not linked. autoPatchelfHook only adds a RUNPATH entry for a
+  # library that satisfies some DT_NEEDED, so listing these in buildInputs isn't enough —
+  # they have to be named here or the dlopen fails at runtime.
+  #
+  # libsecret is what Chromium's gnome-libsecret os_crypt backend loads (see
+  # --password-store in common/claude-desktop.nix). Without it KeyStorageLibsecret::Init()
+  # fails, OSCrypt never derives a v11 key, safeStorage.isEncryptionAvailable() returns
+  # false, and the app logs "tokens will not persist" — so the auth token is dropped on
+  # exit and every launch lands on the login page.
+  runtimeDependencies = with pkgs; [
+    (lib.getLib systemd)
+    (lib.getLib libsecret)
+  ];
 
   # dpkg-deb -x tries to restore chrome-sandbox's setuid bit, which fails in the build
   # sandbox. Stream the payload through tar without preserving perms; the sandbox helper
