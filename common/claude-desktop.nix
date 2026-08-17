@@ -51,6 +51,12 @@ let
   # Claude Code-only transports like `type = "http"` (e.g. liftosaur) are
   # rejected as invalid, so exclude anything that isn't a plain stdio server.
   desktopServers = filterAttrs (_: v: !(v ? type)) config.agindin.mcp.serversConfig;
+
+  # Only the generated half of claude_desktop_config.json — merged into the app's own
+  # copy at activation time rather than replacing it (see claudeDesktopMcpServers below).
+  mcpServersJson = pkgs.writeText "claude-desktop-mcp-servers.json" (
+    builtins.toJSON { mcpServers = desktopServers; }
+  );
 in
 {
   options.agindin.claude.desktop.enable = mkEnableOption "Claude Desktop GUI";
@@ -97,16 +103,50 @@ in
     # nix-ld swaps in a real loader (+ library path) for such runtime-fetched binaries.
     programs.nix-ld.enable = true;
 
-    # Share the stdio MCP servers used by the Claude Code TUI. Claude Desktop
-    # only reads mcpServers from this file; it writes its own auth/session state
-    # elsewhere under .config/Claude, so a read-only store symlink is safe here.
-    # Claude Desktop rewrites this file at runtime (merging in its own state),
-    # which turns HM's symlink into a real file and triggers a backup on every
-    # activation. Force HM to clobber it — the content is fully generated.
-    home-manager.users.agindin.xdg.configFile."Claude/claude_desktop_config.json" = {
-      text = builtins.toJSON { mcpServers = desktopServers; };
-      force = true;
-    };
+    # Share the stdio MCP servers used by the Claude Code TUI.
+    #
+    # claude_desktop_config.json is not just our mcpServers block — it is the app's
+    # whole config document. Claude Desktop reads it at startup and writes it back with
+    # a `preferences` object merged in (sidebar mode, cowork settings,
+    # ccRemoteControlDefaultEnabled, …). Owning the path with xdg.configFile therefore
+    # replaced the entire document with a store symlink holding only mcpServers on every
+    # activation, so each nixos-rebuild silently reset every in-app preference.
+    #
+    # Merge our generated mcpServers into whatever is on disk instead, leaving the rest
+    # of the document alone. mcpServers itself is replaced wholesale so servers dropped
+    # from the Nix config don't linger. If the app happens to be running during
+    # activation it may later flush its in-memory copy over ours; restarting Claude
+    # Desktop picks the new servers back up.
+    home-manager.users.agindin =
+      { lib, ... }:
+      {
+        home.activation.claudeDesktopMcpServers = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+          claudeConfig="$HOME/.config/Claude/claude_desktop_config.json"
+          run mkdir -p "$(dirname "$claudeConfig")"
+
+          # Leftover store symlink from when home-manager owned this path outright.
+          if [ -L "$claudeConfig" ]; then
+            run rm -f "$claudeConfig"
+          fi
+
+          claudeBase='{}'
+          if [ -s "$claudeConfig" ] &&
+            ${lib.getExe pkgs.jq} -e 'type == "object"' "$claudeConfig" >/dev/null 2>&1; then
+            claudeBase="$(cat "$claudeConfig")"
+          fi
+
+          # A jq failure here must not truncate a config we couldn't rewrite.
+          if claudeMerged="$(
+            printf '%s' "$claudeBase" \
+              | ${lib.getExe pkgs.jq} --slurpfile generated ${mcpServersJson} \
+                '. + { mcpServers: $generated[0].mcpServers }'
+          )"; then
+            run install -m 600 -D /dev/stdin "$claudeConfig" <<<"$claudeMerged"
+          else
+            warnEcho "claude-desktop: could not merge mcpServers into $claudeConfig"
+          fi
+        '';
+      };
 
     # Persist login/session across reboots on impermanent hosts.
     agindin.impermanence = mkIf config.agindin.impermanence.enable {
