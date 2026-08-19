@@ -57,5 +57,15 @@ in
     # nix-ld swaps in a real loader for them. (claude-desktop.nix enables this too; NixOS
     # allows the duplicate definition because both set it to the same value.)
     programs.nix-ld.enable = true;
+
+    # detect-libc (bundled via @parcel/watcher, loaded by the git repo watcher) probes
+    # /usr/bin/ldd to tell glibc from musl. NixOS has no /usr/bin/ldd, so it falls through
+    # to its last-resort process.report.getReport(), and generating that report from the
+    # "git" worker thread trips a hard V8 check in this Electron build ("Empty MaybeLocal"
+    # in v8::ToLocalChecked → SIGILL). That kills the main process, so the app crashed on
+    # every launch as soon as a git repo was added as a project. A real ldd on that path
+    # stops the probe before it ever reaches the report fallback — glibc's ldd carries the
+    # "GNU C Library" marker detect-libc matches on.
+    systemd.tmpfiles.rules = [ "L+ /usr/bin/ldd - - - - ${pkgs.glibc.bin}/bin/ldd" ];
   };
 }
