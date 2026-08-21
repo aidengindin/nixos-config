@@ -86,6 +86,9 @@
     hermes = {
       enable = true;
       environmentFile = config.age.secrets.hermes-env.path;
+      matrix = {
+        enable = true;
+      };
     };
 
     # Floating DNS VIP (10.88.88.8) shared with lorien via keepalived/VRRP.
