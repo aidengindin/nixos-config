@@ -27,6 +27,18 @@ let
   # Hash the inputs ourselves to force the restart.
   environmentTrigger = builtins.toJSON config.services.hermes-agent.environment;
 
+  # The same failure mode one level up. The activation script also rewrites
+  # $HERMES_HOME/config.yaml, and Hermes only reads that at startup, so a
+  # changed setting lands on disk while the running process keeps serving the
+  # old value until something unrelated happens to restart it. Observed with
+  # memory.nudge_interval: the deploy reported success, the file was correct,
+  # and the gateway went on using the previous thresholds.
+  #
+  # Covers mcp_servers too, since the upstream module merges those into
+  # settings — so adding or re-pointing an MCP server now restarts the gateway
+  # that has to connect to it.
+  settingsTrigger = builtins.toJSON config.services.hermes-agent.settings;
+
   # environmentFile is the runtime agenix path, whose plaintext does not exist
   # at eval time. Hash the encrypted source instead — it changes on every
   # `agenix -e`, which is the same signal. Hashing ciphertext leaks nothing.
@@ -384,7 +396,11 @@ in
       # stricter than the upstream native default, which exposes /home.
       serviceConfig.ProtectHome = lib.mkForce true;
 
-      restartTriggers = [ environmentTrigger ] ++ environmentFileTriggers;
+      restartTriggers = [
+        environmentTrigger
+        settingsTrigger
+      ]
+      ++ environmentFileTriggers;
     };
 
     systemd.services.hermes-dashboard = {
