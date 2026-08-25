@@ -190,6 +190,16 @@ in
     khazad-dumUser
   ];
 
+  "grafana-mcp-token.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
+  "homeassistant-token.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "hermes-env.age".publicKeys = [
     osgiliathHost
     osgiliathUser

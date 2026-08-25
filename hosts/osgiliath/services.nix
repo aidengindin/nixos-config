@@ -78,6 +78,18 @@
       group = "hermes";
       mode = "0440";
     };
+    hermes-grafana-token = {
+      file = ../../secrets/grafana-mcp-token.age;
+      owner = "hermes";
+      group = "hermes";
+      mode = "0440";
+    };
+    hermes-homeassistant-token = {
+      file = ../../secrets/homeassistant-token.age;
+      owner = "hermes";
+      group = "hermes";
+      mode = "0440";
+    };
   };
 
   agindin.services = {
