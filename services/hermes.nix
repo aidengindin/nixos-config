@@ -104,6 +104,36 @@ in
       };
     };
 
+    memory = {
+      nudgeInterval = mkOption {
+        type = types.ints.unsigned;
+        default = 10;
+        description = ''
+          Remind the agent to consider saving a memory every N user turns.
+          0 disables the nudge.
+
+          Upstream's default of 10 assumes long CLI sessions. Over a chat
+          platform, where most exchanges run two to five turns, it never fires
+          — and the built-in memory then accumulates nothing at all, which is
+          exactly what happened here before this was lowered.
+        '';
+      };
+
+      flushMinTurns = mkOption {
+        type = types.ints.unsigned;
+        default = 6;
+        description = ''
+          Minimum user turns before the agent gets a turn to save memories
+          ahead of losing context (compression, /new, /reset, exit). 0
+          disables the flush.
+
+          Same reasoning as nudgeInterval: upstream's 6 is above the length of
+          a typical chat exchange, so the one guaranteed save opportunity
+          never arrives.
+        '';
+      };
+    };
+
     webSearch.backend = mkOption {
       type = types.nullOr (
         types.enum [
@@ -336,6 +366,12 @@ in
       }
       // optionalAttrs (cfg.webSearch.backend != null) {
         web.backend = cfg.webSearch.backend;
+      }
+      // {
+        memory = {
+          nudge_interval = cfg.memory.nudgeInterval;
+          flush_min_turns = cfg.memory.flushMinTurns;
+        };
       };
     };
 

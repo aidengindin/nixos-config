@@ -103,6 +103,13 @@
       };
       wiki.enable = true;
       webSearch.backend = "tavily";
+      # Tuned down from upstream's 10/6: Matrix exchanges here are short
+      # enough that neither threshold had ever fired, and the built-in
+      # memory stores were still empty after a week of daily use.
+      memory = {
+        nudgeInterval = 4;
+        flushMinTurns = 2;
+      };
     };
 
     # Floating DNS VIP (10.88.88.8) shared with lorien via keepalived/VRRP.
