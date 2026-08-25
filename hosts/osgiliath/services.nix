@@ -101,6 +101,7 @@
       matrix = {
         enable = true;
       };
+      wiki.enable = true;
     };
 
     # Floating DNS VIP (10.88.88.8) shared with lorien via keepalived/VRRP.

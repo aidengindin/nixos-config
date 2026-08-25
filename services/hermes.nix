@@ -72,6 +72,32 @@ in
       '';
     };
 
+    wiki = {
+      enable = mkEnableOption ''
+        an agent-owned wiki: a persistent knowledge base of interlinked
+        markdown that Hermes creates and curates itself.
+
+        This only points the bundled `research/llm-wiki` and
+        `note-taking/obsidian` skills at a directory and injects a pointer into
+        the system prompt. The wiki itself is initialized by asking the agent,
+        not by a deploy
+      '';
+
+      path = mkOption {
+        type = types.str;
+        default = "${config.services.hermes-agent.stateDir}/wiki";
+        defaultText = "\${config.services.hermes-agent.stateDir}/wiki";
+        description = ''
+          Where the wiki lives. Must be under the Hermes state directory: the
+          gateway runs with ProtectSystem=strict and ReadWritePaths covering
+          only the state and working directories.
+
+          Keeping it in the state directory also means impermanence and restic
+          already cover it, so a bad agent edit is recoverable from a snapshot.
+        '';
+      };
+    };
+
     matrix = {
       enable = mkEnableOption ''
         the Matrix gateway platform.
@@ -151,6 +177,17 @@ in
         '';
       }
       {
+        assertion = !cfg.wiki.enable || hasPrefix "${config.services.hermes-agent.stateDir}/" cfg.wiki.path;
+        message = ''
+          agindin.services.hermes.wiki.path must be under
+          ${config.services.hermes-agent.stateDir}. The gateway runs with
+          ProtectSystem=strict and ReadWritePaths covering only the state and
+          working directories, so the agent could not write anywhere else — and
+          a path outside the state directory would silently fall out of the
+          impermanence and restic coverage.
+        '';
+      }
+      {
         assertion = environmentFileTriggers != [ ];
         message = ''
           agindin.services.hermes.environmentFile does not match any age.secrets
@@ -169,16 +206,78 @@ in
       # Non-secret Matrix knobs. The upstream module merges these into
       # $HERMES_HOME/.env alongside environmentFiles; the credentials
       # themselves stay in the agenix file.
-      environment = optionalAttrs cfg.matrix.enable (
-        {
-          MATRIX_E2EE_MODE = cfg.matrix.e2eeMode;
-          MATRIX_REQUIRE_MENTION = boolToString cfg.matrix.requireMention;
-          MATRIX_AUTO_THREAD = boolToString cfg.matrix.autoThread;
-        }
-        // optionalAttrs (cfg.matrix.recoveryKeyOutputFile != null) {
-          MATRIX_RECOVERY_KEY_OUTPUT_FILE = cfg.matrix.recoveryKeyOutputFile;
-        }
-      );
+      environment =
+        optionalAttrs cfg.matrix.enable (
+          {
+            MATRIX_E2EE_MODE = cfg.matrix.e2eeMode;
+            MATRIX_REQUIRE_MENTION = boolToString cfg.matrix.requireMention;
+            MATRIX_AUTO_THREAD = boolToString cfg.matrix.autoThread;
+          }
+          // optionalAttrs (cfg.matrix.recoveryKeyOutputFile != null) {
+            MATRIX_RECOVERY_KEY_OUTPUT_FILE = cfg.matrix.recoveryKeyOutputFile;
+          }
+        )
+        # Both bundled knowledge-base skills read their location from the
+        # environment: `research/llm-wiki` takes WIKI_PATH and
+        # `note-taking/obsidian` takes OBSIDIAN_VAULT_PATH. Pointing both at one
+        # directory is what llm-wiki documents — the obsidian skill is generic
+        # markdown-vault mechanics (wikilinks, anchored appends) and needs no
+        # Obsidian install.
+        // optionalAttrs cfg.wiki.enable {
+          WIKI_PATH = cfg.wiki.path;
+          OBSIDIAN_VAULT_PATH = cfg.wiki.path;
+        };
+
+      # SOUL.md would be the natural home for this, but it loads from
+      # HERMES_HOME and `documents` installs into workingDirectory. Context-file
+      # discovery scans the cwd as .hermes.md → AGENTS.md → CLAUDE.md →
+      # .cursorrules, first found wins, and nothing else creates .hermes.md
+      # here — so AGENTS.md is the reachable slot.
+      #
+      # Deliberately not MEMORY.md: that file is capped at 2200 characters with
+      # the agent told to consolidate or replace when full, so a pointer left
+      # there can be pruned away by the agent itself. This one is capped at
+      # ~20k and installed by the activation script on every deploy, so an
+      # agent edit heals on the next one.
+      documents = optionalAttrs cfg.wiki.enable {
+        # The literal path is baked in on purpose: both skills warn that the
+        # file tools do not expand shell variables, so $WIKI_PATH would be
+        # passed through to read_file verbatim and fail.
+        "AGENTS.md" = ''
+          # Workspace
+
+          ## Your wiki
+
+          You keep a wiki at `${cfg.wiki.path}`. It is yours — you create,
+          update and curate it yourself, and nobody else edits it.
+
+          The `llm-wiki` skill governs it. Read that skill with `skill_view`
+          before any wiki operation: it defines the layout, the frontmatter
+          contract, the tag taxonomy rules and the lint pass.
+
+          ### Orient before answering
+
+          Before answering anything about this infrastructure, these machines,
+          or a topic you have researched before:
+
+          1. Read `${cfg.wiki.path}/SCHEMA.md`
+          2. Read `${cfg.wiki.path}/index.md`
+          3. Read the last ~30 entries of `${cfg.wiki.path}/log.md`
+
+          Then search the wiki before concluding you do not know something.
+
+          ### File what you learn
+
+          After work worth keeping — a diagnosis, a decision and why it was
+          made, a non-obvious fact about a machine or service — write it up and
+          update `index.md` and `log.md`. Skipping those two is what makes a
+          wiki decay; they are the navigational backbone, not bookkeeping.
+
+          Keep `MEMORY.md` for short durable facts and preferences. Anything
+          that needs more than a sentence, cites a source, or should link to
+          other things belongs in the wiki instead.
+        '';
+      };
 
       settings = {
         model = {
@@ -275,6 +374,13 @@ in
         domain = cfg.domain;
         port = globalVars.ports.hermesDashboard;
       }
+    ];
+
+    # The upstream module creates only its own state subdirectories, so the
+    # wiki root needs one of these or the agent's first write fails against a
+    # missing parent.
+    systemd.tmpfiles.rules = mkIf cfg.wiki.enable [
+      "d ${cfg.wiki.path} 0750 ${config.services.hermes-agent.user} ${config.services.hermes-agent.group} - -"
     ];
 
     # Also covers the Matrix E2EE store ($HERMES_HOME/platforms/matrix/store):
