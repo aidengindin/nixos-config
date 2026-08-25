@@ -58,6 +58,12 @@ in
         Agenix environment file containing OPENROUTER_API_KEY and
         HERMES_DASHBOARD_OIDC_CLIENT_ID.
 
+        When `webSearch.backend` is set it must also carry that backend's
+        credential — TAVILY_API_KEY, EXA_API_KEY, PARALLEL_API_KEY,
+        FIRECRAWL_API_KEY, BRAVE_SEARCH_API_KEY or SEARXNG_URL respectively.
+        Nothing validates this at eval time; a missing key shows up as a
+        web_search failure mid-conversation.
+
         When `matrix.enable` is set it must also carry MATRIX_HOMESERVER,
         MATRIX_USER_ID, MATRIX_ACCESS_TOKEN, MATRIX_DEVICE_ID,
         MATRIX_ALLOWED_USERS, MATRIX_HOME_ROOM and — once the adapter has
@@ -96,6 +102,37 @@ in
           already cover it, so a bad agent edit is recoverable from a snapshot.
         '';
       };
+    };
+
+    webSearch.backend = mkOption {
+      type = types.nullOr (
+        types.enum [
+          "tavily"
+          "exa"
+          "parallel"
+          "firecrawl"
+          "searxng"
+          "brave-free"
+          "ddgs"
+        ]
+      );
+      default = null;
+      description = ''
+        Pin the backend behind the web_search and web_extract tools, written
+        as `web.backend` in config.yaml.
+
+        Null leaves Hermes to auto-detect from whichever credential it finds,
+        in the order tavily → exa → parallel → firecrawl → searxng →
+        brave-free → ddgs. Pinning is better: when nothing is configured the
+        resolver falls through to a hardcoded "firecrawl" default, so a
+        missing key surfaces as a tool error mid-conversation rather than as
+        anything visible at deploy time.
+
+        The matching credential goes in `environmentFile`. Note that
+        "searxng", "brave-free" and "ddgs" are search-only and cannot back
+        web_extract, and that "brave-free" is a misnomer — Brave ended its
+        free tier in February 2026.
+      '';
     };
 
     matrix = {
@@ -296,6 +333,9 @@ in
             };
           };
         };
+      }
+      // optionalAttrs (cfg.webSearch.backend != null) {
+        web.backend = cfg.webSearch.backend;
       };
     };
 

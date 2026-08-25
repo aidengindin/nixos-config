@@ -102,6 +102,7 @@
         enable = true;
       };
       wiki.enable = true;
+      webSearch.backend = "tavily";
     };
 
     # Floating DNS VIP (10.88.88.8) shared with lorien via keepalived/VRRP.
