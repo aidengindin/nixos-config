@@ -27,6 +27,18 @@ let
   # Hash the inputs ourselves to force the restart.
   environmentTrigger = builtins.toJSON config.services.hermes-agent.environment;
 
+  # The same failure mode one level up. The activation script also rewrites
+  # $HERMES_HOME/config.yaml, and Hermes only reads that at startup, so a
+  # changed setting lands on disk while the running process keeps serving the
+  # old value until something unrelated happens to restart it. Observed with
+  # memory.nudge_interval: the deploy reported success, the file was correct,
+  # and the gateway went on using the previous thresholds.
+  #
+  # Covers mcp_servers too, since the upstream module merges those into
+  # settings — so adding or re-pointing an MCP server now restarts the gateway
+  # that has to connect to it.
+  settingsTrigger = builtins.toJSON config.services.hermes-agent.settings;
+
   # environmentFile is the runtime agenix path, whose plaintext does not exist
   # at eval time. Hash the encrypted source instead — it changes on every
   # `agenix -e`, which is the same signal. Hashing ciphertext leaks nothing.
@@ -58,6 +70,12 @@ in
         Agenix environment file containing OPENROUTER_API_KEY and
         HERMES_DASHBOARD_OIDC_CLIENT_ID.
 
+        When `webSearch.backend` is set it must also carry that backend's
+        credential — TAVILY_API_KEY, EXA_API_KEY, PARALLEL_API_KEY,
+        FIRECRAWL_API_KEY, BRAVE_SEARCH_API_KEY or SEARXNG_URL respectively.
+        Nothing validates this at eval time; a missing key shows up as a
+        web_search failure mid-conversation.
+
         When `matrix.enable` is set it must also carry MATRIX_HOMESERVER,
         MATRIX_USER_ID, MATRIX_ACCESS_TOKEN, MATRIX_DEVICE_ID,
         MATRIX_ALLOWED_USERS, MATRIX_HOME_ROOM and — once the adapter has
@@ -69,6 +87,134 @@ in
         Pass an agenix `.path` here: the restart trigger below finds the
         matching `age.secrets` entry and hashes its encrypted source, so
         editing the secret actually restarts the gateway.
+      '';
+    };
+
+    wiki = {
+      enable = mkEnableOption ''
+        an agent-owned wiki: a persistent knowledge base of interlinked
+        markdown that Hermes creates and curates itself.
+
+        This only points the bundled `research/llm-wiki` and
+        `note-taking/obsidian` skills at a directory and injects a pointer into
+        the system prompt. The wiki itself is initialized by asking the agent,
+        not by a deploy
+      '';
+
+      path = mkOption {
+        type = types.str;
+        default = "${config.services.hermes-agent.stateDir}/wiki";
+        defaultText = "\${config.services.hermes-agent.stateDir}/wiki";
+        description = ''
+          Where the wiki lives. Must be under the Hermes state directory: the
+          gateway runs with ProtectSystem=strict and ReadWritePaths covering
+          only the state and working directories.
+
+          Keeping it in the state directory also means impermanence and restic
+          already cover it, so a bad agent edit is recoverable from a snapshot.
+        '';
+      };
+    };
+
+    memory = {
+      nudgeInterval = mkOption {
+        type = types.ints.unsigned;
+        default = 10;
+        description = ''
+          Remind the agent to consider saving a memory every N user turns.
+          0 disables the nudge.
+
+          Upstream's default of 10 assumes long CLI sessions. Over a chat
+          platform, where most exchanges run two to five turns, it never fires
+          — and the built-in memory then accumulates nothing at all, which is
+          exactly what happened here before this was lowered.
+        '';
+      };
+
+      flushMinTurns = mkOption {
+        type = types.ints.unsigned;
+        default = 6;
+        description = ''
+          Minimum user turns before the agent gets a turn to save memories
+          ahead of losing context (compression, /new, /reset, exit). 0
+          disables the flush.
+
+          Same reasoning as nudgeInterval: upstream's 6 is above the length of
+          a typical chat exchange, so the one guaranteed save opportunity
+          never arrives.
+        '';
+      };
+    };
+
+    denyCommands = mkOption {
+      type = types.listOf types.str;
+      default = [
+        # Capabilities the gateway does not have today but could acquire by
+        # accident — a key appearing in its home, a group membership added
+        # later. Denying them now means the capability cannot be picked up
+        # silently. nixos-deploy has passwordless sudo, so a working `colmena
+        # apply` from here would be arbitrary root on every host.
+        "colmena *"
+        "nixos-rebuild *"
+        "ssh *"
+        "scp *"
+        "git push --force*"
+        "git push -f *"
+
+        # Credential paths. Belt and braces only: `deny` is matched against
+        # terminal commands, and the file tools (read_file, search_files,
+        # patch) do not go through the approval layer at all — only terminal,
+        # execute_code, mcp_tool and delegate do. These stop a careless
+        # `cat /run/agenix/...`; they do not stop `read_file` on the same path,
+        # nor `cat "/run/age""nix/x"`. Accident prevention, not a boundary.
+        "*run/agenix*"
+        "*mcp-tokens*"
+        "*.hermes/.env*"
+        "*id_ed25519*"
+        "*id_rsa*"
+      ];
+      description = ''
+        fnmatch globs matched case-insensitively against terminal commands.
+        A match blocks unconditionally, ahead of the --yolo/mode=off bypass,
+        which makes this the one approval control an LLM guardian cannot talk
+        its way past.
+
+        Upstream already hardline-blocks the classic destructive set (rm -rf of
+        root, system and home directories, mkfs, dd to block devices, fork
+        bombs, kill -1, the shutdown/reboot family, sudo -S password guessing),
+        and most of it is unreachable anyway under ProtectSystem=strict with no
+        sudo. This list covers what that floor does not.
+      '';
+    };
+
+    webSearch.backend = mkOption {
+      type = types.nullOr (
+        types.enum [
+          "tavily"
+          "exa"
+          "parallel"
+          "firecrawl"
+          "searxng"
+          "brave-free"
+          "ddgs"
+        ]
+      );
+      default = null;
+      description = ''
+        Pin the backend behind the web_search and web_extract tools, written
+        as `web.backend` in config.yaml.
+
+        Null leaves Hermes to auto-detect from whichever credential it finds,
+        in the order tavily → exa → parallel → firecrawl → searxng →
+        brave-free → ddgs. Pinning is better: when nothing is configured the
+        resolver falls through to a hardcoded "firecrawl" default, so a
+        missing key surfaces as a tool error mid-conversation rather than as
+        anything visible at deploy time.
+
+        The matching credential goes in `environmentFile`. Note that
+        "searxng", "brave-free" and "ddgs" are search-only and cannot back
+        web_extract, and that "brave-free" is a misnomer — Brave ended its
+        free tier in February 2026.
       '';
     };
 
@@ -151,6 +297,17 @@ in
         '';
       }
       {
+        assertion = !cfg.wiki.enable || hasPrefix "${config.services.hermes-agent.stateDir}/" cfg.wiki.path;
+        message = ''
+          agindin.services.hermes.wiki.path must be under
+          ${config.services.hermes-agent.stateDir}. The gateway runs with
+          ProtectSystem=strict and ReadWritePaths covering only the state and
+          working directories, so the agent could not write anywhere else — and
+          a path outside the state directory would silently fall out of the
+          impermanence and restic coverage.
+        '';
+      }
+      {
         assertion = environmentFileTriggers != [ ];
         message = ''
           agindin.services.hermes.environmentFile does not match any age.secrets
@@ -169,16 +326,78 @@ in
       # Non-secret Matrix knobs. The upstream module merges these into
       # $HERMES_HOME/.env alongside environmentFiles; the credentials
       # themselves stay in the agenix file.
-      environment = optionalAttrs cfg.matrix.enable (
-        {
-          MATRIX_E2EE_MODE = cfg.matrix.e2eeMode;
-          MATRIX_REQUIRE_MENTION = boolToString cfg.matrix.requireMention;
-          MATRIX_AUTO_THREAD = boolToString cfg.matrix.autoThread;
-        }
-        // optionalAttrs (cfg.matrix.recoveryKeyOutputFile != null) {
-          MATRIX_RECOVERY_KEY_OUTPUT_FILE = cfg.matrix.recoveryKeyOutputFile;
-        }
-      );
+      environment =
+        optionalAttrs cfg.matrix.enable (
+          {
+            MATRIX_E2EE_MODE = cfg.matrix.e2eeMode;
+            MATRIX_REQUIRE_MENTION = boolToString cfg.matrix.requireMention;
+            MATRIX_AUTO_THREAD = boolToString cfg.matrix.autoThread;
+          }
+          // optionalAttrs (cfg.matrix.recoveryKeyOutputFile != null) {
+            MATRIX_RECOVERY_KEY_OUTPUT_FILE = cfg.matrix.recoveryKeyOutputFile;
+          }
+        )
+        # Both bundled knowledge-base skills read their location from the
+        # environment: `research/llm-wiki` takes WIKI_PATH and
+        # `note-taking/obsidian` takes OBSIDIAN_VAULT_PATH. Pointing both at one
+        # directory is what llm-wiki documents — the obsidian skill is generic
+        # markdown-vault mechanics (wikilinks, anchored appends) and needs no
+        # Obsidian install.
+        // optionalAttrs cfg.wiki.enable {
+          WIKI_PATH = cfg.wiki.path;
+          OBSIDIAN_VAULT_PATH = cfg.wiki.path;
+        };
+
+      # SOUL.md would be the natural home for this, but it loads from
+      # HERMES_HOME and `documents` installs into workingDirectory. Context-file
+      # discovery scans the cwd as .hermes.md → AGENTS.md → CLAUDE.md →
+      # .cursorrules, first found wins, and nothing else creates .hermes.md
+      # here — so AGENTS.md is the reachable slot.
+      #
+      # Deliberately not MEMORY.md: that file is capped at 2200 characters with
+      # the agent told to consolidate or replace when full, so a pointer left
+      # there can be pruned away by the agent itself. This one is capped at
+      # ~20k and installed by the activation script on every deploy, so an
+      # agent edit heals on the next one.
+      documents = optionalAttrs cfg.wiki.enable {
+        # The literal path is baked in on purpose: both skills warn that the
+        # file tools do not expand shell variables, so $WIKI_PATH would be
+        # passed through to read_file verbatim and fail.
+        "AGENTS.md" = ''
+          # Workspace
+
+          ## Your wiki
+
+          You keep a wiki at `${cfg.wiki.path}`. It is yours — you create,
+          update and curate it yourself, and nobody else edits it.
+
+          The `llm-wiki` skill governs it. Read that skill with `skill_view`
+          before any wiki operation: it defines the layout, the frontmatter
+          contract, the tag taxonomy rules and the lint pass.
+
+          ### Orient before answering
+
+          Before answering anything about this infrastructure, these machines,
+          or a topic you have researched before:
+
+          1. Read `${cfg.wiki.path}/SCHEMA.md`
+          2. Read `${cfg.wiki.path}/index.md`
+          3. Read the last ~30 entries of `${cfg.wiki.path}/log.md`
+
+          Then search the wiki before concluding you do not know something.
+
+          ### File what you learn
+
+          After work worth keeping — a diagnosis, a decision and why it was
+          made, a non-obvious fact about a machine or service — write it up and
+          update `index.md` and `log.md`. Skipping those two is what makes a
+          wiki decay; they are the navigational backbone, not bookkeeping.
+
+          Keep `MEMORY.md` for short durable facts and preferences. Anything
+          that needs more than a sentence, cites a source, or should link to
+          other things belongs in the wiki instead.
+        '';
+      };
 
       settings = {
         model = {
@@ -197,6 +416,18 @@ in
             };
           };
         };
+      }
+      // optionalAttrs (cfg.webSearch.backend != null) {
+        web.backend = cfg.webSearch.backend;
+      }
+      // {
+        memory = {
+          nudge_interval = cfg.memory.nudgeInterval;
+          flush_min_turns = cfg.memory.flushMinTurns;
+        };
+      }
+      // optionalAttrs (cfg.denyCommands != [ ]) {
+        approvals.deny = cfg.denyCommands;
       };
     };
 
@@ -209,7 +440,11 @@ in
       # stricter than the upstream native default, which exposes /home.
       serviceConfig.ProtectHome = lib.mkForce true;
 
-      restartTriggers = [ environmentTrigger ] ++ environmentFileTriggers;
+      restartTriggers = [
+        environmentTrigger
+        settingsTrigger
+      ]
+      ++ environmentFileTriggers;
     };
 
     systemd.services.hermes-dashboard = {
@@ -275,6 +510,13 @@ in
         domain = cfg.domain;
         port = globalVars.ports.hermesDashboard;
       }
+    ];
+
+    # The upstream module creates only its own state subdirectories, so the
+    # wiki root needs one of these or the agent's first write fails against a
+    # missing parent.
+    systemd.tmpfiles.rules = mkIf cfg.wiki.enable [
+      "d ${cfg.wiki.path} 0750 ${config.services.hermes-agent.user} ${config.services.hermes-agent.group} - -"
     ];
 
     # Also covers the Matrix E2EE store ($HERMES_HOME/platforms/matrix/store):

@@ -15,6 +15,7 @@ let
     mkOption
     types
     optionalAttrs
+    optionals
     getExe
     ;
 
@@ -71,6 +72,48 @@ let
     '';
   };
 
+  # mcp-grafana 1.x reads the token from a file path itself, so every consumer
+  # gets the same plain env attrset: no wrapper, nothing secret in the Nix store
+  # or in the process environment, and a rotated token is picked up without a
+  # restart. nixpkgs 26.05 still carries 0.14.0, which only accepts the token
+  # inline — hence unstablePkgs, matching what mcp-nixos already does.
+  grafanaCfg = cfg.servers.grafana;
+  grafanaEnv = {
+    GRAFANA_URL = grafanaCfg.url;
+    GRAFANA_SERVICE_ACCOUNT_TOKEN_FILE = toString grafanaCfg.tokenFile;
+  };
+  grafanaArgs = optionals grafanaCfg.readOnly [ "--disable-write" ];
+
+  haCfg = cfg.servers.homeAssistant;
+
+  # Non-secret knobs. ha-mcp otherwise spawns a settings-UI web sidecar on a
+  # random port next to the stdio server and queries PyPI for a newer release on
+  # every start — neither belongs in a service Nix already pins and that runs
+  # under ProtectSystem=strict.
+  haEnv = {
+    HOMEASSISTANT_URL = haCfg.url;
+    HA_MCP_DISABLE_SETTINGS_UI = "1";
+    HA_MCP_DISABLE_UPDATE_CHECK = "1";
+  }
+  // optionalAttrs haCfg.readOnly { READ_ONLY_MODE = "1"; };
+
+  # ha-mcp only accepts HOMEASSISTANT_TOKEN inline, so the resolved views need a
+  # wrapper the way github does. programs.mcp below uses env.<VAR>.file instead.
+  haWrapper = pkgs.writeShellApplication {
+    name = "ha-mcp-wrapped";
+    runtimeInputs = [ unstablePkgs.ha-mcp ];
+    text = ''
+      export HOMEASSISTANT_TOKEN
+      HOMEASSISTANT_TOKEN=$(cat "${haCfg.tokenFile}")
+      exec ${getExe unstablePkgs.ha-mcp} "$@"
+    '';
+  };
+
+  timeArgs = optionals (cfg.servers.time.timezone != null) [
+    "--local-timezone"
+    cfg.servers.time.timezone
+  ];
+
   # Stdio MCP servers with secrets already resolved, for consumers that read raw
   # command/args and can't resolve home-manager's file-backed env mechanism
   # (e.g. Claude Desktop, see common/claude-desktop.nix).
@@ -101,6 +144,25 @@ let
     }
     // optionalAttrs cfg.servers.intervals.enable {
       intervals.command = "${intervalsWrapper}/bin/intervals-mcp-wrapped";
+    }
+    // optionalAttrs grafanaCfg.enable {
+      grafana = {
+        command = getExe unstablePkgs.mcp-grafana;
+        args = grafanaArgs;
+        env = grafanaEnv;
+      };
+    }
+    // optionalAttrs haCfg.enable {
+      home-assistant = {
+        command = "${haWrapper}/bin/ha-mcp-wrapped";
+        env = haEnv;
+      };
+    }
+    // optionalAttrs cfg.servers.time.enable {
+      time = {
+        command = getExe mcpPkgs.mcp-server-time;
+        args = timeArgs;
+      };
     };
 
   # Hermes accepts the same stdio/HTTP server definitions, except that its
@@ -161,6 +223,75 @@ in
           description = "Path to env file containing API_KEY and ATHLETE_ID for Intervals.icu.";
         };
       };
+
+      grafana = {
+        enable = mkEnableOption "Grafana MCP server";
+
+        url = mkOption {
+          type = types.str;
+          example = "http://127.0.0.1:10001";
+          description = ''
+            Base URL of the Grafana instance. On a host that runs Grafana
+            itself this should be the loopback port rather than the public
+            domain, which skips Caddy and the OIDC gate.
+          '';
+        };
+
+        tokenFile = mkOption {
+          type = types.path;
+          description = ''
+            Path to a file containing a Grafana service account token. Read by
+            mcp-grafana itself via GRAFANA_SERVICE_ACCOUNT_TOKEN_FILE, so the
+            token never reaches the Nix store or the process environment.
+          '';
+        };
+
+        readOnly = mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Pass --disable-write, which blocks dashboard edits, alert rule
+            changes, annotation writes and snapshot creation. Query tools —
+            including the Prometheus and Loki ones — stay available.
+          '';
+        };
+      };
+
+      homeAssistant = {
+        enable = mkEnableOption "Home Assistant MCP server";
+
+        url = mkOption {
+          type = types.str;
+          example = "http://10.88.88.3:8123";
+          description = "Base URL of the Home Assistant instance.";
+        };
+
+        tokenFile = mkOption {
+          type = types.path;
+          description = "Path to a file containing a Home Assistant long-lived access token.";
+        };
+
+        readOnly = mkOption {
+          type = types.bool;
+          default = false;
+          description = ''
+            Set READ_ONLY_MODE, which hides write-capable tools from the
+            catalog and blocks writes at call time. Off by default so the agent
+            can actually control devices.
+          '';
+        };
+      };
+
+      time = {
+        enable = mkEnableOption "time MCP server, which gives the model a clock";
+
+        timezone = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "America/New_York";
+          description = "Override the local timezone. Null inherits the host's.";
+        };
+      };
     };
   };
 
@@ -202,6 +333,27 @@ in
         }
         // optionalAttrs cfg.servers.intervals.enable {
           intervals.command = "${intervalsWrapper}/bin/intervals-mcp-wrapped";
+        }
+        // optionalAttrs grafanaCfg.enable {
+          grafana = {
+            command = getExe unstablePkgs.mcp-grafana;
+            args = grafanaArgs;
+            env = grafanaEnv;
+          };
+        }
+        // optionalAttrs haCfg.enable {
+          home-assistant = {
+            command = getExe unstablePkgs.ha-mcp;
+            env = haEnv // {
+              HOMEASSISTANT_TOKEN.file = haCfg.tokenFile;
+            };
+          };
+        }
+        // optionalAttrs cfg.servers.time.enable {
+          time = {
+            command = getExe mcpPkgs.mcp-server-time;
+            args = timeArgs;
+          };
         };
     };
   };

@@ -179,14 +179,29 @@ in
     khazad-dumUser
   ];
 
+  # osgiliath keeps a recipient slot even though Hermes no longer runs a github
+  # MCP server and the secret is not deployed there. Being a recipient only
+  # matters to someone who already has root on the host; what kept the PAT
+  # reachable by the hermes user was the age.secrets entry, and that is gone.
+  # A second recipient is what stops a lost laptop from orphaning the secret.
   "github-token.age".publicKeys = [
-    osgiliathHost
     khazad-dumUser
+    osgiliathHost
   ];
 
   "intervals-env.age".publicKeys = [
     osgiliathHost
     khazad-dumHost
+    khazad-dumUser
+  ];
+
+  "grafana-mcp-token.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
+  "homeassistant-token.age".publicKeys = [
+    osgiliathHost
     khazad-dumUser
   ];
 

@@ -969,6 +969,116 @@ in
                 }
               ];
             }
+            {
+              orgId = 1;
+              name = "Hermes";
+              folder = "Infrastructure";
+              interval = "5m";
+              rules = [
+                {
+                  uid = "hermes-mcp-oauth-refresh-dead";
+                  title = "Hermes MCP OAuth refresh token is dead";
+                  # A single failed refresh is noise and self-heals: the MCP
+                  # client clears only its in-memory token, then reloads the
+                  # persisted refresh token from $HERMES_HOME/mcp-tokens on the
+                  # next request. What it cannot recover from is a refresh
+                  # token the provider has permanently rejected — the client
+                  # then needs the interactive authorization-code flow, which a
+                  # headless gateway can never complete, and the server sits
+                  # parked until someone re-authorizes it by hand.
+                  #
+                  # So this alerts on the pattern, not the event: repeated
+                  # failures over an hour mean the reload path has been tried
+                  # and keeps landing on the same dead credential.
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 3600;
+                        to = 0;
+                      };
+                      datasourceUid = "local-loki";
+                      model = {
+                        expr = ''sum(count_over_time({job="systemd-journal", unit="hermes-agent.service"} |= "Token refresh failed" [1h]))'';
+                        queryType = "instant";
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ ];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "B" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ 3 ];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "C" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  # OK rather than NoData: a quiet hour produces no log lines
+                  # at all, which is the healthy state here.
+                  noDataState = "OK";
+                  execErrState = "Error";
+                  for = "15m";
+                  annotations = {
+                    summary = "hermes-agent has logged {{ $values.B.Value | printf \"%.0f\" }} OAuth token refresh failures in the last hour. A refresh token has most likely been revoked — re-authorize the affected MCP server, since the gateway cannot run the interactive flow itself.";
+                  };
+                  labels = {
+                    severity = "warning";
+                  };
+                }
+              ];
+            }
           ];
         };
       };

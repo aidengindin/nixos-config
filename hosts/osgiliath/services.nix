@@ -66,14 +66,20 @@
       group = "hermes";
       mode = "0440";
     };
-    hermes-github-token = {
-      file = ../../secrets/github-token.age;
+    hermes-intervals-env = {
+      file = ../../secrets/intervals-env.age;
       owner = "hermes";
       group = "hermes";
       mode = "0440";
     };
-    hermes-intervals-env = {
-      file = ../../secrets/intervals-env.age;
+    hermes-grafana-token = {
+      file = ../../secrets/grafana-mcp-token.age;
+      owner = "hermes";
+      group = "hermes";
+      mode = "0440";
+    };
+    hermes-homeassistant-token = {
+      file = ../../secrets/homeassistant-token.age;
       owner = "hermes";
       group = "hermes";
       mode = "0440";
@@ -88,6 +94,15 @@
       environmentFile = config.age.secrets.hermes-env.path;
       matrix = {
         enable = true;
+      };
+      wiki.enable = true;
+      webSearch.backend = "tavily";
+      # Tuned down from upstream's 10/6: Matrix exchanges here are short
+      # enough that neither threshold had ever fired, and the built-in
+      # memory stores were still empty after a week of daily use.
+      memory = {
+        nudgeInterval = 4;
+        flushMinTurns = 2;
       };
     };
 
