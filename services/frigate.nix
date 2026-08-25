@@ -53,7 +53,12 @@ let
       mqtt.enabled = false;
       record = {
         enabled = true;
-        retain.days = cfg.retentionDays;
+        # 0.17 dropped `record.retain` in favour of separate continuous and
+        # motion retention. Frigate's own migration maps the old
+        # `retain.days` with the default `mode = "all"` onto both, so do the
+        # same here.
+        continuous.days = cfg.retentionDays;
+        motion.days = cfg.retentionDays;
       };
       cameras = cameraSettings;
     }
