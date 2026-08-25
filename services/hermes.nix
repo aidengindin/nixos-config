@@ -146,6 +146,47 @@ in
       };
     };
 
+    denyCommands = mkOption {
+      type = types.listOf types.str;
+      default = [
+        # Capabilities the gateway does not have today but could acquire by
+        # accident — a key appearing in its home, a group membership added
+        # later. Denying them now means the capability cannot be picked up
+        # silently. nixos-deploy has passwordless sudo, so a working `colmena
+        # apply` from here would be arbitrary root on every host.
+        "colmena *"
+        "nixos-rebuild *"
+        "ssh *"
+        "scp *"
+        "git push --force*"
+        "git push -f *"
+
+        # Credential paths. Belt and braces only: `deny` is matched against
+        # terminal commands, and the file tools (read_file, search_files,
+        # patch) do not go through the approval layer at all — only terminal,
+        # execute_code, mcp_tool and delegate do. These stop a careless
+        # `cat /run/agenix/...`; they do not stop `read_file` on the same path,
+        # nor `cat "/run/age""nix/x"`. Accident prevention, not a boundary.
+        "*run/agenix*"
+        "*mcp-tokens*"
+        "*.hermes/.env*"
+        "*id_ed25519*"
+        "*id_rsa*"
+      ];
+      description = ''
+        fnmatch globs matched case-insensitively against terminal commands.
+        A match blocks unconditionally, ahead of the --yolo/mode=off bypass,
+        which makes this the one approval control an LLM guardian cannot talk
+        its way past.
+
+        Upstream already hardline-blocks the classic destructive set (rm -rf of
+        root, system and home directories, mkfs, dd to block devices, fork
+        bombs, kill -1, the shutdown/reboot family, sudo -S password guessing),
+        and most of it is unreachable anyway under ProtectSystem=strict with no
+        sudo. This list covers what that floor does not.
+      '';
+    };
+
     webSearch.backend = mkOption {
       type = types.nullOr (
         types.enum [
@@ -384,6 +425,9 @@ in
           nudge_interval = cfg.memory.nudgeInterval;
           flush_min_turns = cfg.memory.flushMinTurns;
         };
+      }
+      // optionalAttrs (cfg.denyCommands != [ ]) {
+        approvals.deny = cfg.denyCommands;
       };
     };
 

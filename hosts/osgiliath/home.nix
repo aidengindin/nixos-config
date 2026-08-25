@@ -14,10 +14,10 @@
       git.enable = true;
       fetch.enable = true;
       nixos.enable = true;
-      github = {
-        enable = true;
-        tokenFile = config.age.secrets.hermes-github-token.path;
-      };
+      # Deliberately no github server. The MCP tool surface is curated, but
+      # the raw PAT behind it is not, and the agent can read the secret file
+      # directly — read_file bypasses the approval layer entirely. Claude
+      # Code and Codex keep theirs on khazad-dum, which has its own token.
       liftosaur.enable = true;
       intervals = {
         enable = true;

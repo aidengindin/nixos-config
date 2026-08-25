@@ -179,8 +179,10 @@ in
     khazad-dumUser
   ];
 
+  # osgiliathHost intentionally absent: Hermes no longer runs a github MCP
+  # server, and leaving the token decryptable there would keep the PAT
+  # readable by the hermes user for no benefit.
   "github-token.age".publicKeys = [
-    osgiliathHost
     khazad-dumUser
   ];
 

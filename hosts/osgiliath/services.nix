@@ -66,12 +66,6 @@
       group = "hermes";
       mode = "0440";
     };
-    hermes-github-token = {
-      file = ../../secrets/github-token.age;
-      owner = "hermes";
-      group = "hermes";
-      mode = "0440";
-    };
     hermes-intervals-env = {
       file = ../../secrets/intervals-env.age;
       owner = "hermes";
