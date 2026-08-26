@@ -6,12 +6,12 @@
 {
   imports = [ ../../services ];
 
-  # calibre-web-automated imports books as uid 1000 with a umask that leaves its
-  # library subdirectories group-unwritable. This default ACL makes everything
-  # created under the library group-writable by `media`, so the calibre-news
-  # runner (a member of `media`) can prune old Economist issues.
+  # BookOrbit, like calibre-web-automated before it, files books as uid 1000
+  # with a umask that leaves its library subdirectories group-unwritable. This
+  # default ACL keeps everything created under the library group-writable by
+  # `media`, which the other members of that group rely on.
   systemd.tmpfiles.rules = [
-    "A+ ${config.agindin.services.calibre-web.calibreLibrary} - - - - d:group:media:rwx"
+    "A+ ${config.agindin.services.bookorbit.libraryPath} - - - - d:group:media:rwx"
   ];
 
   age.secrets = {
@@ -310,7 +310,19 @@
       mediaLocation = "/media/immich";
     };
 
-    calibre-web.enable = true;
+    # calibre-web-automated is retired; BookOrbit owns books.gindin.xyz. The
+    # module and its DRM plugin package are kept in-tree but unused.
+    bookorbit = {
+      enable = true;
+      # auth.gindin.xyz resolves to a tailnet address, which BookOrbit's SSRF
+      # guard treats as private (CGNAT) and refuses to fetch discovery from.
+      allowLocalOidcIssuers = true;
+    };
+
+    # Replaces the DeACSM Calibre plugin that calibre-web-automated ran
+    # in-container: fulfills .acsm files with libgourou and drops the
+    # DRM-free result into BookOrbit's Book Dock.
+    acsm.enable = true;
 
     calibre-news = {
       enable = true;
@@ -319,12 +331,13 @@
         recipe = ../../packages/economist-recipe/economist.recipe;
         schedule = "Fri *-*-* 04:00:00";
         cookieFile = config.age.secrets.economist-cookies.path;
-        outputDir = config.agindin.services.calibre-web.ingestDir;
-        cleanup = {
-          enable = true;
-          directory = "${config.agindin.services.calibre-web.calibreLibrary}/The Economist";
-          keep = 4;
-        };
+        outputDir = config.agindin.services.bookorbit.dockPath;
+        # Pruning is off until BookOrbit's library layout is settled. Where a
+        # finalized dock file lands depends on the library's organization mode
+        # and naming pattern, and the prune step no-ops silently on a directory
+        # that does not exist — so a guessed path would look like it works while
+        # issues piled up. Re-enable with the real path once one has landed.
+        # cleanup = { enable = true; directory = "..."; keep = 4; };
       };
     };
 
