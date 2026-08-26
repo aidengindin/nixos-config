@@ -2,11 +2,13 @@
 
 {
   imports = [
+    ./acsm.nix
     ./anduin.nix
     ./anduin-postgres.nix
     ./arr.nix
     ./audiobookshelf.nix
     ./blocky.nix
+    ./bookorbit.nix
     ./caddy.nix
     ./calibre-news.nix
     ./calibre-web.nix

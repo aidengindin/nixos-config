@@ -42,6 +42,8 @@ let
 
       calibre-web = 8350;
 
+      bookorbit = 8351;
+
       open-webui = 8360;
 
       immich = 8370;
