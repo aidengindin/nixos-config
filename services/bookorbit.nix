@@ -239,7 +239,16 @@ in
     systemd.tmpfiles.rules = [
       "d ${dataDir} 0750 root root -"
       "d ${dataDir}/app 0750 1000 ${toString config.users.groups.media.gid} -"
-      "d ${dataDir}/postgres 0700 root root -"
+      # Not 0700: postgres 18's entrypoint creates the data directories as root
+      # and then re-execs itself as uid 999 via gosu, and that second pass runs
+      # `mkdir -p "$PGDATA"` again — so the mounted directory has to stay
+      # traversable by a non-root uid or the container dies with
+      # "mkdir: cannot create directory '/var/lib/postgresql/data'". This is the
+      # mode Docker itself creates for a missing bind-mount source. The cluster
+      # inside is 0700 and owned by the container's postgres user, which is
+      # where the restriction actually belongs; chowning this directory to 999
+      # instead would hand it to `nm-iodine`, which is uid 999 on the host.
+      "d ${dataDir}/postgres 0755 root root -"
       "d ${backupPath} 0750 root root -"
       "d ${cfg.dockPath} 0775 1000 ${toString config.users.groups.media.gid} -"
     ]
