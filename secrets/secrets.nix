@@ -211,6 +211,14 @@ in
     khazad-dumUser
   ];
 
+  # POSTGRES_PASSWORD, JWT_SECRET, SETUP_BOOTSTRAP_TOKEN,
+  # EMAIL_ENCRYPTION_KEY, MIGRATION_ENCRYPTION_KEY
+  "bookorbit-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
   # Private SSH key for osgiliath's nixos-deploy user, used by colmena to SSH to other hosts
   "nixos-deploy-osgiliath-ssh-key.age".publicKeys = [
     osgiliathHost
