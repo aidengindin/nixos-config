@@ -15,6 +15,7 @@ let
 
   accountDir = "${cfg.stateDir}/account";
   failedDir = "${cfg.stateDir}/failed";
+  workDir = "${cfg.stateDir}/work";
 
   # libgourou's utils look for device.xml/activation.xml/devicesalt in a few
   # implicit locations; always pass -D so the unit's cwd can never matter.
@@ -98,6 +99,7 @@ in
       # Contains the device private key material.
       "d ${accountDir} 0700 acsm ${cfg.group} -"
       "d ${failedDir} 0750 acsm ${cfg.group} -"
+      "d ${workDir} 0750 acsm ${cfg.group} -"
       "d ${cfg.inboxDir} 0775 acsm ${cfg.group} -"
     ];
 
@@ -135,58 +137,102 @@ in
         set -u
         shopt -s nullglob
 
-        # A path unit does not re-trigger while its service is still running and
-        # the glob still matches, so drain the inbox rather than taking one pass:
-        # anything dropped mid-run would otherwise sit there unnoticed.
-        while true; do
-          pending=(${cfg.inboxDir}/*.acsm)
-          [ ''${#pending[@]} -eq 0 ] && break
+        # tmpfiles rules for a newly persisted directory are applied during
+        # activation, before switch-to-configuration starts the impermanence
+        # bind mount that then shadows them — so on a switch without a reboot
+        # they land on the wrong side of the mount. Create what the run needs
+        # rather than trusting them to be there.
+        mkdir -p ${workDir} ${failedDir}
 
-          for acsm in "''${pending[@]}"; do
-            echo "Fulfilling $acsm"
+        failures=0
 
-            # acsmdownloader names the output after the book's title and picks
-            # the extension (.epub or .pdf) itself, so give it an empty directory
-            # and discover what it produced.
-            work="$(mktemp -d)"
+        # Never abort the whole run on one book: every mutation is guarded, and
+        # the caller invokes this in a `||` context so errexit stays off inside.
+        fulfill() {
+          claimed="$1"
+          name="$(basename "$claimed")"
+          echo "Fulfilling $name"
 
-            if ! acsmdownloader -D ${accountDir} -O "$work" "$acsm"; then
-              echo "Fulfillment failed for $acsm" >&2
-              mv -f "$acsm" ${failedDir}/
-              rm -rf "$work"
-              continue
-            fi
+          if ! work="$(mktemp -d)"; then
+            echo "Could not create a work directory for $name" >&2
+            return 1
+          fi
 
-            downloaded=("$work"/*)
-            if [ ''${#downloaded[@]} -ne 1 ]; then
-              echo "Expected exactly one file from $acsm, got ''${#downloaded[@]}" >&2
-              mv -f "$acsm" ${failedDir}/
-              rm -rf "$work"
-              continue
-            fi
-
-            book="''${downloaded[0]}"
-            name="$(basename "$book")"
-
-            # adept_remove strips Adobe's ADEPT DRM only. A book carrying some
-            # other scheme fails here and is left in failed/ for manual handling.
-            if ! adept_remove -D ${accountDir} -o "$work/drm-free-$name" "$book"; then
-              echo "DRM removal failed for $acsm" >&2
-              mv -f "$acsm" ${failedDir}/
-              rm -rf "$work"
-              continue
-            fi
-
-            # Land in the watched directory atomically, so the importer never
-            # sees a partial file.
-            cp "$work/drm-free-$name" "${cfg.outputDir}/.$name.part"
-            mv "${cfg.outputDir}/.$name.part" "${cfg.outputDir}/$name"
-
-            echo "Wrote ${cfg.outputDir}/$name"
-            rm -f "$acsm"
+          # acsmdownloader names the output after the book's title and picks
+          # the extension (.epub or .pdf) itself, so give it an empty directory
+          # and discover what it produced.
+          if ! acsmdownloader -D ${accountDir} -O "$work" "$claimed"; then
+            echo "Fulfillment failed for $name" >&2
+            mv -f "$claimed" ${failedDir}/ || echo "Could not set aside $name" >&2
             rm -rf "$work"
+            return 1
+          fi
+
+          downloaded=("$work"/*)
+          if [ ''${#downloaded[@]} -ne 1 ]; then
+            echo "Expected exactly one file from $name, got ''${#downloaded[@]}" >&2
+            mv -f "$claimed" ${failedDir}/ || echo "Could not set aside $name" >&2
+            rm -rf "$work"
+            return 1
+          fi
+
+          book="''${downloaded[0]}"
+          bookName="$(basename "$book")"
+
+          # adept_remove strips Adobe's ADEPT DRM only. A book carrying some
+          # other scheme fails here and is left in failed/ for manual handling.
+          if ! adept_remove -D ${accountDir} -o "$work/drm-free-$bookName" "$book"; then
+            echo "DRM removal failed for $name" >&2
+            mv -f "$claimed" ${failedDir}/ || echo "Could not set aside $name" >&2
+            rm -rf "$work"
+            return 1
+          fi
+
+          # Land in the watched directory atomically, so the importer never
+          # sees a partial file.
+          if ! cp "$work/drm-free-$bookName" "${cfg.outputDir}/.$bookName.part"; then
+            echo "Could not write $bookName to ${cfg.outputDir}" >&2
+            mv -f "$claimed" ${failedDir}/ || echo "Could not set aside $name" >&2
+            rm -rf "$work"
+            return 1
+          fi
+          if ! mv "${cfg.outputDir}/.$bookName.part" "${cfg.outputDir}/$bookName"; then
+            echo "Could not publish $bookName" >&2
+            rm -f "${cfg.outputDir}/.$bookName.part"
+            mv -f "$claimed" ${failedDir}/ || echo "Could not set aside $name" >&2
+            rm -rf "$work"
+            return 1
+          fi
+
+          echo "Wrote ${cfg.outputDir}/$bookName"
+          rm -f "$claimed"
+          rm -rf "$work"
+        }
+
+        while :; do
+          # Claim the inbox before doing any work that can fail. Anything left
+          # in the inbox keeps the path unit's glob matching, and a oneshot that
+          # exits with the trigger still true is restarted immediately — which
+          # is a tight retry loop that burns the start limit and takes the path
+          # unit down with it. Draining first makes that impossible.
+          for acsm in ${cfg.inboxDir}/*.acsm; do
+            if ! mv -f "$acsm" ${workDir}/; then
+              echo "Could not claim $acsm out of the inbox; stopping" >&2
+              failures=1
+              break 2
+            fi
+          done
+
+          # Also picks up anything a previous run was killed midway through.
+          claimed=(${workDir}/*)
+          [ ''${#claimed[@]} -eq 0 ] && break
+
+          for book in "''${claimed[@]}"; do
+            fulfill "$book" || failures=1
           done
         done
+
+        exit "$failures"
       '';
     };
 
