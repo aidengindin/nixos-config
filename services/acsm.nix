@@ -52,10 +52,22 @@ in
       type = types.str;
       default = "/var/lib/acsm";
       description = ''
-        Holds the Adobe device activation (account/) and ACSM files that failed
-        to fulfill (failed/). The activation is what a DeACSM install kept under
-        the Calibre plugin config dir; losing it means burning another device
-        registration against the Adobe ID, so it is backed up.
+        Holds the Adobe device activation (account/), ACSM files being worked on
+        (work/), and ones that failed to fulfill (failed/). The activation is
+        what a DeACSM install kept under the Calibre plugin config dir; losing
+        it means burning another device registration against the Adobe ID, so
+        it is backed up.
+
+        A DeACSM activation is *almost* drop-in. For an anonymous account
+        DeACSM omits `<adept:username>` entirely (libadobeAccount.py guards it
+        with `if account_type != "anonymous"`), while libgourou's parser throws
+        "Invalid activation file" when that element is missing. Add it inside
+        `<adept:credentials>` to make such an activation usable:
+
+            <adept:username method="anonymous">anonymous</adept:username>
+
+        The text is never read — libgourou hardcodes the username when the
+        method is anonymous — only the element and its attribute matter.
       '';
     };
 
