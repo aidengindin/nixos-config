@@ -12,6 +12,7 @@
     ./caddy.nix
     ./calibre-news.nix
     ./calibre-web.nix
+    ./chaptarr.nix
     ./frigate.nix
     ./grafana.nix
     ./headache-sync.nix

@@ -224,4 +224,26 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  # AirVPN WireGuard keys for the qBittorrent network namespace. Contents are
+  # the raw base64 key on a single line, exactly as WireGuard's key files.
+  "airvpn-wireguard-private-key.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+  "airvpn-wireguard-preshared-key.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
+  # API keys for Prowlarr/Radarr/Sonarr, as <APP>__AUTH__APIKEY= env lines.
+  # Declared rather than app-generated so the Prowlarr->Radarr/Sonarr links
+  # keep working across a rebuild or restore.
+  "arr-api-keys.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
 }

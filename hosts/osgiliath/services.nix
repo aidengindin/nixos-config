@@ -78,6 +78,18 @@
       group = "hermes";
       mode = "0440";
     };
+    arr-api-keys = {
+      file = ../../secrets/arr-api-keys.age;
+      mode = "0400";
+    };
+    airvpn-wireguard-private-key = {
+      file = ../../secrets/airvpn-wireguard-private-key.age;
+      mode = "0400";
+    };
+    airvpn-wireguard-preshared-key = {
+      file = ../../secrets/airvpn-wireguard-preshared-key.age;
+      mode = "0400";
+    };
     hermes-homeassistant-token = {
       file = ../../secrets/homeassistant-token.age;
       owner = "hermes";
@@ -154,6 +166,42 @@
     };
 
     audiobookshelf.enable = true;
+
+    # qBittorrent runs inside a WireGuard network namespace; everything else in
+    # the stack talks to it over a veth pair. The values below come from the
+    # WireGuard config generated in the AirVPN client area — see the comments on
+    # the options in services/arr.nix for what each one wants.
+    arr = {
+      enable = true;
+      apiKeyFile = config.age.secrets.arr-api-keys.path;
+      vpn = {
+        # v4 only: the namespace runs with IPv6 disabled, so the v6 address and
+        # resolver from the generated config are deliberately dropped.
+        address = "10.176.64.146/32";
+        dns = "10.128.0.1";
+        endpoint = "america3.vpn.airdns.org:1637";
+        peerPublicKey = "PyLCXAQT8KkM4T+dUsOQfn+Ub3pGxfGlxkIApuig+hk=";
+        mtu = 1320;
+        # Must match the port AirVPN assigned in the client area, and that
+        # forward's "Local port" has to be set to the same number.
+        forwardedPort = 5159;
+        privateKeyFile = config.age.secrets.airvpn-wireguard-private-key.path;
+        presharedKeyFile = config.age.secrets.airvpn-wireguard-preshared-key.path;
+      };
+    };
+
+    # Replaces Readarr, which upstream archived in June 2025 when its metadata
+    # backend went offline for good. Pre-1.0, so the image tag is pinned.
+    chaptarr = {
+      enable = true;
+      apiKeyFile = config.age.secrets.arr-api-keys.path;
+    };
+
+    jellyfin = {
+      enable = true;
+      # Same iGPU that Frigate uses for detection.
+      hardwareAcceleration.enable = true;
+    };
 
     prometheusExporter = {
       enable = true;
