@@ -190,6 +190,13 @@
       };
     };
 
+    # Replaces Readarr, which upstream archived in June 2025 when its metadata
+    # backend went offline for good. Pre-1.0, so the image tag is pinned.
+    chaptarr = {
+      enable = true;
+      apiKeyFile = config.age.secrets.arr-api-keys.path;
+    };
+
     jellyfin = {
       enable = true;
       # Same iGPU that Frigate uses for detection.
