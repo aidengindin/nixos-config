@@ -20,11 +20,14 @@ let
       sonarr = 8003;
       bazarr = 8004;
       flaresolverr = 8005;
+      chaptarr = 8006;
       jellyfin = 8096;
 
       qbittorrent = {
         ui = 8101;
-        torrent = 8102;
+        # The peer-listen port is not chosen here: it has to equal the port
+        # AirVPN forwards, so it lives with the rest of the VPN settings in
+        # the host config (agindin.services.arr.vpn.forwardedPort).
       };
 
       miniflux = 8301;
