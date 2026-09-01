@@ -83,6 +83,38 @@ in
       "d ${backupPath} 0750 postgres postgres -"
     ];
 
+    # A glibc bump changes the collation version the OS reports, while each
+    # database keeps the version it was created with. PostgreSQL then refuses
+    # `CREATE DATABASE`, because it will not copy a template whose recorded
+    # collation no longer matches — so `ensureDatabases` breaks on the first
+    # deploy that adds a database after any nixpkgs update, which is easy to
+    # hit here given the automated flake updates.
+    #
+    # Scoped deliberately to the two system databases. A mismatch on a database
+    # holding real data can mean its text indexes need REINDEX, and that is a
+    # judgement call per database, not something to paper over automatically;
+    # those keep warning until someone looks at them.
+    #
+    # No RemainAfterExit: this has to run again on every switch, not just the
+    # first, or a later glibc bump silently goes unhandled.
+    systemd.services.postgresql-refresh-template-collations = {
+      description = "Refresh collation versions of the PostgreSQL template databases";
+      after = [ "postgresql.service" ];
+      requires = [ "postgresql.service" ];
+      before = [ "postgresql-setup.service" ];
+      wantedBy = [ "postgresql-setup.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "postgres";
+        ExecStart = pkgs.writeShellScript "pg-refresh-template-collations" ''
+          for db in template1 postgres; do
+            ${config.services.postgresql.package}/bin/psql -c \
+              "ALTER DATABASE \"$db\" REFRESH COLLATION VERSION" || true
+          done
+        '';
+      };
+    };
+
     # Explicitly setup postgres_exporter user permissions and password
     # This is needed because initialScript is ignored on existing databases
     systemd.services.postgres-exporter-setup = {
