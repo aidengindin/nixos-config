@@ -78,6 +78,18 @@
       group = "hermes";
       mode = "0440";
     };
+    dawarich-oidc-env = {
+      file = ../../secrets/dawarich-oidc-env.age;
+      owner = "dawarich";
+      group = "dawarich";
+      mode = "0440";
+    };
+    intervals-dawarich-sync-env = {
+      file = ../../secrets/intervals-dawarich-sync-env.age;
+      owner = "intervals-dawarich-sync";
+      group = "intervals-dawarich-sync";
+      mode = "0400";
+    };
     arr-api-keys = {
       file = ../../secrets/arr-api-keys.age;
       mode = "0400";
@@ -387,6 +399,19 @@
         # issues piled up. Re-enable with the real path once one has landed.
         # cleanup = { enable = true; directory = "..."; keep = 4; };
       };
+    };
+
+    # Location history, fed by the Home Assistant integration (set up in HA,
+    # not here) and by intervals-dawarich-sync below.
+    dawarich = {
+      enable = true;
+      oidc.environmentFile = config.age.secrets.dawarich-oidc-env.path;
+    };
+
+    intervals-dawarich-sync = {
+      enable = true;
+      environmentFile = config.age.secrets.intervals-dawarich-sync-env.path;
+      athleteId = "i95355";
     };
 
     linkwarden.enable = true;

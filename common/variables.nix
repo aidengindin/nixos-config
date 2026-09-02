@@ -59,6 +59,8 @@ let
 
       anduinWeb = 8410;
 
+      dawarich = 8420;
+
       hermesDashboard = 9119;
 
       zigbee2mqtt = 8400;

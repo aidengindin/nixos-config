@@ -106,11 +106,15 @@ Each run:
 1. `GET /api/v1/athlete/{id}/activities?oldest=&newest=`, HTTP Basic with
    username `API_KEY` and the token as password.
 2. Skip activities already recorded in the state file.
-3. Skip activities without GPS — `stream_types` must contain `latlng` — and skip
-   virtual ones: `type` starting with `Virtual`, or `trainer == true`, or
-   `source == "ZWIFT"`. All three are checked because Zwift GPX files carry real
-   Watopia coordinates, which would otherwise plot as trips to the middle of the
-   Pacific.
+3. Skip activities without GPS — `stream_types` must contain `latlng`, though an
+   activity that omits the key entirely is attempted anyway and classified by
+   the GPX download — and skip virtual ones: `type` starting with `Virtual`, or
+   `trainer == true`, or `source == "ZWIFT"`. All three are checked because Zwift
+   GPX files carry real Watopia coordinates, which would otherwise plot as trips
+   to the middle of the Pacific. The listing deliberately does not pass a
+   `fields` filter: intervals.icu drops unrecognised field names silently, and a
+   missing `stream_types` would then read as "nothing has GPS" — a no-op run
+   that reports success.
 4. `GET /api/v1/activity/{id}/gpx-file`, then `POST /api/v1/imports` to Dawarich
    as a multipart `file` field with `Authorization: Bearer <key>`.
 5. Record the uploaded id and flush the state file after *every* upload, so an
