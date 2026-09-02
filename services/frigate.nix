@@ -53,12 +53,21 @@ let
       mqtt.enabled = false;
       record = {
         enabled = true;
-        # 0.17 dropped `record.retain` in favour of separate continuous and
-        # motion retention. Frigate's own migration maps the old
-        # `retain.days` with the default `mode = "all"` onto both, so do the
-        # same here.
-        continuous.days = cfg.retentionDays;
-        motion.days = cfg.retentionDays;
+        # 0.17 splits retention into continuous / motion / tracked-object
+        # tiers. Continuous is by far the most expensive: a single main-stream
+        # camera writes ~30 GB/day, so retaining it for a month costs ~1 TB.
+        # Keep a short continuous window, then fall back to motion-only, then
+        # to segments overlapping alerts/detections.
+        continuous.days = cfg.retention.continuousDays;
+        motion.days = cfg.retention.motionDays;
+        alerts.retain = {
+          days = cfg.retention.alertsDays;
+          mode = cfg.retention.alertsMode;
+        };
+        detections.retain = {
+          days = cfg.retention.detectionsDays;
+          mode = cfg.retention.detectionsMode;
+        };
       };
       cameras = cameraSettings;
     }
@@ -115,10 +124,71 @@ in
       description = "Host directory for recordings, clips, and snapshots.";
     };
 
-    retentionDays = mkOption {
-      type = types.ints.positive;
-      default = 30;
-      description = "Number of days to retain recordings.";
+    retention = mkOption {
+      default = { };
+      description = ''
+        Recording retention policy. Frigate keeps a segment for as long as
+        the longest matching tier says to, so these stack: continuous is the
+        floor for every segment, motion extends segments containing motion,
+        and alerts/detections extend segments overlapping tracked objects.
+
+        Continuous retention dominates storage — budget roughly
+        (main stream bitrate) x 86400 per camera per day.
+      '';
+      type = types.submodule {
+        options = {
+          continuousDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 3;
+            description = ''
+              Days to keep 24/7 footage. Set to 0 to only keep footage that
+              matches one of the tiers below.
+            '';
+          };
+          motionDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 7;
+            description = ''
+              Days to keep segments containing motion. This only saves space
+              if motion detection is actually selective; an unmasked, noisy
+              scene can flag motion on nearly every frame, in which case this
+              behaves like continuous retention.
+            '';
+          };
+          alertsDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 30;
+            description = "Days to keep segments overlapping review alerts.";
+          };
+          alertsMode = mkOption {
+            type = types.enum [
+              "all"
+              "motion"
+              "active_objects"
+            ];
+            default = "motion";
+            description = ''
+              Which segments within an alert's time range to keep: "all"
+              footage, only segments with "motion", or only segments with
+              "active_objects".
+            '';
+          };
+          detectionsDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 14;
+            description = "Days to keep segments overlapping review detections.";
+          };
+          detectionsMode = mkOption {
+            type = types.enum [
+              "all"
+              "motion"
+              "active_objects"
+            ];
+            default = "motion";
+            description = "Same as alertsMode, for detections.";
+          };
+        };
+      };
     };
 
     domain = mkOption {
