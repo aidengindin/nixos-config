@@ -139,6 +139,7 @@
       withings.enable = true;
       intervals.enable = true;
       liftosaur.enable = true;
+      headache.enable = true;
       web = {
         enable = true;
         domain = "anduin.gindin.xyz";

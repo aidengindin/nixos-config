@@ -30,15 +30,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1787269283,
-        "narHash": "sha256-Ijvq3xrLj437XIj/4G5/cWANyA2KWZID1Ipyau3Nq8g=",
+        "lastModified": 1788310573,
+        "narHash": "sha256-SXTkUW5ZUhw/w0rUxPsf5YVzmqIcfPcIuAwIMmNfyiU=",
         "owner": "aidengindin",
         "repo": "anduin",
-        "rev": "8b14215dd1801aa1ead9c389aafeade660c037dc",
+        "rev": "dad25e5897d292ad6e38309a9c51b58841cc9679",
         "type": "github"
       },
       "original": {
         "owner": "aidengindin",
+        "ref": "claude/headache-tracker-ui-a564f0",
         "repo": "anduin",
         "type": "github"
       }

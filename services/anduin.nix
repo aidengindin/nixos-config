@@ -35,6 +35,12 @@ let
         enabled = cfg.liftosaur.enable;
         window_days = cfg.liftosaur.windowDays;
       };
+      headache = {
+        enabled = cfg.headache.enable;
+        app_url = cfg.headache.appUrl;
+        ntfy_url = cfg.headache.ntfyUrl;
+        remind_skip_within_minutes = cfg.headache.skipWithinMinutes;
+      };
     }
   );
 
@@ -141,7 +147,8 @@ in
       description = ''
         Agenix-decrypted env file. Must define DATABASE_URL and the secrets for
         each enabled source (GOOGLE_HEALTH_CLIENT_ID/SECRET, WITHINGS_CLIENT_ID/
-        SECRET, INTERVALS_API_KEY, INTERVALS_ATHLETE_ID, LIFTOSAUR_API_KEY).
+        SECRET, INTERVALS_API_KEY, INTERVALS_ATHLETE_ID, LIFTOSAUR_API_KEY, plus
+        NTFY_TOPIC when headache reminders are enabled).
       '';
     };
 
@@ -194,6 +201,35 @@ in
       windowDays = mkOption {
         type = types.ints.positive;
         default = 7;
+      };
+    };
+
+    headache = {
+      enable = mkEnableOption "headache check-in reminders over ntfy";
+      # Local wall-clock times. The timer runs in the host's time.timeZone
+      # (America/New_York, see linux/locale.nix), which is also the civil date
+      # an ntfy-sourced check-in is filed under.
+      schedule = mkOption {
+        type = types.listOf types.str;
+        default = [ "*-*-* 09,13,17,21:00:00" ];
+      };
+      appUrl = mkOption {
+        type = types.str;
+        default = "https://${cfg.web.domain}";
+        description = ''
+          URL the *phone* reaches anduin on. Both ntfy action buttons point
+          here, so it must be routable from the ntfy client — the Caddy vhost,
+          not the loopback address `anduin serve` binds.
+        '';
+      };
+      ntfyUrl = mkOption {
+        type = types.str;
+        default = "https://ntfy.sh";
+      };
+      skipWithinMinutes = mkOption {
+        type = types.ints.positive;
+        default = 120;
+        description = "Suppress a reminder this many minutes after a check-in.";
       };
     };
 
@@ -272,6 +308,40 @@ in
     systemd.timers.anduin-liftosaur = mkIf cfg.liftosaur.enable (
       mkTimer "liftosaur" cfg.liftosaur.schedule
     );
+
+    # Check-in prompt over ntfy. Same env file and config as the extractors,
+    # but no StateDirectory — there is no OAuth token; it reads the last
+    # check-in from the DB and publishes one notification.
+    systemd.services.anduin-remind-headache = mkIf cfg.headache.enable {
+      description = "anduin headache check-in reminder (ntfy)";
+      after = [
+        "network-online.target"
+        "anduin-db-migrate.service"
+      ];
+      wants = [ "network-online.target" ];
+      requires = [ "anduin-db-migrate.service" ];
+      serviceConfig = hardening // {
+        Type = "oneshot";
+        User = cfg.user;
+        Group = cfg.group;
+        EnvironmentFile = cfg.environmentFile;
+        Environment = [ "ANDUIN_CONFIG=${configJson}" ];
+        ExecStartPre = waitForDb;
+        ExecStart = "${cfg.package}/bin/anduin remind headache";
+      };
+    };
+
+    # Deliberately not mkTimer: a prompt should land at the time chosen (no
+    # RandomizedDelaySec), and a missed 9am prompt must not fire at 3pm
+    # (Persistent = false).
+    systemd.timers.anduin-remind-headache = mkIf cfg.headache.enable {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = cfg.headache.schedule;
+        Persistent = false;
+        Unit = "anduin-remind-headache.service";
+      };
+    };
 
     # Long-running read-only web UI. Binds loopback only; Caddy terminates TLS
     # and reverse-proxies the public host to it (same pattern as grafana), and

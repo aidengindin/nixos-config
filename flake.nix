@@ -71,7 +71,7 @@
     };
 
     anduin = {
-      url = "github:aidengindin/anduin";
+      url = "github:aidengindin/anduin/claude/headache-tracker-ui-a564f0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
