@@ -51,6 +51,9 @@ let
   frigateSettings =
     {
       mqtt.enabled = false;
+      # 0.17 flipped the default for detect.enabled from true to false, which
+      # silently turns off object detection on upgrade.
+      detect.enabled = cfg.detect.enable;
       record = {
         enabled = true;
         # 0.17 splits retention into continuous / motion / tracked-object
@@ -72,7 +75,6 @@ let
       cameras = cameraSettings;
     }
     // lib.optionalAttrs (cfg.acceleration == "intel") {
-      ffmpeg.hwaccel_args = "preset-vaapi";
       detectors.ov = {
         type = "openvino";
         device = "GPU";
@@ -85,6 +87,9 @@ let
         path = "/openvino-model/ssdlite_mobilenet_v2.xml";
         labelmap_path = "/openvino-model/coco_91cl_bkgr.txt";
       };
+    }
+    // lib.optionalAttrs (cfg.acceleration == "intel" && cfg.ffmpegHwaccel) {
+      ffmpeg.hwaccel_args = "preset-vaapi";
     };
 
   configFile = yamlFormat.generate "frigate-config.yml" frigateSettings;
@@ -122,6 +127,45 @@ in
       type = types.str;
       default = "/var/lib/frigate/media";
       description = "Host directory for recordings, clips, and snapshots.";
+    };
+
+    ffmpegHwaccel = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Use VAAPI for ffmpeg decoding. Requires acceleration = "intel".
+
+        This only affects the detect stream: Frigate appends hwaccel args
+        solely to the input holding the "detect" role, because the record
+        input is a stream copy with nothing to decode. So the only thing this
+        buys is offloading substream decode, and it costs a hwdownload of
+        every frame back to system memory to reach the detector.
+
+        Off by default because that hwdownload intermittently fails on the
+        iGPU ("Failed to sync surface" / "Failed to download frame: -5"),
+        killing the ffmpeg process and stalling detection. A detect substream
+        is small enough that software decode is cheap.
+      '';
+    };
+
+    detect = mkOption {
+      default = { };
+      description = "Object detection settings.";
+      type = types.submodule {
+        options = {
+          enable = mkOption {
+            type = types.bool;
+            default = true;
+            description = ''
+              Run object detection. Frigate 0.17 changed the upstream default
+              for `detect.enabled` from true to false, so this is set
+              explicitly rather than left implicit. With detection off,
+              nothing populates the alerts/detections retention tiers and
+              recordings are kept on the continuous/motion tiers alone.
+            '';
+          };
+        };
+      };
     };
 
     retention = mkOption {
