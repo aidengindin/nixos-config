@@ -246,4 +246,22 @@ in
     osgiliathUser
     khazad-dumUser
   ];
+
+  # OIDC client credentials for Dawarich against Pocket ID, as OIDC_CLIENT_ID=
+  # and OIDC_CLIENT_SECRET= env lines. The client is created by hand in the
+  # Pocket ID UI, so this can only be filled in after Dawarich is reachable.
+  "dawarich-oidc-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
+  # INTERVALS_API_KEY and DAWARICH_API_KEY for the intervals.icu -> Dawarich
+  # GPX sync. The Dawarich key comes from its account page, which means this
+  # secret can only be written after the first login.
+  "intervals-dawarich-sync-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
 }
