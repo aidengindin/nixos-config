@@ -78,15 +78,33 @@ there is nothing to manage by hand.
 
 ### First-boot sequence
 
-The module runs `rails db:seed`, which creates an admin `demo@dawarich.app` with
-password `safepassword` whenever the users table is empty. OIDC-registered users
-are *not* admin. So the first deploy needs a short manual dance:
+Enabling OIDC takes the password form away. Dawarich's
+`ApplicationHelper#email_password_login_enabled?` returns
+`DawarichSettings.registration_enabled?` once OIDC is on, and that reads
+`ALLOW_EMAIL_PASSWORD_REGISTRATION` — so the login form is gated on the *signup*
+setting, which is off here. The admin `demo@dawarich.app` that `rails db:seed`
+creates is therefore unreachable, and OIDC accounts are not admin:
+`Auth::FindOrCreateOauthUser#create_new_user` sets only email, password,
+provider and uid. Dawarich 1.7.5 has no group- or role-claim mapping either, so
+admin cannot come from Pocket ID.
 
-1. Log in as `demo@dawarich.app` / `safepassword`, then log out.
-2. "Sign in with Pocket ID" — this auto-registers a second, non-admin account.
-3. Log back in as demo, Settings -> Users -> your OIDC account -> toggle admin.
-4. Delete the demo user.
-5. Copy the API key from your account page.
+Admin is set in the database instead, by an `adminEmails` option and a
+`dawarich-promote-admins` oneshot:
+
+```sql
+UPDATE users SET admin = true WHERE email = :'email' AND NOT admin;
+```
+
+The SQL arrives on psql's stdin rather than through `-c`, because psql only
+interpolates `:'email'` for input read from stdin or a file — with `-c` it
+reaches the server verbatim and is a syntax error. The unit has no
+`RemainAfterExit` and runs on every switch, because the row does not exist until
+the account's first OIDC sign-in; the same reasoning as
+`postgresql-refresh-template-collations` in `services/postgres.nix`.
+
+So the first deploy is: sign in through Pocket ID once, deploy again to pick up
+admin, then delete the stranded demo user from Settings -> Users and copy the
+API key from your account page.
 
 ### Home Assistant
 

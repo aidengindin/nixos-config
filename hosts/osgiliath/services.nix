@@ -407,6 +407,9 @@
     dawarich = {
       enable = true;
       oidc.environmentFile = config.age.secrets.dawarich-oidc-env.path;
+      # Applied on every switch, but only takes effect once the account exists,
+      # which means after its first Pocket ID sign-in.
+      adminEmails = [ "aiden@aidengindin.com" ];
     };
 
     intervals-dawarich-sync = {

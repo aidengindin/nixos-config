@@ -24,12 +24,17 @@ in
   #      credentials into secrets/dawarich-oidc-env.age as OIDC_CLIENT_ID= and
   #      OIDC_CLIENT_SECRET= lines.
   #
-  #   2. Claim the admin account. Upstream's `rails db:seed` creates an admin
-  #      demo@dawarich.app / safepassword whenever the users table is empty, and
-  #      OIDC-registered users are *not* admin. So: log in as demo, log out,
-  #      "Sign in with Pocket ID" (which auto-registers you), log back in as
-  #      demo, Settings -> Users -> your account -> toggle admin, then delete
-  #      the demo user.
+  #   2. Sign in once through Pocket ID, which auto-registers the account, then
+  #      deploy again so adminEmails below can promote it. Both steps are
+  #      needed. Dawarich has no group- or role-claim mapping -- 1.7.5's
+  #      Auth::FindOrCreateOauthUser#create_new_user sets only email, password,
+  #      provider and uid -- so an OIDC account is never admin on its own. And
+  #      there is no password form to fall back on: with OIDC enabled, dawarich
+  #      gates the login form on the *signup* setting (see
+  #      ApplicationHelper#email_password_login_enabled?), which is off below.
+  #      Upstream's db:seed still leaves an admin demo@dawarich.app behind, but
+  #      with no way to log into it; delete it from Settings -> Users once you
+  #      have admin yourself.
   #
   # The API key on your account page is what services/intervals-dawarich-sync.nix
   # and the Home Assistant integration authenticate with. Home Assistant is wired
@@ -42,6 +47,16 @@ in
     domain = mkOption {
       type = types.str;
       default = "dawarich.gindin.xyz";
+    };
+
+    adminEmails = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      example = [ "you@example.com" ];
+      description = ''
+        Accounts to grant admin to, by email address. Dawarich cannot derive
+        this from OIDC claims, so it is written straight to the database.
+      '';
     };
 
     oidc = {
@@ -128,6 +143,40 @@ in
           -c "SELECT postgis_extensions_upgrade();"
       '')
     ];
+
+    # Deliberately not RemainAfterExit and not a one-time job: an account has no
+    # row until its first OIDC sign-in, so the promotion has to be retried on
+    # every switch until it finds one. Same reasoning as
+    # postgresql-refresh-template-collations in services/postgres.nix.
+    systemd.services.dawarich-promote-admins = mkIf (cfg.adminEmails != [ ]) {
+      description = "Grant Dawarich admin to the configured accounts";
+      after = [
+        "postgresql.service"
+        "dawarich-init-db.service"
+      ];
+      requires = [ "postgresql.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "postgres";
+        ExecStart = pkgs.writeShellScript "dawarich-promote-admins" ''
+          for email in ${lib.escapeShellArgs cfg.adminEmails}; do
+            # :'email' rather than shell interpolation, so psql does the
+            # quoting. It has to arrive on stdin: psql only substitutes
+            # variables in input read from stdin or a file, and with -c the
+            # :'email' would reach the server verbatim as a syntax error.
+            ${lib.getExe' config.services.postgresql.package "psql"} \
+              -d dawarich -v ON_ERROR_STOP=1 -v email="$email" <<'SQL'
+          UPDATE users SET admin = true WHERE email = :'email' AND NOT admin;
+          SQL
+          done
+        '';
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
+      };
+    };
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
       {
