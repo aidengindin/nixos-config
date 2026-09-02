@@ -211,7 +211,7 @@ in
       # an ntfy-sourced check-in is filed under.
       schedule = mkOption {
         type = types.listOf types.str;
-        default = [ "*-*-* 09,13,17,21:00:00" ];
+        default = [ "*-*-* 08,12,16,20:00:00" ];
       };
       appUrl = mkOption {
         type = types.str;
