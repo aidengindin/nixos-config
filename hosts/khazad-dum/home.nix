@@ -9,6 +9,7 @@
     claude-code.enable = true;
     claude.desktop.enable = true;
     codex.enable = true;
+    element-desktop.enable = true;
     neovim.enable = true;
 
     mcp = {
@@ -42,6 +43,7 @@
     mpv.enable = true;
     neomutt.enable = true;
     spotify.enable = true;
+    vesktop.enable = true;
   };
 
   home-manager.users.agindin.home.sessionVariablesExtra = ''
