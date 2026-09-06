@@ -65,7 +65,7 @@ in
     };
 
     # greetd is enabled and its session command is set by the DMS greeter module
-    # (dms.nixosModules.greeter). We only declare the greeter user it runs as.
+    # (dank-greeter.nixosModules.default). We only declare the greeter user it runs as.
     users.groups.greeter = { };
     users.users.greeter = {
       isSystemUser = true;
@@ -73,7 +73,7 @@ in
     };
     services.greetd.settings.default_session.user = "greeter";
 
-    programs.dank-material-shell.greeter = {
+    programs.dms-greeter = {
       enable = true;
       compositor.name = "hyprland";
       quickshell.package = unstablePkgs.quickshell;
@@ -146,7 +146,6 @@ in
           enable = true;
           systemd.enable = true;
           quickshell.package = unstablePkgs.quickshell;
-          dgop.package = unstablePkgs.dgop;
 
           # Declarative / read-only: settings.json is snapshotted into the repo
           # and managed by Nix (GUI edits won't persist). Re-snapshot with
