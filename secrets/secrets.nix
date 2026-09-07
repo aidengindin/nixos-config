@@ -264,4 +264,29 @@ in
     osgiliathUser
     khazad-dumUser
   ];
+  # Provisioned after Forgejo accounts/runner creation; see docs/forgejo.md.
+  "forgejo-controller-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-runner-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-hermes-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-recovery-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-oidc-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-mirror-token.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
 }

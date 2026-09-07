@@ -8,10 +8,11 @@
 let
   cfg = config.agindin.deployment;
 
-  deployKeys =
-    [ globalVars.keys.khazad-dumUser ]
-    # Added once osgiliathNixosDeploy is set in common/variables.nix
-    ++ lib.optional (globalVars.keys ? osgiliathNixosDeploy) globalVars.keys.osgiliathNixosDeploy;
+  deployKeys = [
+    globalVars.keys.khazad-dumUser
+  ]
+  # Added once osgiliathNixosDeploy is set in common/variables.nix
+  ++ lib.optional (globalVars.keys ? osgiliathNixosDeploy) globalVars.keys.osgiliathNixosDeploy;
 
   deployWrapper = pkgs.writeShellScript "deploy-wrapper" ''
       export PATH="/run/wrappers/bin:$PATH"
@@ -24,6 +25,9 @@ let
       
       # Allowlist of command prefixes
       case "$SSH_ORIGINAL_COMMAND" in
+        "readlink -f /run/current-system"|"readlink -f /nix/var/nix/profiles/system")
+          exec ${pkgs.coreutils}/bin/readlink -f "''${SSH_ORIGINAL_COMMAND#readlink -f }"
+          ;;
         "nix-daemon --stdio")
           exec ${pkgs.nix}/bin/nix-daemon --stdio
           ;;

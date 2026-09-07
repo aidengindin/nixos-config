@@ -112,6 +112,7 @@
 
   agindin.services = {
     blocky.enable = true;
+    forgejo.enable = true;
 
     hermes = {
       enable = true;
