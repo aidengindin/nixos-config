@@ -204,7 +204,8 @@ in
           ];
           preStart = lib.mkAfter ''
             mkdir -p /var/lib/hermes/.hermes/scripts
-            cp ${../../scripts/forgejo/hermes-filter.py} /var/lib/hermes/.hermes/scripts/forgejo-repair-filter.py
+            rm -f /var/lib/hermes/.hermes/scripts/forgejo-repair-filter.py
+            install -m 0700 ${../../scripts/forgejo/hermes-filter.py} /var/lib/hermes/.hermes/scripts/forgejo-repair-filter.py
           '';
         };
   };

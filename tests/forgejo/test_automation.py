@@ -109,6 +109,10 @@ class ControllerTests(unittest.TestCase):
         self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": {"id": 99}, "state": "success"}]
         self.assertEqual(self.c.trusted_statuses(SHA), {})
 
+    def test_status_without_creator_is_ignored(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "failure"}]
+        self.assertEqual(self.c.trusted_statuses(SHA), {})
+
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()

@@ -69,6 +69,8 @@ def main():
                 atomic_json(state_file, state)
                 user = api.request("admin/users", data={"username": username, "email": email,
                     "password": password, "must_change_password": False, "send_notify": False})
+            if not user.get("active"):
+                user = api.request("admin/users/" + username, data={"active": True}, method="PATCH")
             state[username + "_id"] = user["id"]
             atomic_json(state_file, state)
         print("Owner and bot accounts ready. Link the owner to Pocket ID at first sign-in.")

@@ -31,7 +31,7 @@ def main():
     statuses = api(f"commits/{payload['sha']}/status").get("statuses", [])
     failures = [s for s in statuses if s["state"] in ("failure", "error")
         and (s["context"].startswith("colmena/") or s["context"] == "updates")
-        and s.get("creator", {}).get("id") == int(os.environ["FORGEJO_BOT_ID"])]
+        and (s.get("creator") or {}).get("id") == int(os.environ["FORGEJO_BOT_ID"])]
     # Wait for the whole build to settle, so simultaneous host failures cause
     # one repair attempt. The controller retries notifications until accepted.
     if not failures or any(s["state"] == "pending" for s in statuses if s["context"].startswith("colmena/")):
@@ -79,6 +79,8 @@ Colmena here. The CI VM performs all builds. Spend at most 30 minutes on this at
 Before pushing, verify the remote branch still equals the expected SHA; otherwise
 stop and report the concurrent edit. Commit your patch and push normally to
 {BRANCH}; this triggers another CI build. Use the configured Git askpass helper.
+This checkout uses HTTPS with the repository-scoped bot token; no SSH key or
+SSH agent is needed. Keep the HTTPS remote and never print the token.
 If the updater failed, rerun the failed updater steps as appropriate and publish
 an `updates` status for your new SHA; do not claim success without checking them.
 Post a concise result on the Forgejo PR through its API, including unresolved

@@ -98,7 +98,7 @@ in
         if ! test -f ${forgejo.stateDir}/data/ssh/forgejo.ed25519; then
           ${pkgs.util-linux}/bin/runuser -u forgejo -- ${pkgs.openssh}/bin/ssh-keygen -q -t ed25519 -N "" -f ${forgejo.stateDir}/data/ssh/forgejo.ed25519
         fi
-        ${pkgs.coreutils}/bin/install -m 0644 ${forgejo.stateDir}/data/ssh/forgejo.ed25519.pub /run/forgejo-ssh.pub
+        ${pkgs.coreutils}/bin/install -m 0644 ${forgejo.stateDir}/data/ssh/forgejo.ed25519.pub /var/lib/forgejo-ssh-host-key.pub
       '';
     };
     systemd.services.forgejo-secrets = {
@@ -130,7 +130,7 @@ in
         service.ALLOW_ONLY_EXTERNAL_REGISTRATION = true;
         session.COOKIE_SECURE = true;
         oauth2_client = {
-          ENABLE_AUTO_REGISTRATION = false;
+          ENABLE_AUTO_REGISTRATION = true;
           ACCOUNT_LINKING = "auto";
         };
         actions.ENABLED = true;

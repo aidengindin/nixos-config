@@ -78,7 +78,11 @@ class Controller:
             self.queue_repair(payload.get("sha", ""))
 
     def trusted_statuses(self, sha):
-        return {s["context"]: s for s in self.api.statuses(sha) if s.get("creator", {}).get("id") == self.bot_id}
+        return {
+            s["context"]: s
+            for s in self.api.statuses(sha)
+            if (s.get("creator") or {}).get("id") == self.bot_id
+        }
 
     def queue_repair(self, sha):
         if not SHA.fullmatch(sha):

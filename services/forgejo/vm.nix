@@ -53,7 +53,8 @@ in
       "flakes"
     ];
     max-jobs = 1;
-    cores = 4;
+    # Limit derivation parallelism so builds fit within the 6 GiB guest.
+    cores = 1;
     sandbox = true;
   };
   nix.gc = {

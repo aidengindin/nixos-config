@@ -23,7 +23,7 @@ class HermesTests(unittest.TestCase):
         payload = {"repository": module.REPO, "sha": sha, "pr": 5}
         pull = {"number": 5, "state": "open", "head": {"ref": module.BRANCH, "sha": "e" * 40 if changed else sha,
             "repo": {"full_name": module.REPO}}, "body": "Update-Cycle: 2026-09-07"}
-        statuses = {"statuses": [{"state": "failure", "context": "colmena/lorien", "creator": {"id": creator}, "target_url": "https://example.test/log"}]}
+        statuses = {"statuses": [{"state": "failure", "context": "colmena/lorien", "creator": None if creator is None else {"id": creator}, "target_url": "https://example.test/log"}]}
         if pending:
             statuses["statuses"].append({"state": "pending", "context": "colmena/osgiliath"})
         output = io.StringIO()
@@ -52,4 +52,8 @@ class HermesTests(unittest.TestCase):
 
     def test_untrusted_failure_does_not_consume_attempt(self):
         self.invoke("a" * 40, creator=99)
+        self.assertFalse((Path(self.tmp.name) / "attempts.json").exists())
+
+    def test_failure_without_creator_does_not_consume_attempt(self):
+        self.invoke("a" * 40, creator=None)
         self.assertFalse((Path(self.tmp.name) / "attempts.json").exists())
