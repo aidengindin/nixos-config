@@ -18,7 +18,7 @@ class HermesTests(unittest.TestCase):
             "FORGEJO_BOT_ID": "2", "FORGEJO_URL": "https://example.test", "FORGEJO_TOKEN": "test"})
         self.environment.start(); self.addCleanup(self.environment.stop)
 
-    def invoke(self, sha, *, changed=False, pending=False, creator=2):
+    def invoke(self, sha, *, changed=False, pending=False, creator=2, reported=True):
         (Path(self.tmp.name) / sha).mkdir(exist_ok=True)
         payload = {"repository": module.REPO, "sha": sha, "pr": 5}
         pull = {"number": 5, "state": "open", "head": {"ref": module.BRANCH, "sha": "e" * 40 if changed else sha,
@@ -26,6 +26,8 @@ class HermesTests(unittest.TestCase):
         statuses = {"statuses": [{"state": "failure", "context": "colmena/lorien", "creator": None if creator is None else {"id": creator}, "target_url": "https://example.test/log"}]}
         if pending:
             statuses["statuses"].append({"state": "pending", "context": "colmena/osgiliath"})
+        if reported:
+            payload["failures"] = statuses["statuses"]
         output = io.StringIO()
         with patch.object(module, "api", side_effect=[pull, statuses]), patch.object(module.sys, "stdin", io.StringIO(json.dumps(payload))), patch.object(module.sys, "stdout", output), patch.object(module.subprocess, "run"), patch.object(module.subprocess, "check_output", return_value=sha):
             module.main()
@@ -54,6 +56,10 @@ class HermesTests(unittest.TestCase):
         self.invoke("a" * 40, creator=99)
         self.assertFalse((Path(self.tmp.name) / "attempts.json").exists())
 
-    def test_failure_without_creator_does_not_consume_attempt(self):
+    def test_reported_failure_without_creator_is_accepted(self):
         self.invoke("a" * 40, creator=None)
+        self.assertTrue((Path(self.tmp.name) / "attempts.json").exists())
+
+    def test_unreported_failure_without_creator_is_rejected(self):
+        self.invoke("a" * 40, creator=None, reported=False)
         self.assertFalse((Path(self.tmp.name) / "attempts.json").exists())

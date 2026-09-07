@@ -78,11 +78,22 @@ class Controller:
             self.queue_repair(payload.get("sha", ""))
 
     def trusted_statuses(self, sha):
-        return {
-            s["context"]: s
-            for s in self.api.statuses(sha)
-            if (s.get("creator") or {}).get("id") == self.bot_id
-        }
+        trusted = {}
+        prefix = f"{self.api.url}/{REPOSITORY}/actions/runs/"
+        for status in self.api.statuses(sha):
+            creator = (status.get("creator") or {}).get("id")
+            if creator != self.bot_id:
+                target = status.get("target_url", "")
+                if creator is not None or not target.startswith(prefix):
+                    continue
+                run_id = target[len(prefix):].split("/", 1)[0]
+                if not run_id.isdigit():
+                    continue
+                run = self.api.repo(f"actions/runs/{run_id}")
+                if run.get("commit_sha") != sha:
+                    continue
+            trusted[status["context"]] = status
+        return trusted
 
     def queue_repair(self, sha):
         if not SHA.fullmatch(sha):

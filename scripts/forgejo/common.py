@@ -35,7 +35,12 @@ class API:
     def statuses(self, sha):
         assert SHA.fullmatch(sha)
         # Combined status supplies the newest status for each context.
-        return self.repo(f"commits/{sha}/status").get("statuses", [])
+        statuses = self.repo(f"commits/{sha}/status").get("statuses", [])
+        # Forgejo 15 serializes CommitStatus.State as `status` even though the
+        # create endpoint accepts it as `state`.
+        for status in statuses:
+            status["state"] = status.get("state") or status.get("status")
+        return statuses
 
     def status(self, sha, context, state, description, target_url):
         return self.repo(f"statuses/{sha}", data={"context": context, "state": state,

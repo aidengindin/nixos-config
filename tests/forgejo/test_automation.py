@@ -50,6 +50,7 @@ class ControllerTests(unittest.TestCase):
         self.env.start(); self.addCleanup(self.env.stop)
         self.api_patch = patch("controller.API")
         self.api = self.api_patch.start().return_value
+        self.api.url = "https://example.test"
         self.addCleanup(self.api_patch.stop)
         self.c = Controller()
         self.pr = {"number": 5, "state": "open", "head": {"sha": SHA, "repo": {"full_name": REPOSITORY}, "ref": "test"}}
@@ -109,8 +110,16 @@ class ControllerTests(unittest.TestCase):
         self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": {"id": 99}, "state": "success"}]
         self.assertEqual(self.c.trusted_statuses(SHA), {})
 
-    def test_status_without_creator_is_ignored(self):
-        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "failure"}]
+    def test_status_without_creator_uses_matching_action_run(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "failure",
+            "target_url": "https://example.test/aidengindin/nixos-config/actions/runs/7"}]
+        self.api.repo.return_value = {"commit_sha": SHA}
+        self.assertEqual(self.c.trusted_statuses(SHA)["colmena/lorien"]["state"], "failure")
+
+    def test_status_without_creator_rejects_mismatched_run(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "success",
+            "target_url": "https://example.test/aidengindin/nixos-config/actions/runs/7"}]
+        self.api.repo.return_value = {"commit_sha": "b" * 40}
         self.assertEqual(self.c.trusted_statuses(SHA), {})
 
     def test_unknown_comment_author_is_ignored(self):

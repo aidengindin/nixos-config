@@ -29,9 +29,13 @@ def main():
             or pull["head"]["repo"]["full_name"] != REPO):
         return
     statuses = api(f"commits/{payload['sha']}/status").get("statuses", [])
+    for status in statuses:
+        status["state"] = status.get("state") or status.get("status")
+    reported = {(s.get("context"), s.get("target_url")) for s in payload.get("failures", [])}
     failures = [s for s in statuses if s["state"] in ("failure", "error")
         and (s["context"].startswith("colmena/") or s["context"] == "updates")
-        and (s.get("creator") or {}).get("id") == int(os.environ["FORGEJO_BOT_ID"])]
+        and ((s.get("creator") or {}).get("id") == int(os.environ["FORGEJO_BOT_ID"])
+            or (s.get("creator") is None and (s.get("context"), s.get("target_url")) in reported))]
     # Wait for the whole build to settle, so simultaneous host failures cause
     # one repair attempt. The controller retries notifications until accepted.
     if not failures or any(s["state"] == "pending" for s in statuses if s["context"].startswith("colmena/")):
