@@ -45,6 +45,9 @@ def main():
                 if Path(previous["closure"]).exists():
                     api.status(sha, f"colmena/{host}", "success", "Retained successful build", previous["run_url"])
                     continue
+            # Reclaim outputs from failed attempts before the next host. GC
+            # roots retain every successful current-PR closure.
+            subprocess.run(["nix-store", "--gc"], check=True)
             api.status(sha, f"colmena/{host}", "pending", "Building exact PR head", run_url)
             log = state / "results" / sha / f"{host}.log"
             log.parent.mkdir(parents=True, exist_ok=True)

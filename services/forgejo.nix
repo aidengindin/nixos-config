@@ -98,7 +98,6 @@ in
         if ! test -f ${forgejo.stateDir}/data/ssh/forgejo.ed25519; then
           ${pkgs.util-linux}/bin/runuser -u forgejo -- ${pkgs.openssh}/bin/ssh-keygen -q -t ed25519 -N "" -f ${forgejo.stateDir}/data/ssh/forgejo.ed25519
         fi
-        ${pkgs.coreutils}/bin/install -m 0644 ${forgejo.stateDir}/data/ssh/forgejo.ed25519.pub /var/lib/forgejo-ssh-host-key.pub
       '';
     };
     systemd.services.forgejo-secrets = {
@@ -120,6 +119,8 @@ in
           HTTP_ADDR = "127.0.0.1";
           HTTP_PORT = ports.forgejo;
           START_SSH_SERVER = true;
+          BUILTIN_SSH_SERVER_USER = "git";
+          SSH_USER = "git";
           SSH_LISTEN_HOST = "0.0.0.0";
           SSH_LISTEN_PORT = ports.forgejoSsh;
           SSH_PORT = ports.forgejoSsh;
