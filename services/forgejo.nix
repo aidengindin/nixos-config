@@ -94,7 +94,11 @@ in
       script = ''
         ${pkgs.coreutils}/bin/install -d -m 0750 -o forgejo -g forgejo \
           ${forgejo.stateDir} ${forgejo.customDir} ${forgejo.customDir}/conf \
-          ${forgejo.stateDir}/data ${forgejo.repositoryRoot}
+          ${forgejo.stateDir}/data ${forgejo.stateDir}/data/ssh ${forgejo.repositoryRoot}
+        if ! test -f ${forgejo.stateDir}/data/ssh/forgejo.ed25519; then
+          ${pkgs.util-linux}/bin/runuser -u forgejo -- ${pkgs.openssh}/bin/ssh-keygen -q -t ed25519 -N "" -f ${forgejo.stateDir}/data/ssh/forgejo.ed25519
+        fi
+        ${pkgs.coreutils}/bin/install -m 0644 ${forgejo.stateDir}/data/ssh/forgejo.ed25519.pub /run/forgejo-ssh.pub
       '';
     };
     systemd.services.forgejo-secrets = {
@@ -120,6 +124,7 @@ in
           SSH_LISTEN_PORT = ports.forgejoSsh;
           SSH_PORT = ports.forgejoSsh;
           SSH_DOMAIN = cfg.domain;
+          SSH_SERVER_HOST_KEYS = "${forgejo.stateDir}/data/ssh/forgejo.ed25519";
         };
         service.DISABLE_REGISTRATION = true;
         service.ALLOW_ONLY_EXTERNAL_REGISTRATION = true;
