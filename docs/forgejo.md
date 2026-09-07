@@ -74,6 +74,13 @@ migration token. Example paths below are private local working files.
    Spot-check imported comments/reviews, wiki contents, and release attachments
    against `github.json`. GitHub Actions history and reviewer identities do not
    necessarily transfer; the source export remains the historical reference.
+   Initial migration result: all 77 PRs were present; GitHub contained zero
+   reviews, zero review comments, one PR discussion comment, nine labels, no
+   milestones, and no releases. PR 15 preserved that comment byte-for-byte and
+   at the same instant, but attributed it to `Ghost` instead of `aidengindin`.
+   GitHub had its wiki feature enabled but no wiki repository; Forgejo likewise
+   has no wiki contents. The author-attribution loss is the only observed import
+   gap.
 6. Supply the dedicated `GITHUB_MIRROR_TOKEN` and run the `mirror` phase. It
    refuses divergent refs before enabling Forgejo's force-push mirror. Confirm
    a successful sync and no mirror error.
@@ -110,7 +117,9 @@ Each host has a `colmena/<hostname>` status and a JSON manifest under
 `/var/lib/forgejo-ci/results/<sha>/<host>.json`. Colmena's own hive supplies the
 closure path. Successful results are GC-rooted and reused on duplicate events.
 Roots stay while the SHA is a current PR head; old roots have a seven-day grace
-period. Nix GC runs weekly. Failed job workspaces are cleaned of untracked files.
+period. Nix GC runs before every uncached host build and weekly, reclaiming failed
+outputs while preserving successful rooted closures. Failed job workspaces are
+cleaned of untracked files.
 
 The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
 `automation/update`, performs each existing updater, publishes partial edits when

@@ -47,6 +47,14 @@ in
   };
   # slirp exposes host loopback as 10.0.2.2; TLS still checks the real name.
   networking.hosts."10.0.2.2" = [ domain ];
+  # Keep the fixed 6 GiB RAM allocation, but absorb short memory spikes from
+  # frontend and kernel builds on the persistent sparse VM disk.
+  swapDevices = [
+    {
+      device = "/swapfile";
+      size = 8192;
+    }
+  ];
   nix.settings = {
     experimental-features = [
       "nix-command"
