@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Build exact PR heads, retain closures, and publish one status per host."""
+import errno
 import fcntl
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json
+from retention import prune_retention
 
 
 def supersede_pending(api, pull, sha, current_heads, run_url):
@@ -27,6 +30,30 @@ def supersede_pending(api, pull, sha, current_heads, run_url):
             if target.startswith("/"):
                 target = api.url + target
             api.status(old_sha, status["context"], "error", "Superseded by newer PR head", target)
+
+
+GIB = 1024 ** 3
+
+
+def gc_if_needed(state, threshold_percent=85, minimum_free=40 * GIB):
+    usage = shutil.disk_usage(state)
+    used_percent = usage.used * 100 / usage.total
+    free_gib = usage.free / GIB
+    if used_percent < threshold_percent and usage.free >= minimum_free:
+        print(f"Nix store filesystem is {used_percent:.1f}% full with {free_gib:.1f} GiB free; skipping GC.")
+        return False
+    print(f"Nix store filesystem is {used_percent:.1f}% full with {free_gib:.1f} GiB free; running GC.")
+    subprocess.run(["nix-store", "--gc"], check=True)
+    return True
+
+
+def require_build_headroom(state, minimum_free=30 * GIB):
+    usage = shutil.disk_usage(state)
+    if usage.free < minimum_free:
+        raise RuntimeError(
+            f"Only {usage.free / GIB:.1f} GiB is free after GC; "
+            f"refusing to start another build below the {minimum_free / GIB:.0f} GiB reserve"
+        )
 
 
 def main():
@@ -60,6 +87,8 @@ def main():
     failed = False
     with (state / "build.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        prune_retention(state, current_heads)
+        gc_if_needed(state)
         for host in HOSTS:
             api.status(sha, f"colmena/{host}", "pending", "Queued exact PR head", run_url)
         for host in HOSTS:
@@ -69,19 +98,42 @@ def main():
                 if Path(previous["closure"]).exists():
                     api.status(sha, f"colmena/{host}", "success", "Retained successful build", previous["run_url"])
                     continue
-            # Reclaim outputs from failed attempts before the next host. GC
-            # roots retain every successful current-PR closure.
-            subprocess.run(["nix-store", "--gc"], check=True)
+            # Preserve unrooted outputs from partial builds while space allows.
+            # Successful current-PR closures remain protected by explicit roots.
+            gc_if_needed(state)
+            try:
+                require_build_headroom(state)
+            except RuntimeError as error:
+                print(f"{host}: {error}", file=sys.stderr)
+                failed = True
+                api.status(sha, f"colmena/{host}", "failure", "Insufficient CI disk after garbage collection", run_url)
+                continue
             api.status(sha, f"colmena/{host}", "pending", "Building exact PR head", run_url)
             log = state / "results" / sha / f"{host}.log"
             log.parent.mkdir(parents=True, exist_ok=True)
-            with log.open("w") as output:
-                process = subprocess.Popen(["nix", "run", ".#colmena", "--", "build", "--on", host,
-                    "--parallel", "1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-                for line in process.stdout:
-                    print(line, end="", flush=True)
-                    output.write(line)
-                rc = process.wait()
+            process = None
+            try:
+                with log.open("w", buffering=1) as output:
+                    process = subprocess.Popen(["nix", "run", ".#colmena", "--", "build", "--on", host,
+                        "--parallel", "1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    for line in process.stdout:
+                        print(line, end="", flush=True)
+                        output.write(line)
+                    rc = process.wait()
+            except OSError as error:
+                if error.errno != errno.ENOSPC:
+                    raise
+                if process is not None and process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+                print(f"{host}: CI VM ran out of disk space while writing its log", file=sys.stderr)
+                failed = True
+                api.status(sha, f"colmena/{host}", "failure", "CI VM ran out of disk space", run_url)
+                continue
             if rc:
                 failed = True
                 api.status(sha, f"colmena/{host}", "failure", "Colmena build failed; see job log", run_url)
@@ -98,15 +150,10 @@ def main():
             atomic_json(result_file, {"repository": REPOSITORY, "sha": sha, "host": host,
                 "closure": closure, "run": run, "run_url": run_url, "prs": [p["number"] for p in pulls]})
             api.status(sha, f"colmena/{host}", "success", "Colmena build passed", run_url)
-        # Keep all current PR results. Pending deployment closures are pulled
-        # and rooted by the controller before activation; preserve old results
-        # for seven days as a transfer grace period.
-        import time
+        # Refresh leases after a long run and remove roots plus diagnostic files
+        # that have been superseded beyond the transfer grace period.
         current = {p["head"]["sha"] for p in api.pulls()}
-        for directory in (state / "roots").iterdir():
-            if directory.name not in current and time.time() - directory.stat().st_mtime > 7 * 86400:
-                import shutil
-                shutil.rmtree(directory)
+        prune_retention(state, current)
     return int(failed)
 
 if __name__ == "__main__":

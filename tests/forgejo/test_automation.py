@@ -3,6 +3,7 @@ import hmac
 import importlib.util
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -11,8 +12,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
+from build import GIB, gc_if_needed, require_build_headroom
 from common import HOSTS, REPOSITORY, selectors
 from controller import Controller, signed
+from retention import RETENTION_SECONDS, prune_retention
 
 SHA = "a" * 40
 CLOSURE = "/nix/store/" + "b" * 32 + "-nixos-system-lorien-26.05"
@@ -41,6 +44,49 @@ class ValidationTests(unittest.TestCase):
         for command in ["nix-store --serve --write", "result ../../etc/passwd lorien", "bash", "result " + SHA + " lorien;id"]:
             proc = subprocess.run([sys.executable, str(script)], env={**os.environ, "SSH_ORIGINAL_COMMAND": command}, capture_output=True)
             self.assertEqual(proc.returncode, 1)
+
+class RetentionTests(unittest.TestCase):
+    def test_prune_preserves_current_head_and_removes_expired_state(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            current = "b" * 40
+            expired = "c" * 40
+            now = 2_000_000_000
+            for name in ("roots", "results"):
+                for sha in (current, expired):
+                    directory = state / name / sha
+                    directory.mkdir(parents=True)
+                    os.utime(directory, (now - RETENTION_SECONDS - 1,) * 2)
+            removed = prune_retention(state, {current}, now=now)
+            self.assertEqual(len(removed), 2)
+            self.assertTrue((state / "roots" / current).exists())
+            self.assertTrue((state / "results" / current).exists())
+            self.assertFalse((state / "roots" / expired).exists())
+            self.assertFalse((state / "results" / expired).exists())
+            self.assertEqual((state / "roots" / current).stat().st_mtime, now)
+
+    @patch("build.subprocess.run")
+    @patch("build.shutil.disk_usage")
+    def test_gc_runs_only_at_disk_threshold(self, disk_usage, run):
+        disk_usage.return_value = shutil._ntuple_diskusage(500 * GIB, 400 * GIB, 100 * GIB)
+        self.assertFalse(gc_if_needed(Path("/state")))
+        run.assert_not_called()
+        disk_usage.return_value = shutil._ntuple_diskusage(500 * GIB, 425 * GIB, 75 * GIB)
+        self.assertTrue(gc_if_needed(Path("/state")))
+        run.assert_called_once_with(["nix-store", "--gc"], check=True)
+
+    @patch("build.subprocess.run")
+    @patch("build.shutil.disk_usage")
+    def test_gc_also_preserves_build_headroom(self, disk_usage, run):
+        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 125 * GIB, 35 * GIB)
+        self.assertTrue(gc_if_needed(Path("/state")))
+        run.assert_called_once_with(["nix-store", "--gc"], check=True)
+
+    @patch("build.shutil.disk_usage")
+    def test_build_refuses_to_consume_final_reserve(self, disk_usage):
+        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 131 * GIB, 29 * GIB)
+        with self.assertRaisesRegex(RuntimeError, "refusing to start"):
+            require_build_headroom(Path("/state"))
 
 class ControllerTests(unittest.TestCase):
     def setUp(self):

@@ -28,6 +28,26 @@ let
       nixpkgsPath = pkgs.path;
     };
   };
+  resizeVmDisk = pkgs.writeShellApplication {
+    name = "forgejo-ci-resize-disk";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.jq
+      vm.config.virtualisation.qemu.package
+    ];
+    text = ''
+      image=/var/lib/forgejo-ci-vm/disk.qcow2
+      target=$(( ${toString vm.config.virtualisation.diskSize} * 1024 * 1024 ))
+      if [[ ! -e "$image" ]]; then
+        exit 0
+      fi
+      current=$(qemu-img info --output=json "$image" | jq -er '."virtual-size"')
+      if (( current < target )); then
+        echo "Growing Forgejo CI disk from $current to $target bytes"
+        qemu-img resize "$image" "$target"
+      fi
+    '';
+  };
   secrets = {
     forgejo-controller-env = "nixos-deploy";
     forgejo-runner-env = "root";
@@ -147,7 +167,11 @@ in
         cat ${state}/vm-host-key.pub >> ${state}/known_hosts
         chmod 0640 ${state}/known_hosts
         chgrp nixos-deploy ${state}/known_hosts
+        source /run/agenix/forgejo-controller-env
+        umask 077
+        printf 'FORGEJO_URL=%s\nFORGEJO_TOKEN=%s\n' "$FORGEJO_URL" "$FORGEJO_TOKEN" > /run/forgejo-ci-api-env
       '';
+      restartTriggers = lib.optional (builtins.pathExists ../../secrets/forgejo-controller-env.age) ../../secrets/forgejo-controller-env.age;
     };
     systemd.services.forgejo-ci-vm = {
       description = "Isolated Forgejo Colmena builder";
@@ -169,6 +193,7 @@ in
         User = "forgejo-vm";
         Group = "forgejo-vm";
         WorkingDirectory = "/var/lib/forgejo-ci-vm";
+        ExecStartPre = lib.getExe resizeVmDisk;
         ExecStart = "${vm.config.system.build.vm}/bin/run-forgejo-ci-vm";
         Restart = "on-failure";
         RestartSec = 10;
@@ -176,6 +201,7 @@ in
         KillSignal = "SIGTERM";
         LoadCredential = [
           "runner-env:/run/agenix/forgejo-runner-env"
+          "api-env:/run/forgejo-ci-api-env"
           "vm-host-key:${state}/vm-host-key"
           "store-reader-public:${state}/store-reader.pub"
         ];

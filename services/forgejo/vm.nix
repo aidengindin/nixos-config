@@ -12,6 +12,19 @@ let
   export = pkgs.writeShellScript "forgejo-store-export" ''
     exec ${pkgs.python3}/bin/python3 ${../../scripts/forgejo/store-export.py}
   '';
+  retentionSource = pkgs.runCommand "forgejo-ci-retention-source" { } ''
+    mkdir -p $out
+    cp ${../../scripts/forgejo/common.py} $out/common.py
+    cp ${../../scripts/forgejo/retention.py} $out/retention.py
+  '';
+  retention = pkgs.writeShellApplication {
+    name = "forgejo-ci-retention";
+    runtimeInputs = [ pkgs.python3 ];
+    text = ''
+      export PYTHONPATH=${retentionSource}
+      exec python3 ${retentionSource}/retention.py
+    '';
+  };
 in
 {
   imports = [ (modulesPath + "/virtualisation/qemu-vm.nix") ];
@@ -25,7 +38,9 @@ in
   virtualisation = {
     cores = 6;
     memorySize = 10240;
-    diskSize = 102400;
+    # Sparse upper bound. Existing images are only grown, never recreated or
+    # shrunk, by the host unit before QEMU starts.
+    diskSize = 163840;
     graphics = false;
     useNixStoreImage = true;
     mountHostNixStore = false;
@@ -41,10 +56,13 @@ in
         guest.port = 22;
       }
     ];
-    credentials = lib.genAttrs [ "runner-env" "vm-host-key" "store-reader-public" ] (name: {
+    credentials = lib.genAttrs [ "runner-env" "api-env" "vm-host-key" "store-reader-public" ] (name: {
       source = "${credentials}/${name}";
     });
   };
+  # qemu-vm uses a partitionless ext4 root, so grow it to the enlarged qcow2
+  # virtual size during boot.
+  virtualisation.fileSystems."/".autoResize = lib.mkForce true;
   # slirp exposes host loopback as 10.0.2.2; TLS still checks the real name.
   networking.hosts."10.0.2.2" = [ domain ];
   # Absorb memory spikes from large evaluations, frontend builds, and kernels
@@ -124,6 +142,8 @@ in
     script = ''
       systemd-creds --system cat vm-host-key > /run/forgejo-ssh-host-key
       systemd-creds --system cat runner-env > /run/forgejo-runner-env
+      systemd-creds --system cat api-env > /run/forgejo-api-env
+      chmod 0400 /run/forgejo-api-env
       printf 'restrict,command="${export}" ' > /run/forgejo-store-authorized-key
       systemd-creds --system cat store-reader-public >> /run/forgejo-store-authorized-key
       chmod 0644 /run/forgejo-store-authorized-key
@@ -156,6 +176,29 @@ in
       # the safe entries that can poison otherwise unrelated builds.
       nix-store --verify || true
     '';
+  };
+  systemd.services.forgejo-ci-retention = {
+    description = "Expire superseded Forgejo CI roots and diagnostics";
+    wants = [ "network-online.target" ];
+    after = [
+      "network-online.target"
+      "forgejo-vm-credentials.service"
+    ];
+    requires = [ "forgejo-vm-credentials.service" ];
+    environment.CI_STATE = "/var/lib/forgejo-ci";
+    serviceConfig = {
+      Type = "oneshot";
+      EnvironmentFile = "/run/forgejo-api-env";
+      ExecStart = lib.getExe retention;
+    };
+  };
+  systemd.timers.forgejo-ci-retention = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+      RandomizedDelaySec = "1h";
+    };
   };
   systemd.tmpfiles.rules = [
     "d /var/lib/forgejo-ci 0755 ci ci -"
