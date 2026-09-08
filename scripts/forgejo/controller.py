@@ -33,6 +33,7 @@ class Controller:
         with self.db() as db:
             db.execute("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL, state TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS repairs (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
+            db.execute("CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
         self.owner_id = int(os.environ["FORGEJO_OWNER_ID"])
         self.bot_id = int(os.environ["FORGEJO_BOT_ID"])
 
@@ -49,6 +50,33 @@ class Controller:
     def save(self, key, job, state="queued"):
         with self.db() as db:
             db.execute("UPDATE jobs SET data=?,state=? WHERE id=?", (json.dumps(job), state, key))
+
+    def queue_notification(self, key, message):
+        payload = {"event_type": "forgejo_notification", "message": message}
+        with self.db() as db:
+            db.execute("INSERT OR IGNORE INTO notifications(id,payload) VALUES (?,?)",
+                (key, json.dumps(payload)))
+
+    def queue_build_notification(self, sha):
+        if not SHA.fullmatch(sha):
+            return
+        statuses = self.trusted_statuses(sha)
+        host_statuses = {host: statuses.get(f"colmena/{host}") for host in HOSTS}
+        if any(not status or status.get("state") not in ("success", "failure", "error")
+                for status in host_statuses.values()):
+            return
+        pulls = [pull for pull in self.api.pulls() if pull["head"]["sha"] == sha]
+        if not pulls:
+            return
+        failures = [host for host, status in host_statuses.items()
+                    if status["state"] in ("failure", "error")]
+        run_url = next((status.get("target_url") for status in host_statuses.values()
+                        if status.get("target_url")), f"{self.api.url}/{REPOSITORY}/pulls/{pulls[0]['number']}")
+        result = "failed for " + ", ".join(failures) if failures else "passed for all four hosts"
+        for pull in pulls:
+            message = (f"Forgejo CI {result} on PR #{pull['number']} at `{sha[:12]}`.\n"
+                f"Run and logs: {run_url}")
+            self.queue_notification(f"build:{pull['number']}:{sha}", message)
 
     def accept(self, event, payload):
         if payload.get("repository", {}).get("full_name") != REPOSITORY:
@@ -75,7 +103,9 @@ class Controller:
             if inserted:
                 self.api.comment(pr, f"Deployment queued for `{job['sha']}`: {', '.join(targets)}.")
         elif event == "status":
-            self.queue_repair(payload.get("sha", ""))
+            sha = payload.get("sha", "")
+            self.queue_build_notification(sha)
+            self.queue_repair(sha)
 
     def trusted_statuses(self, sha):
         trusted = {}
@@ -124,6 +154,20 @@ class Controller:
                 response.read()
             with self.db() as db:
                 db.execute("UPDATE repairs SET sent=1 WHERE id=?", (key,))
+
+    def send_notifications(self):
+        with self.db() as db:
+            rows = db.execute("SELECT id,payload FROM notifications WHERE sent=0").fetchall()
+        for key, payload in rows:
+            body = payload.encode()
+            signature = hmac.new(os.environ["HERMES_WEBHOOK_SECRET"].encode(), body, hashlib.sha256).hexdigest()
+            request = urllib.request.Request(os.environ["HERMES_NOTIFY_URL"], data=body, headers={
+                "Content-Type": "application/json", "X-Hub-Signature-256": "sha256=" + signature,
+                "X-GitHub-Event": "forgejo_notification", "X-GitHub-Delivery": key})
+            with urllib.request.urlopen(request, timeout=30) as response:
+                response.read()
+            with self.db() as db:
+                db.execute("UPDATE notifications SET sent=1 WHERE id=?", (key,))
 
     def store_ssh(self):
         return ["ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15",
@@ -206,7 +250,9 @@ class Controller:
             self.target(host, ["sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch"])
             item["stage"] = "done"
             self.save(key, job)
-        self.api.comment(pr, self.summary(job, "Deployment complete"))
+        summary = self.summary(job, "Deployment complete")
+        self.api.comment(pr, summary)
+        self.queue_notification(f"deploy:{key}:success", f"Forgejo {summary}")
         self.save(key, job, "done")
         # Current target generations now retain the closures. Keep this audit
         # journal, release the controller's temporary transfer roots.
@@ -234,12 +280,16 @@ class Controller:
                     except Exception as exc:
                         LOG.exception("Deployment %s failed", key)
                         self.save(key, job, "failed")
-                        self.api.comment(job["pr"], self.summary(job, "Deployment stopped: " + str(exc)))
+                        summary = self.summary(job, "Deployment stopped: " + str(exc))
+                        self.api.comment(job["pr"], summary)
+                        self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
                 # Reconcile dropped status webhooks after Forgejo/controller restart.
                 for pull in self.api.pulls():
+                    self.queue_build_notification(pull["head"]["sha"])
                     if pull["head"]["ref"] == UPDATE_BRANCH:
                         self.queue_repair(pull["head"]["sha"])
                 self.send_repairs()
+                self.send_notifications()
             except Exception:
                 LOG.exception("Controller reconciliation failed; retrying")
             time.sleep(15)
@@ -262,7 +312,9 @@ def main():
                 if self.path == "/ci":
                     if payload.get("repository") != REPOSITORY:
                         raise ValueError("Wrong repository")
-                    controller.queue_repair(payload.get("sha", ""))
+                    sha = payload.get("sha", "")
+                    controller.queue_build_notification(sha)
+                    controller.queue_repair(sha)
                 else:
                     controller.accept(self.headers.get("X-Forgejo-Event", self.headers.get("X-Gitea-Event", "")), payload)
             except ValueError as exc:

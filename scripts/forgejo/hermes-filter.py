@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Hermes route filter: revalidate, deduplicate, budget, prepare a checkout."""
 import fcntl
+import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -18,6 +20,20 @@ def api(path):
         headers={"Authorization": "token " + os.environ["FORGEJO_TOKEN"]})
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.load(response)
+
+
+def notify(delivery, message):
+    """Best-effort direct Matrix delivery; repair must not depend on it."""
+    try:
+        body = json.dumps({"event_type": "forgejo_notification", "message": message}).encode()
+        signature = hmac.new(os.environ["WEBHOOK_SECRET"].encode(), body, hashlib.sha256).hexdigest()
+        request = urllib.request.Request(os.environ["HERMES_NOTIFY_URL"], data=body, headers={
+            "Content-Type": "application/json", "X-Hub-Signature-256": "sha256=" + signature,
+            "X-GitHub-Event": "forgejo_notification", "X-GitHub-Delivery": delivery})
+        with urllib.request.urlopen(request, timeout=15) as response:
+            response.read()
+    except Exception as exc:
+        print(f"Matrix notification failed: {exc}", file=sys.stderr)
 
 
 def main():
@@ -52,7 +68,19 @@ def main():
         state = json.loads(state_path.read_text()) if state_path.exists() else {}
         key = f"{pull['number']}:{cycle[1]}"
         attempted = state.setdefault(key, [])
-        if payload["sha"] in attempted or len(attempted) >= 3:
+        if payload["sha"] in attempted:
+            return
+        if len(attempted) >= 3:
+            marker = "exhausted:" + key
+            if state.get(marker):
+                return
+            state[marker] = True
+            temporary = state_path.with_suffix(".tmp")
+            temporary.write_text(json.dumps(state))
+            temporary.replace(state_path)
+            notify(marker, f"Hermes exhausted 3 repair attempts for automated update PR #{pull['number']} "
+                f"after CI failed at `{payload['sha'][:12]}`. Manual intervention is required.\n"
+                f"PR: {os.environ['FORGEJO_URL'].rstrip('/')}/{REPO}/pulls/{pull['number']}")
             return
         checkout = base / payload["sha"]
         # Never put the token in the remote URL or command line. Askpass reads
@@ -73,6 +101,9 @@ def main():
         temporary = state_path.with_suffix(".tmp")
         temporary.write_text(json.dumps(state)); temporary.replace(state_path)
     logs = "\n".join(f"- {s['context']}: {s['target_url']}" for s in failures)
+    notify(f"repair:{pull['number']}:{payload['sha']}",
+        f"Hermes started repair attempt {len(attempted)} of 3 for automated update PR #{pull['number']} "
+        f"at `{payload['sha'][:12]}`.\nFailures:\n{logs}")
     print(f"""Repair automated update PR #{pull['number']} in {checkout}.
 Expected head: {payload['sha']}. Attempt {len(attempted)} of 3 this update cycle.
 Inspect the Forgejo build/update logs through its API using FORGEJO_TOKEN:

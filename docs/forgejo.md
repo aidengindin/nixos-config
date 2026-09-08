@@ -136,6 +136,12 @@ a normal repository-scoped bot token, and pushes to trigger another build.
 No automatic merge or deployment occurs. The 30-minute repair instruction is an
 agent instruction; the persisted attempt counter is the enforced loop bound.
 
+The controller persistently queues and deduplicates notifications, then uses a
+signed loopback Hermes webhook route to deliver them directly to the configured
+Matrix home room without an agent turn. It reports only terminal four-host build
+results, Hermes repair starts and exhaustion, and deployment outcomes. Forgejo
+statuses, logs, and PR comments remain the durable record.
+
 ## Deploy a PR
 
 Comment as your configured Forgejo user:

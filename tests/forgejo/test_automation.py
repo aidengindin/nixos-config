@@ -106,6 +106,30 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", job)
         self.assertEqual(self.c.target.call_count, 1)
 
+    def test_terminal_build_notification_is_deduplicated(self):
+        self.api.pulls.return_value = [self.pr]
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "success",
+             "target_url": "https://example.test/run/7"} for host in HOSTS
+        ]
+        self.c.queue_build_notification(SHA)
+        self.c.queue_build_notification(SHA)
+        with self.c.db() as db:
+            rows = db.execute("SELECT id,payload FROM notifications").fetchall()
+        self.assertEqual(len(rows), 1)
+        self.assertIn("passed for all four hosts", rows[0][1])
+
+    def test_pending_build_has_no_notification(self):
+        self.api.pulls.return_value = [self.pr]
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2},
+             "state": "pending" if host == "weathertop" else "success"}
+            for host in HOSTS
+        ]
+        self.c.queue_build_notification(SHA)
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM notifications").fetchone()[0], 0)
+
     def test_untrusted_status_is_ignored(self):
         self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": {"id": 99}, "state": "success"}]
         self.assertEqual(self.c.trusted_statuses(SHA), {})

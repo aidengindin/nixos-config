@@ -17,6 +17,9 @@ class HermesTests(unittest.TestCase):
         self.environment = patch.dict(os.environ, {"HERMES_REPAIR_STATE": self.tmp.name,
             "FORGEJO_BOT_ID": "2", "FORGEJO_URL": "https://example.test", "FORGEJO_TOKEN": "test"})
         self.environment.start(); self.addCleanup(self.environment.stop)
+        self.notifications = []
+        self.notify_patch = patch.object(module, "notify", side_effect=lambda *args: self.notifications.append(args))
+        self.notify_patch.start(); self.addCleanup(self.notify_patch.stop)
 
     def invoke(self, sha, *, changed=False, pending=False, creator=2, reported=True):
         (Path(self.tmp.name) / sha).mkdir(exist_ok=True)
@@ -38,11 +41,17 @@ class HermesTests(unittest.TestCase):
         self.assertIn("Attempt 1 of 3", first)
         self.assertIn("push normally", first)
         self.assertEqual(self.invoke("a" * 40), "")
+        self.assertEqual(len(self.notifications), 1)
+        self.assertIn("repair attempt 1 of 3", self.notifications[0][1])
 
     def test_three_attempt_budget_survives_new_heads(self):
         for i, letter in enumerate("abc", 1):
             self.assertIn(f"Attempt {i} of 3", self.invoke(letter * 40))
         self.assertEqual(self.invoke("d" * 40), "")
+        self.assertEqual(len(self.notifications), 4)
+        self.assertIn("exhausted 3 repair attempts", self.notifications[-1][1])
+        self.assertEqual(self.invoke("e" * 40), "")
+        self.assertEqual(len(self.notifications), 4)
 
     def test_stale_head_has_no_side_effects(self):
         self.assertEqual(self.invoke("a" * 40, changed=True), "")

@@ -153,6 +153,7 @@ in
         STORE_KEY = "${state}/store-reader";
         STORE_KNOWN_HOSTS = "${state}/known_hosts";
         HERMES_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-repair";
+        HERMES_NOTIFY_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-notify";
       };
       path = [
         pkgs.nix
@@ -183,6 +184,7 @@ in
           environment = {
             WEBHOOK_ENABLED = "true";
             WEBHOOK_PORT = toString ports.hermesWebhook;
+            HERMES_NOTIFY_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-notify";
           };
           settings.platforms.webhook.extra = {
             host = "127.0.0.1";
@@ -192,6 +194,12 @@ in
               script = "forgejo-repair-filter.py";
               prompt = "{script_output}";
               deliver = "log";
+            };
+            routes.forgejo-notify = {
+              events = [ "forgejo_notification" ];
+              prompt = "{message}";
+              deliver = "matrix";
+              deliver_only = true;
             };
           };
         };
