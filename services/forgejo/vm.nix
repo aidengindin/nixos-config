@@ -61,9 +61,6 @@ in
       "flakes"
     ];
     max-jobs = 1;
-    # GC between hosts invalidates paths recorded in the persistent flake
-    # evaluation cache. Re-evaluate against the post-GC store every time.
-    eval-cache = false;
     # Ride through short upstream DNS/cache interruptions.
     download-attempts = 10;
     connect-timeout = 30;
@@ -136,6 +133,30 @@ in
     requires = [ "forgejo-vm-credentials.service" ];
     after = [ "forgejo-vm-credentials.service" ];
   };
+  # The generated read-only lower store changes with the VM closure, while
+  # the writable overlay and Nix database persist. Remove registrations for
+  # paths that existed only in an older lower image before accepting jobs.
+  systemd.services.forgejo-store-reconcile = {
+    description = "Reconcile the persistent CI store with its current lower image";
+    wantedBy = [ "multi-user.target" ];
+    requires = [ "nix-daemon.service" ];
+    after = [
+      "register-nix-paths.service"
+      "nix-daemon.service"
+    ];
+    before = [ "forgejo-runner.service" ];
+    path = [ pkgs.nix ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      # Verification prunes missing paths that no longer have valid referrers.
+      # It returns 1 when stale paths still have referrers, even after removing
+      # the safe entries that can poison otherwise unrelated builds.
+      nix-store --verify || true
+    '';
+  };
   systemd.tmpfiles.rules = [
     "d /var/lib/forgejo-ci 0755 ci ci -"
     "d /var/lib/forgejo-ci/results 0755 ci ci -"
@@ -147,8 +168,12 @@ in
     after = [
       "network-online.target"
       "forgejo-vm-credentials.service"
+      "forgejo-store-reconcile.service"
     ];
-    requires = [ "forgejo-vm-credentials.service" ];
+    requires = [
+      "forgejo-vm-credentials.service"
+      "forgejo-store-reconcile.service"
+    ];
     path = with pkgs; [
       forgejo-runner
       nix
