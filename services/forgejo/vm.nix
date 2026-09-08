@@ -49,7 +49,7 @@ in
   networking.hosts."10.0.2.2" = [ domain ];
   # Keep the fixed 6 GiB RAM allocation, but absorb short memory spikes from
   # frontend and kernel builds on the persistent sparse VM disk.
-  swapDevices = [
+  swapDevices = lib.mkVMOverride [
     {
       device = "/swapfile";
       size = 8192;
