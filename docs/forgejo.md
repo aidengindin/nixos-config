@@ -110,7 +110,7 @@ GitHub commits.
 
 ## CI and repair loop
 
-The VM has 4 vCPUs, 6 GiB RAM, a 100 GiB sparse disk, and capacity one. It runs
+The VM has 6 vCPUs, 8 GiB RAM, a 100 GiB sparse disk, and capacity one. It runs
 Forgejo Runner 13.1 from the stable pin using its supported legacy registration
 flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.

@@ -23,8 +23,8 @@ in
   '';
   system.stateVersion = "26.05";
   virtualisation = {
-    cores = 4;
-    memorySize = 6144;
+    cores = 6;
+    memorySize = 8192;
     diskSize = 102400;
     graphics = false;
     useNixStoreImage = true;
@@ -47,8 +47,8 @@ in
   };
   # slirp exposes host loopback as 10.0.2.2; TLS still checks the real name.
   networking.hosts."10.0.2.2" = [ domain ];
-  # Keep the fixed 6 GiB RAM allocation, but absorb short memory spikes from
-  # frontend and kernel builds on the persistent sparse VM disk.
+  # Absorb short memory spikes from frontend and kernel builds on the
+  # persistent sparse VM disk without committing more host RAM.
   swapDevices = lib.mkVMOverride [
     {
       device = "/swapfile";
@@ -67,8 +67,9 @@ in
     # Ride through short upstream DNS/cache interruptions.
     download-attempts = 10;
     connect-timeout = 30;
-    # Limit derivation parallelism so builds fit within the 6 GiB guest.
-    cores = 1;
+    # Use half of osgiliath's CPU threads while keeping enough memory per
+    # compiler process for large Node and kernel builds.
+    cores = 3;
     sandbox = true;
   };
   nix.gc = {
