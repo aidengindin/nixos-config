@@ -106,7 +106,10 @@ in
       ];
       requires = [ "forgejo-transport-keys.service" ];
       unitConfig.ConditionPathExists = "/run/agenix/forgejo-runner-env";
-      restartTriggers = lib.optional (builtins.pathExists ../../secrets/forgejo-runner-env.age) ../../secrets/forgejo-runner-env.age;
+      restartTriggers = [
+        vm.config.system.build.vm
+      ]
+      ++ lib.optional (builtins.pathExists ../../secrets/forgejo-runner-env.age) ../../secrets/forgejo-runner-env.age;
       environment.NIX_DISK_IMAGE = "/var/lib/forgejo-ci-vm/disk.qcow2";
       serviceConfig = {
         User = "forgejo-vm";
