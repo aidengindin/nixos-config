@@ -200,7 +200,7 @@ class Controller:
 
     def deploy(self, key, job):
         sha, pr = job["sha"], job["pr"]
-        if time.time() - job["created"] > 6 * 3600 and not job.get("started"):
+        if time.time() - job["created"] > 13 * 3600 and not job.get("started"):
             raise ValueError("Timed out waiting for builds")
         pull = self.api.repo(f"pulls/{pr}")
         if not job.get("started") and (pull["state"] != "open" or pull["head"]["sha"] != sha):

@@ -3,7 +3,7 @@
 Forgejo is the authoritative destination after the staged cutover below. GitHub
 stays unarchived as a push mirror. It is not a second development destination.
 The instance is single-user and reachable only over Tailscale at
-`https://git.gindin.xyz`; Git SSH uses port 2222 and user `forgejo`.
+`https://git.gindin.xyz`; Git SSH uses port 2222 and user `git`.
 
 ## Services and credentials
 

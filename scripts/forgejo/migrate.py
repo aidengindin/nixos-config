@@ -127,7 +127,7 @@ def main():
         remotes = subprocess.check_output(["git", "remote"], text=True).splitlines()
         if "github" not in remotes:
             subprocess.run(["git", "remote", "add", "github", f"git@github.com:{REPOSITORY}.git"], check=True)
-        subprocess.run(["git", "remote", "set-url", "origin", f"ssh://forgejo@{api.url.split('://',1)[1]}:2222/{REPOSITORY}.git"], check=True)
+        subprocess.run(["git", "remote", "set-url", "origin", f"ssh://git@{api.url.split('://',1)[1]}:2222/{REPOSITORY}.git"], check=True)
         print("Cutover complete. Enable the Forgejo update schedule after confirming GitHub Actions is disabled.")
 
 if __name__ == "__main__":
