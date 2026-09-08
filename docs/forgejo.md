@@ -118,8 +118,10 @@ Each host has a `colmena/<hostname>` status and a JSON manifest under
 closure path. Successful results are GC-rooted and reused on duplicate events.
 Roots stay while the SHA is a current PR head; old roots have a seven-day grace
 period. Nix GC runs before every uncached host build and weekly, reclaiming failed
-outputs while preserving successful rooted closures. Failed job workspaces are
-cleaned of untracked files.
+outputs while preserving successful rooted closures. The guest disables Nix's
+persistent evaluation cache so post-GC evaluations cannot reference deleted store
+paths. Server, runner, and workflow timeouts are all 12 hours for Weathertop's
+custom-kernel build. Failed job workspaces are cleaned of untracked files.
 
 The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
 `automation/update`, performs each existing updater, publishes partial edits when

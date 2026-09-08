@@ -136,6 +136,9 @@ in
         };
         actions.ENABLED = true;
         actions.DEFAULT_ACTIONS_URL = "https://data.forgejo.org";
+        # Weathertop compiles a custom kernel and can legitimately exceed the
+        # three-hour Forgejo default while continuously reporting progress.
+        actions.ENDLESS_TASK_TIMEOUT = "12h";
         repository.DEFAULT_BRANCH = "main";
         # Internal controller and Hermes callbacks are loopback-only.
         webhook.ALLOWED_HOST_LIST = "127.0.0.1";
@@ -157,6 +160,9 @@ in
         '';
       }
     ];
+    # Local automation should not depend on public or tailnet DNS to reach
+    # Forgejo on this same host. Caddy still terminates TLS for the real name.
+    networking.hosts."127.0.0.1" = [ cfg.domain ];
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ ports.forgejoSsh ];
     systemd.services.forgejo = {
       requires = [ "postgresql-setup.service" ];

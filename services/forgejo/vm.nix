@@ -61,6 +61,12 @@ in
       "flakes"
     ];
     max-jobs = 1;
+    # GC between hosts invalidates paths recorded in the persistent flake
+    # evaluation cache. Re-evaluate against the post-GC store every time.
+    eval-cache = false;
+    # Ride through short upstream DNS/cache interruptions.
+    download-attempts = 10;
+    connect-timeout = 30;
     # Limit derivation parallelism so builds fit within the 6 GiB guest.
     cores = 1;
     sandbox = true;
@@ -181,7 +187,7 @@ in
       cat > config.yml <<'YAML'
       runner:
         capacity: 1
-        timeout: 6h
+        timeout: 12h
         fetch_timeout: 30s
         envs:
           PATH: /run/current-system/sw/bin
