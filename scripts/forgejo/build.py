@@ -17,8 +17,22 @@ def supersede_pending(api, pull, sha, current_heads, run_url):
     host_contexts = {f"colmena/{host}" for host in HOSTS}
     workflow_context = "Colmena PR builds / build (pull_request)"
     commits = api.repo(f"pulls/{pull['number']}/commits?limit=100")
-    for commit in commits:
-        old_sha = commit["sha"]
+    old_shas = {commit["sha"] for commit in commits}
+    # A force-pushed commit disappears from the PR commit list. Forgejo keeps
+    # its SHA and original PR number on the detailed canceled-run record.
+    runs = api.repo("actions/runs?limit=50").get("workflow_runs", [])
+    for summary in runs:
+        if summary.get("status") != "cancelled":
+            continue
+        detail = api.repo(f"actions/runs/{int(summary['id'])}")
+        try:
+            payload = json.loads(detail.get("event_payload", "{}"))
+            old_sha = detail["commit_sha"]
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+            continue
+        if detail.get("event") == "pull_request" and payload.get("number") == pull["number"] and SHA.fullmatch(old_sha):
+            old_shas.add(old_sha)
+    for old_sha in old_shas:
         if old_sha == sha or old_sha in current_heads:
             continue
         for status in api.statuses(old_sha):

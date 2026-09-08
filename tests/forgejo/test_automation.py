@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
-from build import GIB, gc_if_needed, require_build_headroom
+from build import GIB, gc_if_needed, require_build_headroom, supersede_pending
 from common import HOSTS, REPOSITORY, selectors
 from controller import Controller, signed
 from retention import RETENTION_SECONDS, prune_retention
@@ -44,6 +44,35 @@ class ValidationTests(unittest.TestCase):
         for command in ["nix-store --serve --write", "result ../../etc/passwd lorien", "bash", "result " + SHA + " lorien;id"]:
             proc = subprocess.run([sys.executable, str(script)], env={**os.environ, "SSH_ORIGINAL_COMMAND": command}, capture_output=True)
             self.assertEqual(proc.returncode, 1)
+
+class StatusCleanupTests(unittest.TestCase):
+    def test_force_pushed_cancelled_run_is_closed(self):
+        old_sha = "c" * 40
+        api = Mock()
+        api.url = "https://example.test"
+        api.repo.side_effect = lambda path: {
+            "pulls/78/commits?limit=100": [],
+            "actions/runs?limit=50": {"workflow_runs": [{"id": 16, "status": "cancelled"}]},
+            "actions/runs/16": {
+                "event": "pull_request",
+                "commit_sha": old_sha,
+                "event_payload": json.dumps({"number": 78}),
+            },
+        }[path]
+        api.statuses.return_value = [{
+            "context": "colmena/weathertop",
+            "state": "pending",
+            "target_url": "/actions/runs/16",
+        }]
+        supersede_pending(api, {"number": 78}, SHA, {SHA}, "https://example.test/actions/runs/17")
+        api.status.assert_called_once_with(
+            old_sha,
+            "colmena/weathertop",
+            "error",
+            "Superseded by newer PR head",
+            "https://example.test/actions/runs/16",
+        )
+
 
 class RetentionTests(unittest.TestCase):
     def test_prune_preserves_current_head_and_removes_expired_state(self):
