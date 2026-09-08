@@ -9,6 +9,26 @@ import sys
 from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json
 
 
+def supersede_pending(api, pull, sha, current_heads, run_url):
+    """Close custom statuses stranded when Forgejo cancels an older run."""
+    host_contexts = {f"colmena/{host}" for host in HOSTS}
+    workflow_context = "Colmena PR builds / build (pull_request)"
+    commits = api.repo(f"pulls/{pull['number']}/commits?limit=100")
+    for commit in commits:
+        old_sha = commit["sha"]
+        if old_sha == sha or old_sha in current_heads:
+            continue
+        for status in api.statuses(old_sha):
+            if status["state"] != "pending":
+                continue
+            if status["context"] not in host_contexts and status["context"] != workflow_context:
+                continue
+            target = status.get("target_url") or run_url
+            if target.startswith("/"):
+                target = api.url + target
+            api.status(old_sha, status["context"], "error", "Superseded by newer PR head", target)
+
+
 def main():
     api = API()
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
@@ -16,7 +36,8 @@ def main():
     sha = os.environ.get("COMMIT_SHA") or event.get("pull_request", {}).get("head", {}).get("sha") or event.get("after")
     if not sha or not SHA.fullmatch(sha):
         raise ValueError("Missing exact commit SHA")
-    pulls = api.pulls()
+    open_pulls = api.pulls()
+    pulls = open_pulls
     if pr_number:
         pulls = [api.repo(f"pulls/{int(pr_number)}")]
     pulls = [p for p in pulls if p["head"]["sha"] == sha and p["state"] == "open"]
@@ -33,6 +54,9 @@ def main():
     state.mkdir(exist_ok=True)
     run = os.environ["GITHUB_RUN_ID"]
     run_url = f"{api.url}/{REPOSITORY}/actions/runs/{run}"
+    current_heads = {p["head"]["sha"] for p in open_pulls}
+    for pull in pulls:
+        supersede_pending(api, pull, sha, current_heads, run_url)
     failed = False
     with (state / "build.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)

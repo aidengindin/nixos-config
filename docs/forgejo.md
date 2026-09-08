@@ -110,7 +110,7 @@ GitHub commits.
 
 ## CI and repair loop
 
-The VM has 6 vCPUs, 8 GiB RAM, a 100 GiB sparse disk, and capacity one. It runs
+The VM has 6 vCPUs, 10 GiB RAM, 16 GiB swap, a 100 GiB sparse disk, and capacity one. It runs
 Forgejo Runner 13.1 from the stable pin using its supported legacy registration
 flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.
@@ -125,7 +125,9 @@ outputs while preserving successful rooted closures. At boot, the guest verifies
 its persistent Nix database against the current generated read-only store image
 before accepting jobs, pruning safe stale registrations left by older VM closures. Server,
 runner, and workflow timeouts are all 12 hours for Weathertop's
-custom-kernel build. Failed job workspaces are cleaned of untracked files.
+custom-kernel build. Failed job workspaces are cleaned of untracked files. When a
+new PR head cancels an older run, the next build closes pending host and workflow
+statuses on superseded commits so Forgejo does not display them as still running.
 
 The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
 `automation/update`, performs each existing updater, publishes partial edits when
