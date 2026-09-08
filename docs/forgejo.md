@@ -98,7 +98,10 @@ migration token. Example paths below are private local working files.
    Then merge the implementation PR to enable the Forgejo weekly schedule.
 10. Revoke the temporary `migration-bootstrap` recovery-account token and
     remove plaintext bootstrap files. Retain the encrypted recovery secret,
-    migration export, and verification report.
+    migration export, and verification report. The verified pre-migration bundle
+    and GitHub metadata are retained at
+    `/var/lib/forgejo-automation/migration/pre-forgejo-2026-09-07`, which is
+    included in both configured Restic destinations.
 
 Git remotes are shared by Git worktrees. Cutover changes the common repository's
 `origin`, including other worktrees. A frozen GitHub archive is incompatible with

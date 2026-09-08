@@ -59,6 +59,60 @@ in
       "d ${state}/controller 0700 nixos-deploy nixos-deploy -"
       "d /var/lib/forgejo-ci-vm 0700 forgejo-vm forgejo-vm -"
     ];
+    # Consume the checked, one-time pre-migration export from a staging path.
+    # Its fixed digest prevents a local user from substituting arbitrary content.
+    systemd.services.forgejo-migration-archive = {
+      description = "Archive the verified pre-Forgejo migration export";
+      wantedBy = [ "multi-user.target" ];
+      unitConfig.ConditionPathExists = [
+        "/var/tmp/forgejo-migration-2026-09-07.tar.gz"
+        "!${state}/migration/pre-forgejo-2026-09-07/verified"
+      ];
+      path = [
+        pkgs.coreutils
+        pkgs.git
+        pkgs.gnutar
+        pkgs.gzip
+        pkgs.python3
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        UMask = "0027";
+        ProtectSystem = "strict";
+        PrivateTmp = false;
+        ReadWritePaths = [
+          state
+          "/var/tmp"
+        ];
+      };
+      script = ''
+        set -euo pipefail
+        archive=/var/tmp/forgejo-migration-2026-09-07.tar.gz
+        root=${state}/migration
+        next="$root/.pre-forgejo-2026-09-07.next"
+        destination="$root/pre-forgejo-2026-09-07"
+        expected=a73e7c6e5ed1d4572602986c7ba9633aaea192b7c86211f16008e06eae191340
+        actual=$(sha256sum "$archive" | cut -d ' ' -f 1)
+        test "$actual" = "$expected"
+        install -d -m 0750 "$root"
+        rm -rf "$next"
+        install -d -m 0750 "$next"
+        tar -xzf "$archive" --no-same-owner --no-same-permissions -C "$next"
+        source="$next/forgejo-migration-2026-09-07"
+        test -s "$source/github.json"
+        test -s "$source/repository.bundle"
+        test -s "$source/verification.json"
+        python3 -m json.tool "$source/github.json" >/dev/null
+        python3 -m json.tool "$source/verification.json" >/dev/null
+        git bundle list-heads "$source/repository.bundle" >/dev/null
+        printf '%s  %s\n' "$expected" "$(basename "$archive")" > "$source/archive.sha256"
+        date --iso-8601=seconds > "$source/verified"
+        chmod -R u=rwX,g=rX,o= "$source"
+        mv "$source" "$destination"
+        rmdir "$next"
+        rm -f "$archive"
+      '';
+    };
     # Infrastructure transport identities never leave osgiliath except for the
     # guest's own host key. Derive known_hosts locally; never trust ssh-keyscan.
     systemd.services.forgejo-transport-keys = {
