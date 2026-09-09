@@ -27,6 +27,8 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Test Forgejo automation
+        run: python3 -m unittest discover -s tests/forgejo -v
       - name: Build every host and retain closures
         run: python3 scripts/forgejo/build.py
       - name: Report unexpected build failure
