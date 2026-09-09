@@ -14,6 +14,7 @@
     ./calibre-web.nix
     ./chaptarr.nix
     ./dawarich.nix
+    ./forgejo.nix
     ./frigate.nix
     ./grafana.nix
     ./headache-sync.nix

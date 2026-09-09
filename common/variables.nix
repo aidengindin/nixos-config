@@ -3,6 +3,11 @@ let
   globalVars = {
     ports = {
       postgres = 5432;
+      forgejo = 8430;
+      forgejoSsh = 2222;
+      forgejoController = 8431;
+      forgejoVmSsh = 2223;
+      hermesWebhook = 8644;
 
       grafana = 10001;
       prometheus = 10002;

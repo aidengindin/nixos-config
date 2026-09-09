@@ -1,0 +1,29 @@
+name: Automated flake update
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+jobs:
+  update:
+    runs-on: nixos
+    timeout-minutes: 360
+    env:
+      FORGEJO_URL: https://git.gindin.xyz
+      FORGEJO_TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+      CI_WEBHOOK_SECRET: ${{ secrets.CI_WEBHOOK_SECRET }}
+      GH_TOKEN: ${{ secrets.UPSTREAM_GITHUB_TOKEN }}
+    steps:
+      - uses: https://data.forgejo.org/actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTOMATION_TOKEN }}
+          fetch-depth: 0
+      - name: Update inputs and packages, preserving partial results
+        run: python3 scripts/forgejo/update.py
+      - name: Notify the repair controller
+        if: always()
+        run: python3 scripts/forgejo/notify.py
+      - name: Remove credentials and untracked files
+        if: always()
+        run: |
+          git config --local --unset-all http.https://git.gindin.xyz/.extraheader || true
+          git clean -ffdx
