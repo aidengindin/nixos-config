@@ -1,6 +1,7 @@
 """Small, dependency-free Forgejo API client shared by the automation."""
 import json
 import os
+from pathlib import Path
 import re
 import urllib.request
 
@@ -11,6 +12,18 @@ TAGS = {"server": HOSTS[:2], "onprem": HOSTS[:2], "laptop": ("khazad-dum",),
 UPDATE_BRANCH = "automation/update"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 STORE_PATH = re.compile(r"^/nix/store/[0-9a-z]{32}-nixos-system-[A-Za-z0-9.+_-]+$")
+
+
+def event_sha():
+    """Return the exact source SHA for PR, push, and dispatched workflows."""
+    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+    sha = (os.environ.get("COMMIT_SHA")
+        or event.get("pull_request", {}).get("head", {}).get("sha")
+        or event.get("after"))
+    if not sha or not SHA.fullmatch(sha):
+        raise ValueError("Missing exact commit SHA")
+    return sha
+
 
 class API:
     def __init__(self, url=None, token=None):

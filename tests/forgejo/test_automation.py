@@ -12,8 +12,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
-from build import GIB, gc_if_needed, require_build_headroom, supersede_pending
-from common import HOSTS, REPOSITORY, selectors
+from build import GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
+from common import HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 from retention import RETENTION_SECONDS, prune_retention
 
@@ -72,6 +72,26 @@ class StatusCleanupTests(unittest.TestCase):
             "Superseded by newer PR head",
             "https://example.test/actions/runs/16",
         )
+
+    def test_unexpected_failure_closes_missing_and_pending_hosts(self):
+        api = Mock()
+        api.statuses.return_value = [
+            {"context": "colmena/lorien", "state": "success"},
+            {"context": "colmena/osgiliath", "state": "pending"},
+            {"context": "unrelated", "state": "pending"},
+        ]
+        close_incomplete_statuses(api, SHA, "https://example.test/run/1")
+        self.assertEqual(
+            [call.args[1] for call in api.status.call_args_list],
+            ["colmena/osgiliath", "colmena/khazad-dum", "colmena/weathertop"],
+        )
+
+    def test_event_sha_uses_pr_head_before_checkout(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            event = Path(temporary) / "event.json"
+            event.write_text(json.dumps({"pull_request": {"head": {"sha": SHA}}}))
+            with patch.dict(os.environ, {"GITHUB_EVENT_PATH": str(event), "COMMIT_SHA": ""}):
+                self.assertEqual(event_sha(), SHA)
 
 
 class RetentionTests(unittest.TestCase):

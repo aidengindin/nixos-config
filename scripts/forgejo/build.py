@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json
+from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json, event_sha
 from retention import prune_retention
 
 
@@ -70,13 +70,21 @@ def require_build_headroom(state, minimum_free=30 * GIB):
         )
 
 
+def close_incomplete_statuses(api, sha, run_url):
+    """Mark every missing or pending host result failed after a job error."""
+    statuses = {status["context"]: status for status in api.statuses(sha)}
+    terminal = {"success", "failure", "error"}
+    for host in HOSTS:
+        context = f"colmena/{host}"
+        if statuses.get(context, {}).get("state") not in terminal:
+            api.status(sha, context, "failure", "Build job interrupted or failed unexpectedly", run_url)
+
+
 def main():
     api = API()
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
     pr_number = os.environ.get("PR_NUMBER") or event.get("number")
-    sha = os.environ.get("COMMIT_SHA") or event.get("pull_request", {}).get("head", {}).get("sha") or event.get("after")
-    if not sha or not SHA.fullmatch(sha):
-        raise ValueError("Missing exact commit SHA")
+    sha = event_sha()
     open_pulls = api.pulls()
     pulls = open_pulls
     if pr_number:
