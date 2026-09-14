@@ -199,6 +199,12 @@ in
         RestartSec = 10;
         TimeoutStopSec = 120;
         KillSignal = "SIGTERM";
+        # Protect Forgejo/PostgreSQL and the rest of osgiliath if a fresh
+        # system build drives the guest into sustained memory or I/O pressure.
+        MemoryHigh = "9G";
+        MemoryMax = "10G";
+        MemorySwapMax = "2G";
+        IOWeight = 25;
         LoadCredential = [
           "runner-env:/run/agenix/forgejo-runner-env"
           "api-env:/run/forgejo-ci-api-env"

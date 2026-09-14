@@ -125,6 +125,30 @@ class Controller:
             trusted[status["context"]] = status
         return trusted
 
+    def reconcile_terminal_build(self, sha):
+        """Close host statuses when Forgejo ended a run before cleanup ran."""
+        statuses = self.trusted_statuses(sha)
+        unresolved = [
+            host for host in HOSTS
+            if statuses.get(f"colmena/{host}", {}).get("state")
+            not in ("success", "failure", "error")
+        ]
+        if not unresolved:
+            return False
+        runs = self.api.repo("actions/runs?limit=50").get("workflow_runs", [])
+        run = next((
+            item for item in runs
+            if item.get("workflow_id") == "build.yml" and item.get("commit_sha") == sha
+        ), None)
+        if not run or run.get("status") not in ("success", "failure", "cancelled"):
+            return False
+        state = "failure" if run["status"] == "failure" else "error"
+        description = f"Forgejo run {run['status']} before this host reported a result"
+        run_url = run.get("html_url") or f"{self.api.url}/{REPOSITORY}/actions/runs/{int(run['id'])}"
+        for host in unresolved:
+            self.api.status(sha, f"colmena/{host}", state, description, run_url)
+        return True
+
     def queue_repair(self, sha):
         if not SHA.fullmatch(sha):
             return
@@ -285,6 +309,7 @@ class Controller:
                         self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
                 # Reconcile dropped status webhooks after Forgejo/controller restart.
                 for pull in self.api.pulls():
+                    self.reconcile_terminal_build(pull["head"]["sha"])
                     self.queue_build_notification(pull["head"]["sha"])
                     if pull["head"]["ref"] == UPDATE_BRANCH:
                         self.queue_repair(pull["head"]["sha"])

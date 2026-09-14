@@ -225,6 +225,42 @@ class ControllerTests(unittest.TestCase):
         with self.c.db() as db:
             self.assertEqual(db.execute("SELECT count(*) FROM notifications").fetchone()[0], 0)
 
+    def test_terminal_action_run_closes_unresolved_host_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2},
+             "state": "pending" if host == "weathertop" else "failure"}
+            for host in HOSTS
+        ]
+        self.api.repo.return_value = {"workflow_runs": [{
+            "id": 24,
+            "workflow_id": "build.yml",
+            "commit_sha": SHA,
+            "status": "failure",
+            "html_url": "https://example.test/run/24",
+        }]}
+        self.assertTrue(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_called_once_with(
+            SHA,
+            "colmena/weathertop",
+            "failure",
+            "Forgejo run failure before this host reported a result",
+            "https://example.test/run/24",
+        )
+
+    def test_running_action_does_not_close_pending_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "pending"}
+            for host in HOSTS
+        ]
+        self.api.repo.return_value = {"workflow_runs": [{
+            "id": 24,
+            "workflow_id": "build.yml",
+            "commit_sha": SHA,
+            "status": "running",
+        }]}
+        self.assertFalse(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_not_called()
+
     def test_untrusted_status_is_ignored(self):
         self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": {"id": 99}, "state": "success"}]
         self.assertEqual(self.c.trusted_statuses(SHA), {})
