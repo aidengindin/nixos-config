@@ -39,11 +39,76 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(signed(body + b" ", digest, "secret"))
         self.assertFalse(signed(body, "", "secret"))
 
-    def test_store_export_denies_writes_and_traversal(self):
+    def test_store_export_denies_generic_protocol_and_traversal(self):
         script = Path(__file__).resolve().parents[2] / "scripts/forgejo/store-export.py"
-        for command in ["nix-store --serve --write", "result ../../etc/passwd lorien", "bash", "result " + SHA + " lorien;id"]:
-            proc = subprocess.run([sys.executable, str(script)], env={**os.environ, "SSH_ORIGINAL_COMMAND": command}, capture_output=True)
+        commands = [
+            "nix-store --serve",
+            "nix-store --serve --write",
+            "result ../../etc/passwd lorien",
+            "bash",
+            "result " + SHA + " lorien;id",
+            "export " + SHA + " lorien;id",
+        ]
+        for command in commands:
+            proc = subprocess.run(
+                [sys.executable, str(script)],
+                env={**os.environ, "SSH_ORIGINAL_COMMAND": command},
+                capture_output=True,
+            )
             self.assertEqual(proc.returncode, 1)
+
+    def test_store_export_is_bound_to_validated_manifest(self):
+        script = Path(__file__).resolve().parents[2] / "scripts/forgejo/store-export.py"
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary) / "state"
+            result = state / "results" / SHA / "lorien.json"
+            result.parent.mkdir(parents=True)
+            manifest = {
+                "repository": REPOSITORY,
+                "sha": SHA,
+                "host": "lorien",
+                "closure": CLOSURE,
+            }
+            result.write_text(json.dumps(manifest))
+            bindir = Path(temporary) / "bin"
+            bindir.mkdir()
+            fake = bindir / "nix-store"
+            fake.write_text(
+                '#!/bin/sh\ncase "$1" in\n'
+                '  --query) printf "%s\\n" "$3";;\n'
+                '  --export) printf archive;;\n'
+                '  *) exit 2;;\n'
+                'esac\n'
+            )
+            fake.chmod(0o755)
+            env = {
+                **os.environ,
+                "FORGEJO_CI_STATE": str(state),
+                "PATH": str(bindir) + ":" + os.environ["PATH"],
+            }
+            metadata = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"result {SHA} lorien"},
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            self.assertEqual(json.loads(metadata.stdout), manifest)
+            archive = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"export {SHA} lorien"},
+                capture_output=True,
+                check=True,
+            )
+            self.assertEqual(archive.stdout, b"archive")
+            manifest["repository"] = "attacker/repository"
+            result.write_text(json.dumps(manifest))
+            denied = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"export {SHA} lorien"},
+                capture_output=True,
+            )
+            self.assertEqual(denied.returncode, 1)
 
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):

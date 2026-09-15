@@ -173,7 +173,7 @@ the controller dispatches CI. Changing the PR before activation cancels the
 request.
 
 Deployment runs on osgiliath, **not** in the CI VM. The controller pulls the
-selected closures over the restricted SSH export connection, roots them locally,
+selected closures through a manifest-bound SSH export stream, roots them locally,
 then copies/activates them on targets. It never evaluates or rebuilds PR code on
 the deployment host. Only this authenticated import uses `--no-check-sigs`;
 normal store signature policy remains enabled.

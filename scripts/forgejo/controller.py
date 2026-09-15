@@ -212,11 +212,24 @@ class Controller:
         if result.get("run_url") != status.get("target_url") or not STORE_PATH.fullmatch(result.get("closure", "")):
             raise ValueError("Build result does not match successful status")
         closure = result["closure"]
-        import shlex
-        env = dict(os.environ, NIX_SSHOPTS=shlex.join(self.store_ssh()[1:]))
-        # Only this explicit, authenticated import bypasses signatures. The VM
-        # is not a globally trusted substitute source for arbitrary host builds.
-        subprocess.run(["nix", "copy", "--no-check-sigs", "--from", "ssh://store-export@127.0.0.1", closure], env=env, check=True, timeout=3600)
+        exporter = subprocess.Popen(
+            self.store_ssh() + ["store-export@127.0.0.1", f"export {sha} {host}"],
+            stdout=subprocess.PIPE,
+        )
+        try:
+            # nixos-deploy is the trusted local controller user. Disable
+            # signature checks only for this manifest-bound import stream.
+            imported = subprocess.run(
+                ["nix-store", "--import", "--option", "require-sigs", "false"],
+                stdin=exporter.stdout,
+                stdout=subprocess.DEVNULL,
+                timeout=3600,
+            )
+        finally:
+            exporter.stdout.close()
+        export_rc = exporter.wait(timeout=30)
+        if imported.returncode or export_rc:
+            raise subprocess.CalledProcessError(imported.returncode or export_rc, "restricted closure transfer")
         root = self.state / "roots" / sha / host
         root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["nix-store", "--realise", closure, "--add-root", str(root), "--indirect"], check=True)
