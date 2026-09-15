@@ -163,6 +163,7 @@ in
           test -f ${state}/$name || ssh-keygen -q -t ed25519 -N "" -f ${state}/$name
         done
         chown nixos-deploy:nixos-deploy ${state}/store-reader
+        chmod 0600 ${state}/store-reader
         printf '[127.0.0.1]:${toString ports.forgejoVmSsh} ' > ${state}/known_hosts
         cat ${state}/vm-host-key.pub >> ${state}/known_hosts
         chmod 0640 ${state}/known_hosts
