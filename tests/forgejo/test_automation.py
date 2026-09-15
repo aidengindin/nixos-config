@@ -266,6 +266,15 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", job)
         self.assertEqual(self.c.target.call_count, 1)
 
+    @patch("controller.subprocess.check_output", return_value="")
+    def test_local_activation_uses_nixos_sudo_wrapper(self, check_output):
+        self.c.target("osgiliath", ["sudo", "-H", "--", "nix-env", "--version"])
+        check_output.assert_called_once_with(
+            ["/run/wrappers/bin/sudo", "-H", "--", "nix-env", "--version"],
+            text=True,
+            timeout=600,
+        )
+
     def test_terminal_build_notification_is_deduplicated(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [

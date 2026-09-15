@@ -17,6 +17,7 @@ import urllib.request
 from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
+SUDO = "/run/wrappers/bin/sudo"
 
 
 def signed(body, signature, secret):
@@ -200,6 +201,8 @@ class Controller:
 
     def target(self, host, command):
         if host == "osgiliath":
+            if command[0] == "sudo":
+                command = [SUDO, *command[1:]]
             return subprocess.check_output(command, text=True, timeout=600).strip()
         return subprocess.check_output(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
             "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command], text=True, timeout=600).strip()
