@@ -163,6 +163,7 @@ in
           test -f ${state}/$name || ssh-keygen -q -t ed25519 -N "" -f ${state}/$name
         done
         chown nixos-deploy:nixos-deploy ${state}/store-reader
+        chmod 0600 ${state}/store-reader
         printf '[127.0.0.1]:${toString ports.forgejoVmSsh} ' > ${state}/known_hosts
         cat ${state}/vm-host-key.pub >> ${state}/known_hosts
         chmod 0640 ${state}/known_hosts
@@ -199,6 +200,12 @@ in
         RestartSec = 10;
         TimeoutStopSec = 120;
         KillSignal = "SIGTERM";
+        # Protect Forgejo/PostgreSQL and the rest of osgiliath if a fresh
+        # system build drives the guest into sustained memory or I/O pressure.
+        MemoryHigh = "9G";
+        MemoryMax = "10G";
+        MemorySwapMax = "2G";
+        IOWeight = 25;
         LoadCredential = [
           "runner-env:/run/agenix/forgejo-runner-env"
           "api-env:/run/forgejo-ci-api-env"

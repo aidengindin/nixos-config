@@ -39,11 +39,76 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(signed(body + b" ", digest, "secret"))
         self.assertFalse(signed(body, "", "secret"))
 
-    def test_store_export_denies_writes_and_traversal(self):
+    def test_store_export_denies_generic_protocol_and_traversal(self):
         script = Path(__file__).resolve().parents[2] / "scripts/forgejo/store-export.py"
-        for command in ["nix-store --serve --write", "result ../../etc/passwd lorien", "bash", "result " + SHA + " lorien;id"]:
-            proc = subprocess.run([sys.executable, str(script)], env={**os.environ, "SSH_ORIGINAL_COMMAND": command}, capture_output=True)
+        commands = [
+            "nix-store --serve",
+            "nix-store --serve --write",
+            "result ../../etc/passwd lorien",
+            "bash",
+            "result " + SHA + " lorien;id",
+            "export " + SHA + " lorien;id",
+        ]
+        for command in commands:
+            proc = subprocess.run(
+                [sys.executable, str(script)],
+                env={**os.environ, "SSH_ORIGINAL_COMMAND": command},
+                capture_output=True,
+            )
             self.assertEqual(proc.returncode, 1)
+
+    def test_store_export_is_bound_to_validated_manifest(self):
+        script = Path(__file__).resolve().parents[2] / "scripts/forgejo/store-export.py"
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary) / "state"
+            result = state / "results" / SHA / "lorien.json"
+            result.parent.mkdir(parents=True)
+            manifest = {
+                "repository": REPOSITORY,
+                "sha": SHA,
+                "host": "lorien",
+                "closure": CLOSURE,
+            }
+            result.write_text(json.dumps(manifest))
+            bindir = Path(temporary) / "bin"
+            bindir.mkdir()
+            fake = bindir / "nix-store"
+            fake.write_text(
+                '#!/bin/sh\ncase "$1" in\n'
+                '  --query) printf "%s\\n" "$3";;\n'
+                '  --export) printf archive;;\n'
+                '  *) exit 2;;\n'
+                'esac\n'
+            )
+            fake.chmod(0o755)
+            env = {
+                **os.environ,
+                "FORGEJO_CI_STATE": str(state),
+                "PATH": str(bindir) + ":" + os.environ["PATH"],
+            }
+            metadata = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"result {SHA} lorien"},
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            self.assertEqual(json.loads(metadata.stdout), manifest)
+            archive = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"export {SHA} lorien"},
+                capture_output=True,
+                check=True,
+            )
+            self.assertEqual(archive.stdout, b"archive")
+            manifest["repository"] = "attacker/repository"
+            result.write_text(json.dumps(manifest))
+            denied = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"export {SHA} lorien"},
+                capture_output=True,
+            )
+            self.assertEqual(denied.returncode, 1)
 
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):
@@ -201,6 +266,22 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", job)
         self.assertEqual(self.c.target.call_count, 1)
 
+    @patch("controller.os.chmod")
+    def test_store_ssh_protects_private_key(self, chmod):
+        with patch.dict(os.environ, {"STORE_KEY": "/state/reader", "STORE_KNOWN_HOSTS": "/state/known", "STORE_PORT": "2223"}):
+            command = self.c.store_ssh()
+        chmod.assert_called_once_with("/state/reader", 0o600)
+        self.assertIn("/state/reader", command)
+
+    @patch("controller.subprocess.check_output", return_value="")
+    def test_local_activation_uses_nixos_sudo_wrapper(self, check_output):
+        self.c.target("osgiliath", ["sudo", "-H", "--", "nix-env", "--version"])
+        check_output.assert_called_once_with(
+            ["/run/wrappers/bin/sudo", "-H", "--", "nix-env", "--version"],
+            text=True,
+            timeout=600,
+        )
+
     def test_terminal_build_notification_is_deduplicated(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
@@ -224,6 +305,42 @@ class ControllerTests(unittest.TestCase):
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
             self.assertEqual(db.execute("SELECT count(*) FROM notifications").fetchone()[0], 0)
+
+    def test_terminal_action_run_closes_unresolved_host_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2},
+             "state": "pending" if host == "weathertop" else "failure"}
+            for host in HOSTS
+        ]
+        self.api.repo.return_value = {"workflow_runs": [{
+            "id": 24,
+            "workflow_id": "build.yml",
+            "commit_sha": SHA,
+            "status": "failure",
+            "html_url": "https://example.test/run/24",
+        }]}
+        self.assertTrue(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_called_once_with(
+            SHA,
+            "colmena/weathertop",
+            "failure",
+            "Forgejo run failure before this host reported a result",
+            "https://example.test/run/24",
+        )
+
+    def test_running_action_does_not_close_pending_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "pending"}
+            for host in HOSTS
+        ]
+        self.api.repo.return_value = {"workflow_runs": [{
+            "id": 24,
+            "workflow_id": "build.yml",
+            "commit_sha": SHA,
+            "status": "running",
+        }]}
+        self.assertFalse(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_not_called()
 
     def test_untrusted_status_is_ignored(self):
         self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": {"id": 99}, "state": "success"}]

@@ -37,7 +37,9 @@ in
   system.stateVersion = "26.05";
   virtualisation = {
     cores = 6;
-    memorySize = 10240;
+    # Two build cores fit in 8 GiB. Keeping half of osgiliath's RAM outside
+    # the guest prevents host-wide reclaim from stalling Forgejo and journald.
+    memorySize = 8192;
     # Sparse upper bound. Existing images are only grown, never recreated or
     # shrunk, by the host unit before QEMU starts.
     diskSize = 163840;

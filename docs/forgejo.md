@@ -110,7 +110,7 @@ GitHub commits.
 
 ## CI and repair loop
 
-The VM has 6 vCPUs, 10 GiB RAM, 16 GiB swap, a 160 GiB sparse disk, and capacity one. Existing disk images grow in place and are never shrunk or recreated. It runs
+The VM has 6 vCPUs, 8 GiB RAM, 16 GiB guest swap, a 160 GiB sparse disk, and capacity one. Its host unit applies memory and I/O limits so a fresh build cannot starve Forgejo, PostgreSQL, or journald on osgiliath. Existing disk images grow in place and are never shrunk or recreated. It runs
 Forgejo Runner 13.1 from the stable pin using its supported legacy registration
 flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.
@@ -131,6 +131,9 @@ runner, and workflow timeouts are all 12 hours for Weathertop's
 custom-kernel build. Failed job workspaces are cleaned of untracked files. When a
 new PR head cancels an older run, the next build closes pending host and workflow
 statuses on superseded commits so Forgejo does not display them as still running.
+The controller also reconciles each open PR against Forgejo's terminal action
+runs. If a runner or guest dies before its cleanup step, any missing or pending
+per-host statuses become terminal failures instead of remaining yellow forever.
 
 The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
 `automation/update`, performs each existing updater, publishes partial edits when
@@ -170,7 +173,7 @@ the controller dispatches CI. Changing the PR before activation cancels the
 request.
 
 Deployment runs on osgiliath, **not** in the CI VM. The controller pulls the
-selected closures over the restricted SSH export connection, roots them locally,
+selected closures through a manifest-bound SSH export stream, roots them locally,
 then copies/activates them on targets. It never evaluates or rebuilds PR code on
 the deployment host. Only this authenticated import uses `--no-check-sigs`;
 normal store signature policy remains enabled.
