@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
-from build import GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
+from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
 from common import HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 from retention import RETENTION_SECONDS, prune_retention
@@ -110,6 +110,13 @@ class ValidationTests(unittest.TestCase):
             )
             self.assertEqual(denied.returncode, 1)
 
+class WorkflowTests(unittest.TestCase):
+    def test_update_branch_does_not_duplicate_pr_builds(self):
+        workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/build.yml").read_text()
+        self.assertIn("\n  pull_request:", workflow)
+        self.assertNotIn("\n  push:", workflow)
+
+
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):
         old_sha = "c" * 40
@@ -160,6 +167,10 @@ class StatusCleanupTests(unittest.TestCase):
 
 
 class RetentionTests(unittest.TestCase):
+    def test_disk_heavy_host_builds_first(self):
+        self.assertEqual(BUILD_ORDER[0], "weathertop")
+        self.assertCountEqual(BUILD_ORDER, HOSTS)
+
     def test_prune_preserves_current_head_and_removes_expired_state(self):
         with tempfile.TemporaryDirectory() as temporary:
             state = Path(temporary)
@@ -201,6 +212,12 @@ class RetentionTests(unittest.TestCase):
         disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 131 * GIB, 29 * GIB)
         with self.assertRaisesRegex(RuntimeError, "refusing to start"):
             require_build_headroom(Path("/state"))
+
+    @patch("build.shutil.disk_usage")
+    def test_weathertop_requires_larger_reserve(self, disk_usage):
+        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 125 * GIB, 35 * GIB)
+        with self.assertRaisesRegex(RuntimeError, "40 GiB reserve"):
+            require_build_headroom(Path("/state"), minimum_free=40 * GIB)
 
 class ControllerTests(unittest.TestCase):
     def setUp(self):

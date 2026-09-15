@@ -47,6 +47,9 @@ def supersede_pending(api, pull, sha, current_heads, run_url):
 
 
 GIB = 1024 ** 3
+# Compile the disk-hungry custom kernel before retained outputs from the other
+# hosts reduce the working space available to its Nix sandbox.
+BUILD_ORDER = ("weathertop", *(host for host in HOSTS if host != "weathertop"))
 
 
 def gc_if_needed(state, threshold_percent=85, minimum_free=40 * GIB):
@@ -113,7 +116,7 @@ def main():
         gc_if_needed(state)
         for host in HOSTS:
             api.status(sha, f"colmena/{host}", "pending", "Queued exact PR head", run_url)
-        for host in HOSTS:
+        for host in BUILD_ORDER:
             result_file = state / "results" / sha / f"{host}.json"
             if result_file.exists():
                 previous = json.loads(result_file.read_text())
@@ -124,7 +127,7 @@ def main():
             # Successful current-PR closures remain protected by explicit roots.
             gc_if_needed(state)
             try:
-                require_build_headroom(state)
+                require_build_headroom(state, minimum_free=(40 if host == "weathertop" else 30) * GIB)
             except RuntimeError as error:
                 print(f"{host}: {error}", file=sys.stderr)
                 failed = True
