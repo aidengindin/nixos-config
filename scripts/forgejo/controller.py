@@ -195,6 +195,7 @@ class Controller:
                 db.execute("UPDATE notifications SET sent=1 WHERE id=?", (key,))
 
     def store_ssh(self):
+        os.chmod(os.environ["STORE_KEY"], 0o600)
         return ["ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15",
             "-o", "UserKnownHostsFile=" + os.environ["STORE_KNOWN_HOSTS"],
             "-i", os.environ["STORE_KEY"], "-p", os.environ["STORE_PORT"]]

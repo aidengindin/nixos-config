@@ -266,6 +266,13 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", job)
         self.assertEqual(self.c.target.call_count, 1)
 
+    @patch("controller.os.chmod")
+    def test_store_ssh_protects_private_key(self, chmod):
+        with patch.dict(os.environ, {"STORE_KEY": "/state/reader", "STORE_KNOWN_HOSTS": "/state/known", "STORE_PORT": "2223"}):
+            command = self.c.store_ssh()
+        chmod.assert_called_once_with("/state/reader", 0o600)
+        self.assertIn("/state/reader", command)
+
     @patch("controller.subprocess.check_output", return_value="")
     def test_local_activation_uses_nixos_sudo_wrapper(self, check_output):
         self.c.target("osgiliath", ["sudo", "-H", "--", "nix-env", "--version"])
