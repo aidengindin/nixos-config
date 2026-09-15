@@ -64,7 +64,6 @@
 
     mcp-servers-nix = {
       url = "github:natsukium/mcp-servers-nix";
-      inputs.nixpkgs.follows = "unstable";
     };
 
     # Pin Hermes to a tagged release: its upstream Nix support is Tier 2 and

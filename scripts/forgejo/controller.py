@@ -17,6 +17,7 @@ import urllib.request
 from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
+SUDO = "/run/wrappers/bin/sudo"
 
 
 def signed(body, signature, secret):
@@ -125,6 +126,30 @@ class Controller:
             trusted[status["context"]] = status
         return trusted
 
+    def reconcile_terminal_build(self, sha):
+        """Close host statuses when Forgejo ended a run before cleanup ran."""
+        statuses = self.trusted_statuses(sha)
+        unresolved = [
+            host for host in HOSTS
+            if statuses.get(f"colmena/{host}", {}).get("state")
+            not in ("success", "failure", "error")
+        ]
+        if not unresolved:
+            return False
+        runs = self.api.repo("actions/runs?limit=50").get("workflow_runs", [])
+        run = next((
+            item for item in runs
+            if item.get("workflow_id") == "build.yml" and item.get("commit_sha") == sha
+        ), None)
+        if not run or run.get("status") not in ("success", "failure", "cancelled"):
+            return False
+        state = "failure" if run["status"] == "failure" else "error"
+        description = f"Forgejo run {run['status']} before this host reported a result"
+        run_url = run.get("html_url") or f"{self.api.url}/{REPOSITORY}/actions/runs/{int(run['id'])}"
+        for host in unresolved:
+            self.api.status(sha, f"colmena/{host}", state, description, run_url)
+        return True
+
     def queue_repair(self, sha):
         if not SHA.fullmatch(sha):
             return
@@ -170,12 +195,15 @@ class Controller:
                 db.execute("UPDATE notifications SET sent=1 WHERE id=?", (key,))
 
     def store_ssh(self):
+        os.chmod(os.environ["STORE_KEY"], 0o600)
         return ["ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15",
             "-o", "UserKnownHostsFile=" + os.environ["STORE_KNOWN_HOSTS"],
             "-i", os.environ["STORE_KEY"], "-p", os.environ["STORE_PORT"]]
 
     def target(self, host, command):
         if host == "osgiliath":
+            if command[0] == "sudo":
+                command = [SUDO, *command[1:]]
             return subprocess.check_output(command, text=True, timeout=600).strip()
         return subprocess.check_output(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
             "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command], text=True, timeout=600).strip()
@@ -188,11 +216,24 @@ class Controller:
         if result.get("run_url") != status.get("target_url") or not STORE_PATH.fullmatch(result.get("closure", "")):
             raise ValueError("Build result does not match successful status")
         closure = result["closure"]
-        import shlex
-        env = dict(os.environ, NIX_SSHOPTS=shlex.join(self.store_ssh()[1:]))
-        # Only this explicit, authenticated import bypasses signatures. The VM
-        # is not a globally trusted substitute source for arbitrary host builds.
-        subprocess.run(["nix", "copy", "--no-check-sigs", "--from", "ssh://store-export@127.0.0.1", closure], env=env, check=True, timeout=3600)
+        exporter = subprocess.Popen(
+            self.store_ssh() + ["store-export@127.0.0.1", f"export {sha} {host}"],
+            stdout=subprocess.PIPE,
+        )
+        try:
+            # nixos-deploy is the trusted local controller user. Disable
+            # signature checks only for this manifest-bound import stream.
+            imported = subprocess.run(
+                ["nix-store", "--import", "--option", "require-sigs", "false"],
+                stdin=exporter.stdout,
+                stdout=subprocess.DEVNULL,
+                timeout=3600,
+            )
+        finally:
+            exporter.stdout.close()
+        export_rc = exporter.wait(timeout=30)
+        if imported.returncode or export_rc:
+            raise subprocess.CalledProcessError(imported.returncode or export_rc, "restricted closure transfer")
         root = self.state / "roots" / sha / host
         root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["nix-store", "--realise", closure, "--add-root", str(root), "--indirect"], check=True)
@@ -285,6 +326,7 @@ class Controller:
                         self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
                 # Reconcile dropped status webhooks after Forgejo/controller restart.
                 for pull in self.api.pulls():
+                    self.reconcile_terminal_build(pull["head"]["sha"])
                     self.queue_build_notification(pull["head"]["sha"])
                     if pull["head"]["ref"] == UPDATE_BRANCH:
                         self.queue_repair(pull["head"]["sha"])
