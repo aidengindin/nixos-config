@@ -17,7 +17,6 @@ import urllib.request
 from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
-SUDO = "/run/wrappers/bin/sudo"
 ACTIVATION_GRACE_SECONDS = 300
 
 
@@ -218,13 +217,21 @@ class Controller:
             "-o", "UserKnownHostsFile=" + os.environ["STORE_KNOWN_HOSTS"],
             "-i", os.environ["STORE_KEY"], "-p", os.environ["STORE_PORT"]]
 
+    @staticmethod
+    def target_command(host, command):
+        return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+            "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command]
+
     def target(self, host, command):
-        if host == "osgiliath":
-            if command[0] == "sudo":
-                command = [SUDO, *command[1:]]
-            return subprocess.check_output(command, text=True, timeout=600).strip()
-        return subprocess.check_output(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
-            "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command], text=True, timeout=600).strip()
+        return subprocess.check_output(self.target_command(host, command), text=True, timeout=600).strip()
+
+    def start_self_activation(self, closure):
+        # Activation stops forgejo-controller.service. Do not leave stdout or a
+        # controlling session tied to the controller process that systemd kills.
+        subprocess.Popen(self.target_command("osgiliath", [
+            "sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch",
+        ]), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, start_new_session=True)
 
     def pull_closure(self, sha, host, status):
         raw = subprocess.check_output(self.store_ssh() + ["store-export@127.0.0.1", f"result {sha} {host}"], text=True, timeout=30)
@@ -252,6 +259,13 @@ class Controller:
         export_rc = exporter.wait(timeout=30)
         if imported.returncode or export_rc:
             raise subprocess.CalledProcessError(imported.returncode or export_rc, "restricted closure transfer")
+        # Only closures bound to the verified CI manifest reach this point.
+        # Sign the full closure so remote targets can retain normal signature
+        # enforcement during the subsequent ssh-ng copy.
+        subprocess.run([
+            "nix", "store", "sign", "--recursive", "--key-file",
+            os.environ["STORE_SIGNING_KEY"], closure,
+        ], check=True, timeout=3600)
         root = self.state / "roots" / sha / host
         root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["nix-store", "--realise", closure, "--add-root", str(root), "--indirect"], check=True)
@@ -261,11 +275,11 @@ class Controller:
         sha, pr = job["sha"], job["pr"]
         if time.time() - job["created"] > 13 * 3600 and not job.get("started"):
             raise ValueError("Timed out waiting for builds")
-        pull = self.api.repo(f"pulls/{pr}")
-        if not job.get("started") and (pull["state"] != "open" or pull["head"]["sha"] != sha):
-            raise ValueError("PR changed; submit a new /deploy command")
-        statuses = self.trusted_statuses(sha)
         if not job.get("started"):
+            pull = self.api.repo(f"pulls/{pr}")
+            if pull["state"] != "open" or pull["head"]["sha"] != sha:
+                raise ValueError("PR changed; submit a new /deploy command")
+            statuses = self.trusted_statuses(sha)
             for host in job["targets"]:
                 status = statuses.get(f"colmena/{host}")
                 if status and status["state"] in ("failure", "error"):
@@ -307,13 +321,26 @@ class Controller:
                     return
                 # An interrupted activation is ambiguous. Never repeat it.
                 raise ValueError(f"Interrupted activation on {host}; inspect manually before retrying")
-            item["previous"] = self.target(host, ["readlink", "-f", "/nix/var/nix/profiles/system"])
+            try:
+                item["previous"] = self.target(host, ["readlink", "-f", "/run/current-system"])
+            except subprocess.CalledProcessError:
+                if host == "osgiliath":
+                    raise
+                # Legacy target wrappers did not allow generation queries. The
+                # closure switch below upgrades the wrapper for future deploys.
+                LOG.warning("Cannot read active generation on legacy target %s", host)
+                item["previous"] = "unknown"
             if host != "osgiliath":
-                subprocess.run(["nix", "copy", "--to", f"ssh://nixos-deploy@{host}", closure], check=True, timeout=3600)
+                subprocess.run(["nix", "copy", "--to", f"ssh-ng://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"
             item["activation_started"] = time.time()
             self.save(key, job)
             self.target(host, ["sudo", "-H", "--", "nix-env", "--profile", "/nix/var/nix/profiles/system", "--set", closure])
+            if host == "osgiliath":
+                self.start_self_activation(closure)
+                # The controller will be stopped by activation. Its replacement
+                # confirms the active generation before completing the job.
+                return
             self.target(host, ["sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch"])
             item["stage"] = "done"
             self.save(key, job)

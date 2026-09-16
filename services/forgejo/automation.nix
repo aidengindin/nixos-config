@@ -50,6 +50,7 @@ let
   };
   secrets = {
     forgejo-controller-env = "nixos-deploy";
+    forgejo-store-signing-key = "nixos-deploy";
     forgejo-runner-env = "root";
     forgejo-hermes-env = "hermes";
   };
@@ -230,8 +231,13 @@ in
         "forgejo.service"
       ];
       requires = [ "forgejo-transport-keys.service" ];
-      unitConfig.ConditionPathExists = "/run/agenix/forgejo-controller-env";
-      restartTriggers = lib.optional (builtins.pathExists ../../secrets/forgejo-controller-env.age) ../../secrets/forgejo-controller-env.age;
+      unitConfig.ConditionPathExists = [
+        "/run/agenix/forgejo-controller-env"
+        "/run/agenix/forgejo-store-signing-key"
+      ];
+      restartTriggers =
+        lib.optional (builtins.pathExists ../../secrets/forgejo-controller-env.age) ../../secrets/forgejo-controller-env.age
+        ++ lib.optional (builtins.pathExists ../../secrets/forgejo-store-signing-key.age) ../../secrets/forgejo-store-signing-key.age;
       environment = {
         FORGEJO_URL = "https://${cfg.domain}";
         CONTROLLER_PORT = toString ports.forgejoController;
@@ -239,6 +245,7 @@ in
         STORE_PORT = toString ports.forgejoVmSsh;
         STORE_KEY = "${state}/store-reader";
         STORE_KNOWN_HOSTS = "${state}/known_hosts";
+        STORE_SIGNING_KEY = config.age.secrets.forgejo-store-signing-key.path;
         HERMES_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-repair";
         HERMES_NOTIFY_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-notify";
       };
