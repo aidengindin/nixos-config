@@ -217,13 +217,21 @@ class Controller:
             "-o", "UserKnownHostsFile=" + os.environ["STORE_KNOWN_HOSTS"],
             "-i", os.environ["STORE_KEY"], "-p", os.environ["STORE_PORT"]]
 
+    @staticmethod
+    def target_command(host, command):
+        return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+            "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command]
+
     def target(self, host, command):
-        # Use SSH for osgiliath too. A local switch-to-configuration process is
-        # a child of forgejo-controller.service; switching configurations stops
-        # that service and leaves the activation process in its cgroup. Running
-        # through sshd gives self-deployment an independent service lifecycle.
-        return subprocess.check_output(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
-            "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command], text=True, timeout=600).strip()
+        return subprocess.check_output(self.target_command(host, command), text=True, timeout=600).strip()
+
+    def start_self_activation(self, closure):
+        # Activation stops forgejo-controller.service. Do not leave stdout or a
+        # controlling session tied to the controller process that systemd kills.
+        subprocess.Popen(self.target_command("osgiliath", [
+            "sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch",
+        ]), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, start_new_session=True)
 
     def pull_closure(self, sha, host, status):
         raw = subprocess.check_output(self.store_ssh() + ["store-export@127.0.0.1", f"result {sha} {host}"], text=True, timeout=30)
@@ -328,6 +336,11 @@ class Controller:
             item["activation_started"] = time.time()
             self.save(key, job)
             self.target(host, ["sudo", "-H", "--", "nix-env", "--profile", "/nix/var/nix/profiles/system", "--set", closure])
+            if host == "osgiliath":
+                self.start_self_activation(closure)
+                # The controller will be stopped by activation. Its replacement
+                # confirms the active generation before completing the job.
+                return
             self.target(host, ["sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch"])
             item["stage"] = "done"
             self.save(key, job)

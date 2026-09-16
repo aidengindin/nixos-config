@@ -345,6 +345,17 @@ class ControllerTests(unittest.TestCase):
             timeout=600,
         )
 
+    @patch("controller.subprocess.Popen")
+    def test_self_activation_is_detached_from_controller(self, popen):
+        self.c.start_self_activation(CLOSURE)
+        popen.assert_called_once_with(
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+             "-o", "StrictHostKeyChecking=yes", "nixos-deploy@osgiliath",
+             "sudo", "-H", "--", CLOSURE + "/bin/switch-to-configuration", "switch"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, start_new_session=True,
+        )
+
     def test_pr_comment_retries_after_forgejo_restart(self):
         self.c.queue_comment("deploy:1:success", 5, "complete")
         self.api.comment.side_effect = OSError("Forgejo restarting")
