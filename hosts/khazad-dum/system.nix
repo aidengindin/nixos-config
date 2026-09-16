@@ -60,6 +60,11 @@
     owner = "agindin";
   };
 
+  age.secrets.khazad-dum-homeassistant-token = {
+    file = ../../secrets/homeassistant-token.age;
+    owner = "agindin";
+  };
+
   zramSwap = {
     enable = true;
   };
