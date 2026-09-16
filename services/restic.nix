@@ -13,16 +13,8 @@ let
     types
     ;
 
-  # The setfacl grants in resticPermissions below are not sufficient on their
-  # own. A chmod on a file carrying a POSIX ACL recalculates the ACL mask from
-  # the group permission bits, so any service that hardens its own state
-  # directory silently revokes restic's access: hermes-agent chmods
-  # $HERMES_HOME/cron to 0700 whenever it writes a cron job, which drops the
-  # mask to --- and leaves `user:restic:r-x #effective:---`. Each deploy
-  # re-granted it and the next write took it away again, so restic exited 3 on
-  # every run from 2026-08-08 and the unit sat permanently failed — which in
-  # turn kept the systemd-failed alert firing and taught us to ignore it.
-  #
+  # Service state frequently changes permissions after activation, so recursive
+  # ACL grants are both ineffective and prone to races with live files.
   # CAP_DAC_READ_SEARCH is the capability made for this: it bypasses file read
   # and directory search permission checks without running the backup as root,
   # and it fixes the whole class rather than one directory. Already present in
@@ -73,8 +65,6 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = with pkgs; [ acl ];
-
     users.users.restic = {
       isSystemUser = true;
       group = "restic";
@@ -102,13 +92,6 @@ in
         fi
       '';
 
-      # grant the restic user access to any directories it's backing up
-      resticPermissions = ''
-        ${lib.concatMapStrings (path: ''
-          ${pkgs.acl}/bin/setfacl -R -m u:restic:rX ${path}
-          ${pkgs.acl}/bin/setfacl -R -dm u:restic:rX ${path}
-        '') cfg.paths}
-      '';
     };
 
     systemd = {

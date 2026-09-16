@@ -18,6 +18,7 @@ from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selec
 
 LOG = logging.getLogger("forgejo-controller")
 SUDO = "/run/wrappers/bin/sudo"
+ACTIVATION_GRACE_SECONDS = 300
 
 
 def signed(body, signature, secret):
@@ -35,6 +36,7 @@ class Controller:
             db.execute("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL, state TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS repairs (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
+            db.execute("CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, pr INTEGER NOT NULL, body TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
         self.owner_id = int(os.environ["FORGEJO_OWNER_ID"])
         self.bot_id = int(os.environ["FORGEJO_BOT_ID"])
 
@@ -57,6 +59,18 @@ class Controller:
         with self.db() as db:
             db.execute("INSERT OR IGNORE INTO notifications(id,payload) VALUES (?,?)",
                 (key, json.dumps(payload)))
+
+    def queue_comment(self, key, pr, body):
+        with self.db() as db:
+            db.execute("INSERT OR IGNORE INTO comments(id,pr,body) VALUES (?,?,?)", (key, pr, body))
+
+    def send_comments(self):
+        with self.db() as db:
+            rows = db.execute("SELECT id,pr,body FROM comments WHERE sent=0").fetchall()
+        for key, pr, body in rows:
+            self.api.comment(pr, body)
+            with self.db() as db:
+                db.execute("UPDATE comments SET sent=1 WHERE id=?", (key,))
 
     def queue_build_notification(self, sha):
         if not SHA.fullmatch(sha):
@@ -280,19 +294,27 @@ class Controller:
                     item["stage"] = "done"
                     self.save(key, job)
                     continue
+                started = item.get("activation_started")
+                if started is None:
+                    item["activation_started"] = time.time()
+                    self.save(key, job)
+                    return
+                if time.time() - started < ACTIVATION_GRACE_SECONDS:
+                    return
                 # An interrupted activation is ambiguous. Never repeat it.
                 raise ValueError(f"Interrupted activation on {host}; inspect manually before retrying")
             item["previous"] = self.target(host, ["readlink", "-f", "/nix/var/nix/profiles/system"])
             if host != "osgiliath":
                 subprocess.run(["nix", "copy", "--to", f"ssh://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"
+            item["activation_started"] = time.time()
             self.save(key, job)
             self.target(host, ["sudo", "-H", "--", "nix-env", "--profile", "/nix/var/nix/profiles/system", "--set", closure])
             self.target(host, ["sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch"])
             item["stage"] = "done"
             self.save(key, job)
         summary = self.summary(job, "Deployment complete")
-        self.api.comment(pr, summary)
+        self.queue_comment(f"deploy:{key}:success", pr, summary)
         self.queue_notification(f"deploy:{key}:success", f"Forgejo {summary}")
         self.save(key, job, "done")
         # Current target generations now retain the closures. Keep this audit
@@ -322,7 +344,7 @@ class Controller:
                         LOG.exception("Deployment %s failed", key)
                         self.save(key, job, "failed")
                         summary = self.summary(job, "Deployment stopped: " + str(exc))
-                        self.api.comment(job["pr"], summary)
+                        self.queue_comment(f"deploy:{key}:failure", job["pr"], summary)
                         self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
                 # Reconcile dropped status webhooks after Forgejo/controller restart.
                 for pull in self.api.pulls():
@@ -331,6 +353,7 @@ class Controller:
                     if pull["head"]["ref"] == UPDATE_BRANCH:
                         self.queue_repair(pull["head"]["sha"])
                 self.send_repairs()
+                self.send_comments()
                 self.send_notifications()
             except Exception:
                 LOG.exception("Controller reconciliation failed; retrying")

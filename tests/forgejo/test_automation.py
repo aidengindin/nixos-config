@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -274,9 +275,19 @@ class ControllerTests(unittest.TestCase):
         self.c.target.assert_called_once_with("lorien", ["readlink", "-f", "/run/current-system"])
         self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
 
-    def test_ambiguous_activation_never_repeats(self):
+    def test_restarted_controller_gives_activation_time_to_finish(self):
         job = self.job(); job["started"] = True
         job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating"}
+        self.c.trusted_statuses = Mock(return_value={})
+        self.c.target = Mock(return_value="old")
+        with patch("controller.time.time", return_value=1000):
+            self.c.deploy("1", job)
+        self.assertEqual(job["hosts"]["lorien"]["activation_started"], 1000)
+        self.assertEqual(job["hosts"]["lorien"]["stage"], "activating")
+
+    def test_ambiguous_activation_never_repeats(self):
+        job = self.job(); job["started"] = True
+        job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating", "activation_started": time.time() - 301}
         self.c.trusted_statuses = Mock(return_value={})
         self.c.target = Mock(return_value="old")
         with self.assertRaisesRegex(ValueError, "Interrupted activation"):
@@ -298,6 +309,18 @@ class ControllerTests(unittest.TestCase):
             text=True,
             timeout=600,
         )
+
+    def test_pr_comment_retries_after_forgejo_restart(self):
+        self.c.queue_comment("deploy:1:success", 5, "complete")
+        self.api.comment.side_effect = OSError("Forgejo restarting")
+        with self.assertRaises(OSError):
+            self.c.send_comments()
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT sent FROM comments").fetchone()[0], 0)
+        self.api.comment.side_effect = None
+        self.c.send_comments()
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT sent FROM comments").fetchone()[0], 1)
 
     def test_terminal_build_notification_is_deduplicated(self):
         self.api.pulls.return_value = [self.pr]
