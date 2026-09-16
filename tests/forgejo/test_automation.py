@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import importlib.util
+import io
 import json
 import os
 import shutil
@@ -259,6 +260,7 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", self.job())
         self.assertTrue(any(call.args[0][:2] == ["nix", "copy"] for call in run.call_args_list))
         self.assertFalse(any("build" in call.args[0] for call in run.call_args_list))
+        run.assert_called_once_with(["nix", "copy", "--to", "ssh-ng://nixos-deploy@lorien", CLOSURE], check=True, timeout=3600)
         self.assertEqual(self.c.target.call_count, 3)
         self.c.target.assert_any_call("lorien", ["readlink", "-f", "/run/current-system"])
 
@@ -311,6 +313,28 @@ class ControllerTests(unittest.TestCase):
             command = self.c.store_ssh()
         chmod.assert_called_once_with("/state/reader", 0o600)
         self.assertIn("/state/reader", command)
+
+    @patch("controller.subprocess.run")
+    @patch("controller.subprocess.Popen")
+    @patch("controller.subprocess.check_output")
+    def test_manifest_verified_closure_is_signed_before_retention(self, check_output, popen, run):
+        check_output.return_value = json.dumps({
+            "repository": REPOSITORY, "sha": SHA, "host": "lorien",
+            "run_url": "https://example.test/run/1", "closure": CLOSURE,
+        })
+        exporter = popen.return_value
+        exporter.stdout = io.BytesIO()
+        exporter.wait.return_value = 0
+        run.side_effect = [Mock(returncode=0), Mock(returncode=0), Mock(returncode=0)]
+        self.c.store_ssh = Mock(return_value=["ssh"])
+        with patch.dict(os.environ, {"STORE_SIGNING_KEY": "/run/agenix/signing-key"}):
+            self.assertEqual(self.c.pull_closure(SHA, "lorien", {
+                "target_url": "https://example.test/run/1",
+            }), CLOSURE)
+        self.assertEqual(run.call_args_list[1].args[0], [
+            "nix", "store", "sign", "--recursive", "--key-file",
+            "/run/agenix/signing-key", CLOSURE,
+        ])
 
     @patch("controller.subprocess.check_output", return_value="")
     def test_local_activation_uses_nixos_sudo_wrapper(self, check_output):

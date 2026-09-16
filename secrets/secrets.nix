@@ -269,6 +269,10 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+  "forgejo-store-signing-key.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
   "forgejo-runner-env.age".publicKeys = [
     osgiliathHost
     khazad-dumUser

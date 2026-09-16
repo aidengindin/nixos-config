@@ -252,6 +252,13 @@ class Controller:
         export_rc = exporter.wait(timeout=30)
         if imported.returncode or export_rc:
             raise subprocess.CalledProcessError(imported.returncode or export_rc, "restricted closure transfer")
+        # Only closures bound to the verified CI manifest reach this point.
+        # Sign the full closure so remote targets can retain normal signature
+        # enforcement during the subsequent ssh-ng copy.
+        subprocess.run([
+            "nix", "store", "sign", "--recursive", "--key-file",
+            os.environ["STORE_SIGNING_KEY"], closure,
+        ], check=True, timeout=3600)
         root = self.state / "roots" / sha / host
         root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["nix-store", "--realise", closure, "--add-root", str(root), "--indirect"], check=True)
@@ -317,7 +324,7 @@ class Controller:
                 LOG.warning("Cannot read active generation on legacy target %s", host)
                 item["previous"] = "unknown"
             if host != "osgiliath":
-                subprocess.run(["nix", "copy", "--to", f"ssh://nixos-deploy@{host}", closure], check=True, timeout=3600)
+                subprocess.run(["nix", "copy", "--to", f"ssh-ng://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"
             item["activation_started"] = time.time()
             self.save(key, job)
