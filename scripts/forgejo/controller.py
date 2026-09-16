@@ -261,11 +261,11 @@ class Controller:
         sha, pr = job["sha"], job["pr"]
         if time.time() - job["created"] > 13 * 3600 and not job.get("started"):
             raise ValueError("Timed out waiting for builds")
-        pull = self.api.repo(f"pulls/{pr}")
-        if not job.get("started") and (pull["state"] != "open" or pull["head"]["sha"] != sha):
-            raise ValueError("PR changed; submit a new /deploy command")
-        statuses = self.trusted_statuses(sha)
         if not job.get("started"):
+            pull = self.api.repo(f"pulls/{pr}")
+            if pull["state"] != "open" or pull["head"]["sha"] != sha:
+                raise ValueError("PR changed; submit a new /deploy command")
+            statuses = self.trusted_statuses(sha)
             for host in job["targets"]:
                 status = statuses.get(f"colmena/{host}")
                 if status and status["state"] in ("failure", "error"):
@@ -307,7 +307,15 @@ class Controller:
                     return
                 # An interrupted activation is ambiguous. Never repeat it.
                 raise ValueError(f"Interrupted activation on {host}; inspect manually before retrying")
-            item["previous"] = self.target(host, ["readlink", "-f", "/run/current-system"])
+            try:
+                item["previous"] = self.target(host, ["readlink", "-f", "/run/current-system"])
+            except subprocess.CalledProcessError:
+                if host == "osgiliath":
+                    raise
+                # Legacy target wrappers did not allow generation queries. The
+                # closure switch below upgrades the wrapper for future deploys.
+                LOG.warning("Cannot read active generation on legacy target %s", host)
+                item["previous"] = "unknown"
             if host != "osgiliath":
                 subprocess.run(["nix", "copy", "--to", f"ssh://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"

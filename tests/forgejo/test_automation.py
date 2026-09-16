@@ -262,13 +262,28 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.c.target.call_count, 3)
         self.c.target.assert_any_call("lorien", ["readlink", "-f", "/run/current-system"])
 
+    def test_legacy_target_without_readlink_still_activates(self):
+        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}})
+        self.c.pull_closure = Mock(return_value=CLOSURE)
+        self.c.target = Mock(side_effect=[
+            subprocess.CalledProcessError(1, "readlink"), "", "",
+        ])
+        job = self.job()
+        with patch("controller.subprocess.run"):
+            self.c.deploy("1", job)
+        self.assertEqual(job["hosts"]["lorien"]["previous"], "unknown")
+        self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
+
     def test_restart_checks_completed_activation_without_repeating(self):
         job = self.job(); job["started"] = True
         job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating", "previous": "old"}
-        self.c.trusted_statuses = Mock(return_value={})
+        self.c.trusted_statuses = Mock(side_effect=OSError("Forgejo restarting"))
+        self.api.repo.side_effect = OSError("Forgejo restarting")
         self.c.target = Mock(return_value=CLOSURE)
         self.c.deploy("1", job)
         self.c.target.assert_called_once_with("lorien", ["readlink", "-f", "/run/current-system"])
+        self.api.repo.assert_not_called()
+        self.c.trusted_statuses.assert_not_called()
         self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
 
     def test_restarted_controller_gives_activation_time_to_finish(self):
