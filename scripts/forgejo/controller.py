@@ -307,7 +307,7 @@ class Controller:
                     return
                 # An interrupted activation is ambiguous. Never repeat it.
                 raise ValueError(f"Interrupted activation on {host}; inspect manually before retrying")
-            item["previous"] = self.target(host, ["readlink", "-f", "/nix/var/nix/profiles/system"])
+            item["previous"] = self.target(host, ["readlink", "-f", "/run/current-system"])
             if host != "osgiliath":
                 subprocess.run(["nix", "copy", "--to", f"ssh://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"

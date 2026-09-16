@@ -260,6 +260,7 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(any(call.args[0][:2] == ["nix", "copy"] for call in run.call_args_list))
         self.assertFalse(any("build" in call.args[0] for call in run.call_args_list))
         self.assertEqual(self.c.target.call_count, 3)
+        self.c.target.assert_any_call("lorien", ["readlink", "-f", "/run/current-system"])
 
     def test_restart_checks_completed_activation_without_repeating(self):
         job = self.job(); job["started"] = True
