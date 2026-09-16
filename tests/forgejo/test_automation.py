@@ -8,12 +8,13 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
-from build import GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
-from common import HOSTS, REPOSITORY, event_sha, selectors
+from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
+from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 from retention import RETENTION_SECONDS, prune_retention
 
@@ -110,6 +111,13 @@ class ValidationTests(unittest.TestCase):
             )
             self.assertEqual(denied.returncode, 1)
 
+class WorkflowTests(unittest.TestCase):
+    def test_update_branch_does_not_duplicate_pr_builds(self):
+        workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/build.yml").read_text()
+        self.assertIn("\n  pull_request:", workflow)
+        self.assertNotIn("\n  push:", workflow)
+
+
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):
         old_sha = "c" * 40
@@ -125,14 +133,14 @@ class StatusCleanupTests(unittest.TestCase):
             },
         }[path]
         api.statuses.return_value = [{
-            "context": "colmena/weathertop",
+            "context": "colmena/khazad-dum",
             "state": "pending",
             "target_url": "/actions/runs/16",
         }]
         supersede_pending(api, {"number": 78}, SHA, {SHA}, "https://example.test/actions/runs/17")
         api.status.assert_called_once_with(
             old_sha,
-            "colmena/weathertop",
+            "colmena/khazad-dum",
             "error",
             "Superseded by newer PR head",
             "https://example.test/actions/runs/16",
@@ -148,7 +156,7 @@ class StatusCleanupTests(unittest.TestCase):
         close_incomplete_statuses(api, SHA, "https://example.test/run/1")
         self.assertEqual(
             [call.args[1] for call in api.status.call_args_list],
-            ["colmena/osgiliath", "colmena/khazad-dum", "colmena/weathertop"],
+            ["colmena/osgiliath", "colmena/khazad-dum"],
         )
 
     def test_event_sha_uses_pr_head_before_checkout(self):
@@ -160,6 +168,11 @@ class StatusCleanupTests(unittest.TestCase):
 
 
 class RetentionTests(unittest.TestCase):
+    def test_weathertop_is_excluded_from_ci(self):
+        self.assertEqual(BUILD_ORDER, CI_HOSTS)
+        self.assertNotIn("weathertop", CI_HOSTS)
+        self.assertIn("weathertop", HOSTS)
+
     def test_prune_preserves_current_head_and_removes_expired_state(self):
         with tempfile.TemporaryDirectory() as temporary:
             state = Path(temporary)
@@ -192,7 +205,7 @@ class RetentionTests(unittest.TestCase):
     @patch("build.subprocess.run")
     @patch("build.shutil.disk_usage")
     def test_gc_also_preserves_build_headroom(self, disk_usage, run):
-        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 125 * GIB, 35 * GIB)
+        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 135 * GIB, 25 * GIB)
         self.assertTrue(gc_if_needed(Path("/state")))
         run.assert_called_once_with(["nix-store", "--gc"], check=True)
 
@@ -257,9 +270,19 @@ class ControllerTests(unittest.TestCase):
         self.c.target.assert_called_once_with("lorien", ["readlink", "-f", "/run/current-system"])
         self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
 
-    def test_ambiguous_activation_never_repeats(self):
+    def test_restarted_controller_gives_activation_time_to_finish(self):
         job = self.job(); job["started"] = True
         job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating"}
+        self.c.trusted_statuses = Mock(return_value={})
+        self.c.target = Mock(return_value="old")
+        with patch("controller.time.time", return_value=1000):
+            self.c.deploy("1", job)
+        self.assertEqual(job["hosts"]["lorien"]["activation_started"], 1000)
+        self.assertEqual(job["hosts"]["lorien"]["stage"], "activating")
+
+    def test_ambiguous_activation_never_repeats(self):
+        job = self.job(); job["started"] = True
+        job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating", "activation_started": time.time() - 301}
         self.c.trusted_statuses = Mock(return_value={})
         self.c.target = Mock(return_value="old")
         with self.assertRaisesRegex(ValueError, "Interrupted activation"):
@@ -282,25 +305,37 @@ class ControllerTests(unittest.TestCase):
             timeout=600,
         )
 
+    def test_pr_comment_retries_after_forgejo_restart(self):
+        self.c.queue_comment("deploy:1:success", 5, "complete")
+        self.api.comment.side_effect = OSError("Forgejo restarting")
+        with self.assertRaises(OSError):
+            self.c.send_comments()
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT sent FROM comments").fetchone()[0], 0)
+        self.api.comment.side_effect = None
+        self.c.send_comments()
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT sent FROM comments").fetchone()[0], 1)
+
     def test_terminal_build_notification_is_deduplicated(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "success",
-             "target_url": "https://example.test/run/7"} for host in HOSTS
+             "target_url": "https://example.test/run/7"} for host in CI_HOSTS
         ]
         self.c.queue_build_notification(SHA)
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
             rows = db.execute("SELECT id,payload FROM notifications").fetchall()
         self.assertEqual(len(rows), 1)
-        self.assertIn("passed for all four hosts", rows[0][1])
+        self.assertIn("passed for all CI hosts", rows[0][1])
 
     def test_pending_build_has_no_notification(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2},
-             "state": "pending" if host == "weathertop" else "success"}
-            for host in HOSTS
+             "state": "pending" if host == "khazad-dum" else "success"}
+            for host in CI_HOSTS
         ]
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
@@ -309,8 +344,8 @@ class ControllerTests(unittest.TestCase):
     def test_terminal_action_run_closes_unresolved_host_status(self):
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2},
-             "state": "pending" if host == "weathertop" else "failure"}
-            for host in HOSTS
+             "state": "pending" if host == "khazad-dum" else "failure"}
+            for host in CI_HOSTS
         ]
         self.api.repo.return_value = {"workflow_runs": [{
             "id": 24,
@@ -322,7 +357,7 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(self.c.reconcile_terminal_build(SHA))
         self.api.status.assert_called_once_with(
             SHA,
-            "colmena/weathertop",
+            "colmena/khazad-dum",
             "failure",
             "Forgejo run failure before this host reported a result",
             "https://example.test/run/24",
@@ -331,7 +366,7 @@ class ControllerTests(unittest.TestCase):
     def test_running_action_does_not_close_pending_status(self):
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "pending"}
-            for host in HOSTS
+            for host in CI_HOSTS
         ]
         self.api.repo.return_value = {"workflow_runs": [{
             "id": 24,
@@ -361,6 +396,15 @@ class ControllerTests(unittest.TestCase):
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()
+
+    def test_ci_excluded_host_cannot_be_deployed_from_pr(self):
+        comment = {"id": 9, "user": {"id": 1}, "body": "/deploy weathertop"}
+        self.api.repo.side_effect = [comment, self.pr]
+        payload = {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": comment, "issue": {"number": 5}}
+        with self.assertRaisesRegex(ValueError, "excluded from CI"):
+            self.c.accept("issue_comment", payload)
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM jobs").fetchone()[0], 0)
 
     def test_duplicate_comment_is_queued_once(self):
         comment = {"id": 10, "user": {"id": 1}, "body": "/deploy lorien"}

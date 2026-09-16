@@ -115,20 +115,24 @@ Forgejo Runner 13.1 from the stable pin using its supported legacy registration
 flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.
 
-PR events and update-branch pushes build all four hosts at the exact PR head.
+PR events build lorien, osgiliath, and khazad-dum at the exact PR head.
+Weathertop remains in the NixOS inventory but is excluded from CI and PR
+deployment.
 Each host has a `colmena/<hostname>` status and a JSON manifest under
 `/var/lib/forgejo-ci/results/<sha>/<host>.json`. Colmena's own hive supplies the
 closure path. Successful results are GC-rooted and reused on duplicate events.
 Roots stay while the SHA is a current PR head; a daily timer refreshes those
 leases and removes superseded roots, manifests, and logs after a seven-day grace
 period. The workflow checks disk pressure at startup and before each uncached host,
-running Nix GC at 85% usage or below 40 GiB free. A new host build will not start below a 30 GiB reserve after collection; Nix also runs its configured weekly collection.
+running Nix GC at 85% usage or below 30 GiB free. A new host build will
+not start below a 30 GiB reserve after collection; Nix also runs its configured
+weekly collection.
 This preserves reusable outputs from partial builds while successful closures remain
 protected by explicit roots. At boot, the guest verifies
 its persistent Nix database against the current generated read-only store image
-before accepting jobs, pruning safe stale registrations left by older VM closures. Server,
-runner, and workflow timeouts are all 12 hours for Weathertop's
-custom-kernel build. Failed job workspaces are cleaned of untracked files. When a
+before accepting jobs, pruning safe stale registrations left by older VM closures.
+Server, runner, and workflow timeouts are all 12 hours. Failed job workspaces are
+cleaned of untracked files. When a
 new PR head cancels an older run, the next build closes pending host and workflow
 statuses on superseded commits so Forgejo does not display them as still running.
 The controller also reconciles each open PR against Forgejo's terminal action
