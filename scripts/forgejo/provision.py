@@ -13,7 +13,7 @@ import secrets
 import subprocess
 import urllib.error
 import urllib.request
-from common import API, HOSTS, REPOSITORY, atomic_json
+from common import API, CI_HOSTS, REPOSITORY, atomic_json
 
 
 def basic(api, user, password, path, data):
@@ -103,7 +103,7 @@ def main():
         api.repo("hooks", data=hook_data)
     protections = api.repo("branch_protections")
     protection = {"rule_name": "main", "enable_push": False, "enable_status_check": True,
-        "status_check_contexts": [f"colmena/{host}" for host in HOSTS], "required_approvals": 0,
+        "status_check_contexts": [f"colmena/{host}" for host in CI_HOSTS], "required_approvals": 0,
         "apply_to_admins": True}
     if any(p.get("rule_name", p.get("branch_name")) == "main" for p in protections):
         api.repo("branch_protections/main", data=protection, method="PATCH")

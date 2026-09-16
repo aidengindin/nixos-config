@@ -42,7 +42,7 @@ in
     memorySize = 8192;
     # Sparse upper bound. Existing images are only grown, never recreated or
     # shrunk, by the host unit before QEMU starts.
-    diskSize = 196608;
+    diskSize = 163840;
     graphics = false;
     useNixStoreImage = true;
     mountHostNixStore = false;

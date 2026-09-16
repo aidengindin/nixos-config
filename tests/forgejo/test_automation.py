@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
 from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
-from common import HOSTS, REPOSITORY, event_sha, selectors
+from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 from retention import RETENTION_SECONDS, prune_retention
 
@@ -133,14 +133,14 @@ class StatusCleanupTests(unittest.TestCase):
             },
         }[path]
         api.statuses.return_value = [{
-            "context": "colmena/weathertop",
+            "context": "colmena/khazad-dum",
             "state": "pending",
             "target_url": "/actions/runs/16",
         }]
         supersede_pending(api, {"number": 78}, SHA, {SHA}, "https://example.test/actions/runs/17")
         api.status.assert_called_once_with(
             old_sha,
-            "colmena/weathertop",
+            "colmena/khazad-dum",
             "error",
             "Superseded by newer PR head",
             "https://example.test/actions/runs/16",
@@ -156,7 +156,7 @@ class StatusCleanupTests(unittest.TestCase):
         close_incomplete_statuses(api, SHA, "https://example.test/run/1")
         self.assertEqual(
             [call.args[1] for call in api.status.call_args_list],
-            ["colmena/osgiliath", "colmena/khazad-dum", "colmena/weathertop"],
+            ["colmena/osgiliath", "colmena/khazad-dum"],
         )
 
     def test_event_sha_uses_pr_head_before_checkout(self):
@@ -168,9 +168,10 @@ class StatusCleanupTests(unittest.TestCase):
 
 
 class RetentionTests(unittest.TestCase):
-    def test_disk_heavy_host_builds_first(self):
-        self.assertEqual(BUILD_ORDER[0], "weathertop")
-        self.assertCountEqual(BUILD_ORDER, HOSTS)
+    def test_weathertop_is_excluded_from_ci(self):
+        self.assertEqual(BUILD_ORDER, CI_HOSTS)
+        self.assertNotIn("weathertop", CI_HOSTS)
+        self.assertIn("weathertop", HOSTS)
 
     def test_prune_preserves_current_head_and_removes_expired_state(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -213,12 +214,6 @@ class RetentionTests(unittest.TestCase):
         disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 131 * GIB, 29 * GIB)
         with self.assertRaisesRegex(RuntimeError, "refusing to start"):
             require_build_headroom(Path("/state"))
-
-    @patch("build.shutil.disk_usage")
-    def test_weathertop_requires_larger_reserve(self, disk_usage):
-        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 125 * GIB, 35 * GIB)
-        with self.assertRaisesRegex(RuntimeError, "40 GiB reserve"):
-            require_build_headroom(Path("/state"), minimum_free=40 * GIB)
 
 class ControllerTests(unittest.TestCase):
     def setUp(self):
@@ -326,21 +321,21 @@ class ControllerTests(unittest.TestCase):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "success",
-             "target_url": "https://example.test/run/7"} for host in HOSTS
+             "target_url": "https://example.test/run/7"} for host in CI_HOSTS
         ]
         self.c.queue_build_notification(SHA)
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
             rows = db.execute("SELECT id,payload FROM notifications").fetchall()
         self.assertEqual(len(rows), 1)
-        self.assertIn("passed for all four hosts", rows[0][1])
+        self.assertIn("passed for all CI hosts", rows[0][1])
 
     def test_pending_build_has_no_notification(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2},
-             "state": "pending" if host == "weathertop" else "success"}
-            for host in HOSTS
+             "state": "pending" if host == "khazad-dum" else "success"}
+            for host in CI_HOSTS
         ]
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
@@ -349,8 +344,8 @@ class ControllerTests(unittest.TestCase):
     def test_terminal_action_run_closes_unresolved_host_status(self):
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2},
-             "state": "pending" if host == "weathertop" else "failure"}
-            for host in HOSTS
+             "state": "pending" if host == "khazad-dum" else "failure"}
+            for host in CI_HOSTS
         ]
         self.api.repo.return_value = {"workflow_runs": [{
             "id": 24,
@@ -362,7 +357,7 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(self.c.reconcile_terminal_build(SHA))
         self.api.status.assert_called_once_with(
             SHA,
-            "colmena/weathertop",
+            "colmena/khazad-dum",
             "failure",
             "Forgejo run failure before this host reported a result",
             "https://example.test/run/24",
@@ -371,7 +366,7 @@ class ControllerTests(unittest.TestCase):
     def test_running_action_does_not_close_pending_status(self):
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "pending"}
-            for host in HOSTS
+            for host in CI_HOSTS
         ]
         self.api.repo.return_value = {"workflow_runs": [{
             "id": 24,
@@ -401,6 +396,15 @@ class ControllerTests(unittest.TestCase):
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()
+
+    def test_ci_excluded_host_cannot_be_deployed_from_pr(self):
+        comment = {"id": 9, "user": {"id": 1}, "body": "/deploy weathertop"}
+        self.api.repo.side_effect = [comment, self.pr]
+        payload = {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": comment, "issue": {"number": 5}}
+        with self.assertRaisesRegex(ValueError, "excluded from CI"):
+            self.c.accept("issue_comment", payload)
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM jobs").fetchone()[0], 0)
 
     def test_duplicate_comment_is_queued_once(self):
         comment = {"id": 10, "user": {"id": 1}, "body": "/deploy lorien"}

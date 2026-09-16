@@ -63,7 +63,7 @@ def main():
         sha = git("rev-parse", "HEAD", capture=True)
         body = f"Automated flake and custom package updates.\n\nUpdate-Cycle: {cycle}\n\n"
         body += "Updater failures:\n" + "\n".join("- `" + f + "`" for f in failures) if failures else "All updater steps completed."
-        body += "\n\nCI builds all four hosts. Merge manually; use `/deploy @server` or individual hosts to deploy this PR."
+        body += "\n\nCI builds lorien, osgiliath, and khazad-dum. Merge manually; use `/deploy @server` or individual hosts to deploy this PR."
         if pulls:
             pr = pulls[0]
             api.repo(f"pulls/{pr['number']}", data={"body": body}, method="PATCH")

@@ -14,7 +14,7 @@ import subprocess
 import threading
 import time
 import urllib.request
-from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
+from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
 SUDO = "/run/wrappers/bin/sudo"
@@ -76,7 +76,7 @@ class Controller:
         if not SHA.fullmatch(sha):
             return
         statuses = self.trusted_statuses(sha)
-        host_statuses = {host: statuses.get(f"colmena/{host}") for host in HOSTS}
+        host_statuses = {host: statuses.get(f"colmena/{host}") for host in CI_HOSTS}
         if any(not status or status.get("state") not in ("success", "failure", "error")
                 for status in host_statuses.values()):
             return
@@ -87,7 +87,7 @@ class Controller:
                     if status["state"] in ("failure", "error")]
         run_url = next((status.get("target_url") for status in host_statuses.values()
                         if status.get("target_url")), f"{self.api.url}/{REPOSITORY}/pulls/{pulls[0]['number']}")
-        result = "failed for " + ", ".join(failures) if failures else "passed for all four hosts"
+        result = "failed for " + ", ".join(failures) if failures else "passed for all CI hosts"
         for pull in pulls:
             message = (f"Forgejo CI {result} on PR #{pull['number']} at `{sha[:12]}`.\n"
                 f"Run and logs: {run_url}")
@@ -111,6 +111,9 @@ class Controller:
             if pull["state"] != "open" or pull["head"]["repo"]["full_name"] != REPOSITORY:
                 raise ValueError("Deployment requires an open local PR")
             targets = selectors(real["body"])
+            unsupported = [host for host in targets if host not in CI_HOSTS]
+            if unsupported:
+                raise ValueError("PR deployment is unavailable for hosts excluded from CI: " + ", ".join(unsupported))
             job = {"pr": pr, "sha": pull["head"]["sha"], "targets": targets, "created": time.time(), "hosts": {}}
             key = str(comment["id"])
             with self.db() as db:
@@ -144,7 +147,7 @@ class Controller:
         """Close host statuses when Forgejo ended a run before cleanup ran."""
         statuses = self.trusted_statuses(sha)
         unresolved = [
-            host for host in HOSTS
+            host for host in CI_HOSTS
             if statuses.get(f"colmena/{host}", {}).get("state")
             not in ("success", "failure", "error")
         ]
@@ -168,10 +171,11 @@ class Controller:
         if not SHA.fullmatch(sha):
             return
         statuses = self.trusted_statuses(sha)
-        if any(statuses.get(f"colmena/{host}", {}).get("state") not in ("success", "failure", "error") for host in HOSTS):
+        if any(statuses.get(f"colmena/{host}", {}).get("state") not in ("success", "failure", "error") for host in CI_HOSTS):
             return
+        ci_contexts = {f"colmena/{host}" for host in CI_HOSTS}
         failures = [s for s in statuses.values()
-                    if s["state"] in ("failure", "error") and (s["context"].startswith("colmena/") or s["context"] == "updates")]
+                    if s["state"] in ("failure", "error") and (s["context"] in ci_contexts or s["context"] == "updates")]
         for pull in self.api.pulls():
             if pull["head"]["sha"] != sha or pull["head"]["ref"] != UPDATE_BRANCH or not failures:
                 continue
