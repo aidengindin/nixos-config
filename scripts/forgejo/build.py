@@ -50,7 +50,7 @@ GIB = 1024 ** 3
 BUILD_ORDER = CI_HOSTS
 
 
-def gc_if_needed(state, threshold_percent=85, minimum_free=40 * GIB):
+def gc_if_needed(state, threshold_percent=85, minimum_free=30 * GIB):
     usage = shutil.disk_usage(state)
     used_percent = usage.used * 100 / usage.total
     free_gib = usage.free / GIB

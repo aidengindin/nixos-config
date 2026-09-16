@@ -205,7 +205,7 @@ class RetentionTests(unittest.TestCase):
     @patch("build.subprocess.run")
     @patch("build.shutil.disk_usage")
     def test_gc_also_preserves_build_headroom(self, disk_usage, run):
-        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 125 * GIB, 35 * GIB)
+        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 135 * GIB, 25 * GIB)
         self.assertTrue(gc_if_needed(Path("/state")))
         run.assert_called_once_with(["nix-store", "--gc"], check=True)
 

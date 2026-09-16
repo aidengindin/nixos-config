@@ -124,7 +124,7 @@ closure path. Successful results are GC-rooted and reused on duplicate events.
 Roots stay while the SHA is a current PR head; a daily timer refreshes those
 leases and removes superseded roots, manifests, and logs after a seven-day grace
 period. The workflow checks disk pressure at startup and before each uncached host,
-running Nix GC at 85% usage or below 40 GiB free. A new host build will
+running Nix GC at 85% usage or below 30 GiB free. A new host build will
 not start below a 30 GiB reserve after collection; Nix also runs its configured
 weekly collection.
 This preserves reusable outputs from partial builds while successful closures remain
