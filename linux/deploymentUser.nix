@@ -129,6 +129,7 @@ in
     systemd.tmpfiles.rules = [
       "d /var/lib/nixos-deploy 0700 nixos-deploy nixos-deploy -"
       "d /var/lib/nixos-deploy/.ssh 0700 nixos-deploy nixos-deploy -"
+      "f /var/lib/nixos-deploy/commands.log 0600 nixos-deploy nixos-deploy - -"
     ];
 
     # Persist the deploy user's home (audit log + SSH known_hosts) with correct

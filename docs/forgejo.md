@@ -179,8 +179,11 @@ request.
 Deployment runs on osgiliath, **not** in the CI VM. The controller pulls the
 selected closures through a manifest-bound SSH export stream, roots them locally,
 then copies/activates them on targets. It never evaluates or rebuilds PR code on
-the deployment host. Only this authenticated import uses `--no-check-sigs`;
-normal store signature policy remains enabled.
+the deployment host. Only this authenticated import uses `--no-check-sigs`.
+After validating the manifest, the controller recursively signs the imported
+closure with the encrypted `forgejo-deploy.git.gindin.xyz-1` key. Lorien and
+Khazad-dûm trust its public key, and `ssh-ng` copies retain normal signature
+enforcement.
 
 Ensure every remote target has received the updated deployment wrapper supporting
 read-only generation queries. All target host keys must be pinned before first

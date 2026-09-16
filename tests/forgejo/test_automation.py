@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import importlib.util
+import io
 import json
 import os
 import shutil
@@ -259,15 +260,32 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", self.job())
         self.assertTrue(any(call.args[0][:2] == ["nix", "copy"] for call in run.call_args_list))
         self.assertFalse(any("build" in call.args[0] for call in run.call_args_list))
+        run.assert_called_once_with(["nix", "copy", "--to", "ssh-ng://nixos-deploy@lorien", CLOSURE], check=True, timeout=3600)
         self.assertEqual(self.c.target.call_count, 3)
+        self.c.target.assert_any_call("lorien", ["readlink", "-f", "/run/current-system"])
+
+    def test_legacy_target_without_readlink_still_activates(self):
+        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}})
+        self.c.pull_closure = Mock(return_value=CLOSURE)
+        self.c.target = Mock(side_effect=[
+            subprocess.CalledProcessError(1, "readlink"), "", "",
+        ])
+        job = self.job()
+        with patch("controller.subprocess.run"):
+            self.c.deploy("1", job)
+        self.assertEqual(job["hosts"]["lorien"]["previous"], "unknown")
+        self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
 
     def test_restart_checks_completed_activation_without_repeating(self):
         job = self.job(); job["started"] = True
         job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating", "previous": "old"}
-        self.c.trusted_statuses = Mock(return_value={})
+        self.c.trusted_statuses = Mock(side_effect=OSError("Forgejo restarting"))
+        self.api.repo.side_effect = OSError("Forgejo restarting")
         self.c.target = Mock(return_value=CLOSURE)
         self.c.deploy("1", job)
         self.c.target.assert_called_once_with("lorien", ["readlink", "-f", "/run/current-system"])
+        self.api.repo.assert_not_called()
+        self.c.trusted_statuses.assert_not_called()
         self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
 
     def test_restarted_controller_gives_activation_time_to_finish(self):
@@ -296,13 +314,46 @@ class ControllerTests(unittest.TestCase):
         chmod.assert_called_once_with("/state/reader", 0o600)
         self.assertIn("/state/reader", command)
 
+    @patch("controller.subprocess.run")
+    @patch("controller.subprocess.Popen")
+    @patch("controller.subprocess.check_output")
+    def test_manifest_verified_closure_is_signed_before_retention(self, check_output, popen, run):
+        check_output.return_value = json.dumps({
+            "repository": REPOSITORY, "sha": SHA, "host": "lorien",
+            "run_url": "https://example.test/run/1", "closure": CLOSURE,
+        })
+        exporter = popen.return_value
+        exporter.stdout = io.BytesIO()
+        exporter.wait.return_value = 0
+        run.side_effect = [Mock(returncode=0), Mock(returncode=0), Mock(returncode=0)]
+        self.c.store_ssh = Mock(return_value=["ssh"])
+        with patch.dict(os.environ, {"STORE_SIGNING_KEY": "/run/agenix/signing-key"}):
+            self.assertEqual(self.c.pull_closure(SHA, "lorien", {
+                "target_url": "https://example.test/run/1",
+            }), CLOSURE)
+        self.assertEqual(run.call_args_list[1].args[0], [
+            "nix", "store", "sign", "--recursive", "--key-file",
+            "/run/agenix/signing-key", CLOSURE,
+        ])
+
     @patch("controller.subprocess.check_output", return_value="")
-    def test_local_activation_uses_nixos_sudo_wrapper(self, check_output):
+    def test_self_activation_uses_restricted_ssh_session(self, check_output):
         self.c.target("osgiliath", ["sudo", "-H", "--", "nix-env", "--version"])
         check_output.assert_called_once_with(
-            ["/run/wrappers/bin/sudo", "-H", "--", "nix-env", "--version"],
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "StrictHostKeyChecking=yes", "nixos-deploy@osgiliath", "sudo", "-H", "--", "nix-env", "--version"],
             text=True,
             timeout=600,
+        )
+
+    @patch("controller.subprocess.Popen")
+    def test_self_activation_is_detached_from_controller(self, popen):
+        self.c.start_self_activation(CLOSURE)
+        popen.assert_called_once_with(
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+             "-o", "StrictHostKeyChecking=yes", "nixos-deploy@osgiliath",
+             "sudo", "-H", "--", CLOSURE + "/bin/switch-to-configuration", "switch"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, start_new_session=True,
         )
 
     def test_pr_comment_retries_after_forgejo_restart(self):
