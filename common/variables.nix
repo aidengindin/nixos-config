@@ -83,6 +83,14 @@ let
       };
     };
 
+    # Home Assistant runs on a separate HAOS box, not managed by this flake.
+    homeAssistant = {
+      lanUrl = "http://10.88.88.3:8123";
+      # Reachable from anywhere on the tailnet, so jobs on the laptop keep
+      # working away from the house. MagicDNS survives the IP changing.
+      tailscaleUrl = "http://homeassistant.tail64748.ts.net:8123";
+    };
+
     keys = {
       lorienHost = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILnIe7mhYr7SaUuxGFax29rEDxMd7YhNCDGR6nYqzwPG root@lorien";
       khazad-dumHost = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmD0CnrRzF6ZXj4lkV9eIE1TBfj66MTi0Ixi8EbrrIP khazad-dum";
