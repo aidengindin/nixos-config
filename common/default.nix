@@ -18,6 +18,7 @@
     ./neomutt.nix
     ./nvim.nix
     ./opencode.nix
+    ./pseg-import.nix
     ./spotify.nix
     ./starship.nix
     ./vesktop.nix
