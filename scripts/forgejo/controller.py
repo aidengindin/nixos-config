@@ -17,7 +17,6 @@ import urllib.request
 from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
-SUDO = "/run/wrappers/bin/sudo"
 ACTIVATION_GRACE_SECONDS = 300
 
 
@@ -219,10 +218,10 @@ class Controller:
             "-i", os.environ["STORE_KEY"], "-p", os.environ["STORE_PORT"]]
 
     def target(self, host, command):
-        if host == "osgiliath":
-            if command[0] == "sudo":
-                command = [SUDO, *command[1:]]
-            return subprocess.check_output(command, text=True, timeout=600).strip()
+        # Use SSH for osgiliath too. A local switch-to-configuration process is
+        # a child of forgejo-controller.service; switching configurations stops
+        # that service and leaves the activation process in its cgroup. Running
+        # through sshd gives self-deployment an independent service lifecycle.
         return subprocess.check_output(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
             "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command], text=True, timeout=600).strip()
 

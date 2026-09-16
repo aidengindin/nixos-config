@@ -337,10 +337,10 @@ class ControllerTests(unittest.TestCase):
         ])
 
     @patch("controller.subprocess.check_output", return_value="")
-    def test_local_activation_uses_nixos_sudo_wrapper(self, check_output):
+    def test_self_activation_uses_restricted_ssh_session(self, check_output):
         self.c.target("osgiliath", ["sudo", "-H", "--", "nix-env", "--version"])
         check_output.assert_called_once_with(
-            ["/run/wrappers/bin/sudo", "-H", "--", "nix-env", "--version"],
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "StrictHostKeyChecking=yes", "nixos-deploy@osgiliath", "sudo", "-H", "--", "nix-env", "--version"],
             text=True,
             timeout=600,
         )
