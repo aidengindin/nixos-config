@@ -162,6 +162,11 @@ in
     khazad-dumUser
   ];
 
+  "mosquitto-tasmota-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "zigbee2mqtt-mqtt-env.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
