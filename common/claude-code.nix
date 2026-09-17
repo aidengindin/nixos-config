@@ -104,94 +104,111 @@ in
     # 1. File watcher triggers immediate save on any change (primary mechanism)
     # 2. Periodic 30s timer catches any missed changes (backup)
     # 3. Shutdown service for graceful shutdowns (won't help with crashes)
-    systemd = mkIf config.agindin.impermanence.enable {
-      services = {
-        # Restore config from persist on boot
-        claude-code-restore-config = {
-          description = "Restore Claude Code config from persistent storage";
+    #
+    # Both directions copy to a temp file and rename, never `cp` in place.
+    # switch-to-configuration can re-run the restore unit on a live system; an
+    # in-place copy truncates ~/.claude.json, the path watcher fires a save, and
+    # the save copies the empty file over the persisted one mid-restore — both
+    # copies end up 0 bytes (seen 2026-09-13 during `colmena apply`).
+    systemd =
+      let
+        coreutils = lib.getExe' pkgs.coreutils;
+        jq = lib.getExe pkgs.jq;
+
+        restoreScript = pkgs.writeShellScript "restore-claude-config" ''
+          PERSIST="/persist/home/agindin/.claude.json"
+          HOME_FILE="/home/agindin/.claude.json"
+
+          # Only fill in a missing or empty file: on a running system the live
+          # copy is newer than the persisted one.
+          if [ -s "$HOME_FILE" ]; then
+            exit 0
+          fi
+
+          if [ -s "$PERSIST" ] && ${jq} empty "$PERSIST" 2>/dev/null; then
+            TMP=$(${coreutils "mktemp"} "$HOME_FILE.restore.XXXXXX")
+            ${coreutils "cp"} -f "$PERSIST" "$TMP"
+            ${coreutils "chmod"} 600 "$TMP"
+            ${coreutils "mv"} -f "$TMP" "$HOME_FILE"
+          fi
+        '';
+
+        saveScript = pkgs.writeShellScript "save-claude-config" ''
+          HOME_FILE="/home/agindin/.claude.json"
+          PERSIST="/persist/home/agindin/.claude.json"
+          PERSIST_DIR="/persist/home/agindin"
+
+          # Never persist an empty or unparseable file over a good copy.
+          if [ -s "$HOME_FILE" ] && ${jq} empty "$HOME_FILE" 2>/dev/null; then
+            ${coreutils "mkdir"} -p "$PERSIST_DIR"
+            TMP=$(${coreutils "mktemp"} "$PERSIST.save.XXXXXX")
+            ${coreutils "cp"} -f "$HOME_FILE" "$TMP"
+            ${coreutils "mv"} -f "$TMP" "$PERSIST"
+          fi
+        '';
+      in
+      mkIf config.agindin.impermanence.enable {
+        services = {
+          # Restore config from persist on boot
+          claude-code-restore-config = {
+            description = "Restore Claude Code config from persistent storage";
+            wantedBy = [ "multi-user.target" ];
+            after = [
+              "local-fs.target"
+              "fix-home-permissions.service"
+            ];
+            wants = [ "fix-home-permissions.service" ];
+
+            serviceConfig = {
+              Type = "oneshot";
+              User = "agindin";
+              ExecStart = restoreScript;
+            };
+          };
+
+          # Save config to persist (triggered by watcher, timer, or shutdown)
+          claude-code-save-config = {
+            description = "Save Claude Code config to persistent storage";
+            serviceConfig = {
+              Type = "oneshot";
+              User = "agindin";
+              ExecStart = saveScript;
+            };
+          };
+
+          # Save on graceful shutdown (won't run on crashes/hard reboots)
+          claude-code-save-on-shutdown = {
+            description = "Save Claude Code config on shutdown";
+            wantedBy = [ "shutdown.target" ];
+            before = [ "shutdown.target" ];
+            serviceConfig = {
+              Type = "oneshot";
+              User = "agindin";
+              ExecStart = saveScript;
+            };
+          };
+        };
+
+        # Watch for changes to .claude.json and trigger immediate save
+        paths.claude-code-watch-config = {
+          description = "Watch Claude Code configuration for changes";
           wantedBy = [ "multi-user.target" ];
-          after = [
-            "local-fs.target"
-            "fix-home-permissions.service"
-          ];
-          wants = [ "fix-home-permissions.service" ];
-
-          serviceConfig = {
-            Type = "oneshot";
-            User = "agindin";
-            ExecStart = pkgs.writeShellScript "restore-claude-config" ''
-              PERSIST="/persist/home/agindin/.claude.json"
-              HOME_FILE="/home/agindin/.claude.json"
-
-              if [ -f "$PERSIST" ]; then
-                ${lib.getExe' pkgs.coreutils "cp"} -f "$PERSIST" "$HOME_FILE"
-                ${lib.getExe' pkgs.coreutils "chmod"} 600 "$HOME_FILE"
-              fi
-            '';
+          pathConfig = {
+            PathChanged = "/home/agindin/.claude.json";
+            Unit = "claude-code-save-config.service";
           };
         };
 
-        # Save config to persist (triggered by watcher, timer, or shutdown)
-        claude-code-save-config = {
-          description = "Save Claude Code config to persistent storage";
-          serviceConfig = {
-            Type = "oneshot";
-            User = "agindin";
-            ExecStart = pkgs.writeShellScript "save-claude-config" ''
-              HOME_FILE="/home/agindin/.claude.json"
-              PERSIST="/persist/home/agindin/.claude.json"
-              PERSIST_DIR="/persist/home/agindin"
-
-              if [ -f "$HOME_FILE" ]; then
-                ${lib.getExe' pkgs.coreutils "mkdir"} -p "$PERSIST_DIR"
-                ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME_FILE" "$PERSIST"
-              fi
-            '';
-          };
-        };
-
-        # Save on graceful shutdown (won't run on crashes/hard reboots)
-        claude-code-save-on-shutdown = {
-          description = "Save Claude Code config on shutdown";
-          wantedBy = [ "shutdown.target" ];
-          before = [ "shutdown.target" ];
-          serviceConfig = {
-            Type = "oneshot";
-            User = "agindin";
-            ExecStart = pkgs.writeShellScript "save-claude-config-shutdown" ''
-              HOME_FILE="/home/agindin/.claude.json"
-              PERSIST="/persist/home/agindin/.claude.json"
-              PERSIST_DIR="/persist/home/agindin"
-
-              if [ -f "$HOME_FILE" ]; then
-                ${lib.getExe' pkgs.coreutils "mkdir"} -p "$PERSIST_DIR"
-                ${lib.getExe' pkgs.coreutils "cp"} -f "$HOME_FILE" "$PERSIST"
-              fi
-            '';
+        # Periodically sync config every 30 seconds while system is running
+        timers.claude-code-periodic-save = {
+          description = "Periodically save Claude Code configuration";
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnBootSec = "30s";
+            OnUnitActiveSec = "30s";
+            Unit = "claude-code-save-config.service";
           };
         };
       };
-
-      # Watch for changes to .claude.json and trigger immediate save
-      paths.claude-code-watch-config = {
-        description = "Watch Claude Code configuration for changes";
-        wantedBy = [ "multi-user.target" ];
-        pathConfig = {
-          PathChanged = "/home/agindin/.claude.json";
-          Unit = "claude-code-save-config.service";
-        };
-      };
-
-      # Periodically sync config every 30 seconds while system is running
-      timers.claude-code-periodic-save = {
-        description = "Periodically save Claude Code configuration";
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnBootSec = "30s";
-          OnUnitActiveSec = "30s";
-          Unit = "claude-code-save-config.service";
-        };
-      };
-    };
   };
 }
