@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -30,7 +33,10 @@
   "panels": [
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "current service state",
       "fieldConfig": {
         "defaults": {
@@ -109,7 +115,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Is blocking enabled?",
       "fieldConfig": {
         "defaults": {
@@ -193,7 +202,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Blocky [version](https://github.com/0xERR0R/blocky) number",
       "fieldConfig": {
         "defaults": {
@@ -263,7 +275,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Average query response time for all query types",
       "fieldConfig": {
         "defaults": {
@@ -337,7 +352,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Number of blacklist entries",
       "fieldConfig": {
         "defaults": {
@@ -405,7 +423,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -473,7 +494,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Percentage of blocked queries",
       "fieldConfig": {
         "defaults": {
@@ -548,7 +572,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Number of all queries. Shows the last value",
       "fieldConfig": {
         "defaults": {
@@ -618,7 +645,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Number of entries in the cache. Shows the last value",
       "fieldConfig": {
         "defaults": {
@@ -674,7 +704,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -734,7 +767,10 @@
     },
     {
       "cacheTimeout": null,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Number of occured errors",
       "fieldConfig": {
         "defaults": {
@@ -811,7 +847,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -865,7 +904,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -923,7 +965,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -977,7 +1022,10 @@
       "type": "stat"
     },
     {
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Time since last list refresh",
       "fieldConfig": {
         "defaults": {
@@ -1039,7 +1087,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1138,7 +1189,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1246,7 +1300,10 @@
         "cardColor": "#b4ff00"
       },
       "dataFormat": "tsbuckets",
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1312,7 +1369,10 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1367,7 +1427,10 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "decimals": null,
       "fieldConfig": {
         "defaults": {
@@ -1424,7 +1487,10 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1476,7 +1542,10 @@
         "label": "Others",
         "threshold": ""
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1530,7 +1599,10 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1584,7 +1656,10 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1640,7 +1715,10 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(up{job=~\"blocky.*\"}, job)",
         "hide": 0,
         "includeAll": false,

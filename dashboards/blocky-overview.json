@@ -19,7 +19,10 @@
         "x": 0,
         "y": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "targets": [
         {
           "expr": "sum(increase(blocky_query_total[$__range]))",
@@ -36,7 +39,10 @@
         "x": 4,
         "y": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit"
@@ -57,7 +63,10 @@
         "x": 8,
         "y": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit"
@@ -78,7 +87,10 @@
         "x": 12,
         "y": 0
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "targets": [
         {
           "expr": "sum(increase(blocky_error_total[$__range]))"
@@ -94,7 +106,10 @@
         "x": 0,
         "y": 4
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (job) (rate(blocky_query_total[5m])) * 60",
@@ -111,7 +126,10 @@
         "x": 12,
         "y": 4
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "s"
@@ -133,7 +151,10 @@
         "x": 0,
         "y": 12
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (job) (increase(blocky_query_total[$__range]))",
@@ -222,7 +243,10 @@
         "x": 0,
         "y": 20
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (type) (increase(blocky_query_total[$__range]))",
@@ -239,7 +263,10 @@
         "x": 12,
         "y": 20
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (reason) (increase(blocky_response_total[$__range]))",
