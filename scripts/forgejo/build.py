@@ -8,13 +8,13 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json, event_sha
+from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json, event_sha
 from retention import prune_retention
 
 
 def supersede_pending(api, pull, sha, current_heads, run_url):
     """Close custom statuses stranded when Forgejo cancels an older run."""
-    host_contexts = {f"colmena/{host}" for host in HOSTS}
+    host_contexts = {f"colmena/{host}" for host in CI_HOSTS}
     workflow_context = "Colmena PR builds / build (pull_request)"
     commits = api.repo(f"pulls/{pull['number']}/commits?limit=100")
     old_shas = {commit["sha"] for commit in commits}
@@ -47,9 +47,10 @@ def supersede_pending(api, pull, sha, current_heads, run_url):
 
 
 GIB = 1024 ** 3
+BUILD_ORDER = CI_HOSTS
 
 
-def gc_if_needed(state, threshold_percent=85, minimum_free=40 * GIB):
+def gc_if_needed(state, threshold_percent=85, minimum_free=30 * GIB):
     usage = shutil.disk_usage(state)
     used_percent = usage.used * 100 / usage.total
     free_gib = usage.free / GIB
@@ -74,7 +75,7 @@ def close_incomplete_statuses(api, sha, run_url):
     """Mark every missing or pending host result failed after a job error."""
     statuses = {status["context"]: status for status in api.statuses(sha)}
     terminal = {"success", "failure", "error"}
-    for host in HOSTS:
+    for host in CI_HOSTS:
         context = f"colmena/{host}"
         if statuses.get(context, {}).get("state") not in terminal:
             api.status(sha, context, "failure", "Build job interrupted or failed unexpectedly", run_url)
@@ -111,9 +112,9 @@ def main():
         fcntl.flock(lock, fcntl.LOCK_EX)
         prune_retention(state, current_heads)
         gc_if_needed(state)
-        for host in HOSTS:
+        for host in CI_HOSTS:
             api.status(sha, f"colmena/{host}", "pending", "Queued exact PR head", run_url)
-        for host in HOSTS:
+        for host in BUILD_ORDER:
             result_file = state / "results" / sha / f"{host}.json"
             if result_file.exists():
                 previous = json.loads(result_file.read_text())

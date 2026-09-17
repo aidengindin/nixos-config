@@ -110,27 +110,34 @@ GitHub commits.
 
 ## CI and repair loop
 
-The VM has 6 vCPUs, 10 GiB RAM, 16 GiB swap, a 160 GiB sparse disk, and capacity one. Existing disk images grow in place and are never shrunk or recreated. It runs
+The VM has 6 vCPUs, 8 GiB RAM, 16 GiB guest swap, a 160 GiB sparse disk, and capacity one. Its host unit applies memory and I/O limits so a fresh build cannot starve Forgejo, PostgreSQL, or journald on osgiliath. Existing disk images grow in place and are never shrunk or recreated. It runs
 Forgejo Runner 13.1 from the stable pin using its supported legacy registration
 flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.
 
-PR events and update-branch pushes build all four hosts at the exact PR head.
+PR events build lorien, osgiliath, and khazad-dum at the exact PR head.
+Weathertop remains in the NixOS inventory but is excluded from CI and PR
+deployment.
 Each host has a `colmena/<hostname>` status and a JSON manifest under
 `/var/lib/forgejo-ci/results/<sha>/<host>.json`. Colmena's own hive supplies the
 closure path. Successful results are GC-rooted and reused on duplicate events.
 Roots stay while the SHA is a current PR head; a daily timer refreshes those
 leases and removes superseded roots, manifests, and logs after a seven-day grace
 period. The workflow checks disk pressure at startup and before each uncached host,
-running Nix GC at 85% usage or below 40 GiB free. A new host build will not start below a 30 GiB reserve after collection; Nix also runs its configured weekly collection.
+running Nix GC at 85% usage or below 30 GiB free. A new host build will
+not start below a 30 GiB reserve after collection; Nix also runs its configured
+weekly collection.
 This preserves reusable outputs from partial builds while successful closures remain
 protected by explicit roots. At boot, the guest verifies
 its persistent Nix database against the current generated read-only store image
-before accepting jobs, pruning safe stale registrations left by older VM closures. Server,
-runner, and workflow timeouts are all 12 hours for Weathertop's
-custom-kernel build. Failed job workspaces are cleaned of untracked files. When a
+before accepting jobs, pruning safe stale registrations left by older VM closures.
+Server, runner, and workflow timeouts are all 12 hours. Failed job workspaces are
+cleaned of untracked files. When a
 new PR head cancels an older run, the next build closes pending host and workflow
 statuses on superseded commits so Forgejo does not display them as still running.
+The controller also reconciles each open PR against Forgejo's terminal action
+runs. If a runner or guest dies before its cleanup step, any missing or pending
+per-host statuses become terminal failures instead of remaining yellow forever.
 
 The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
 `automation/update`, performs each existing updater, publishes partial edits when
@@ -170,10 +177,13 @@ the controller dispatches CI. Changing the PR before activation cancels the
 request.
 
 Deployment runs on osgiliath, **not** in the CI VM. The controller pulls the
-selected closures over the restricted SSH export connection, roots them locally,
+selected closures through a manifest-bound SSH export stream, roots them locally,
 then copies/activates them on targets. It never evaluates or rebuilds PR code on
-the deployment host. Only this authenticated import uses `--no-check-sigs`;
-normal store signature policy remains enabled.
+the deployment host. Only this authenticated import uses `--no-check-sigs`.
+After validating the manifest, the controller recursively signs the imported
+closure with the encrypted `forgejo-deploy.git.gindin.xyz-1` key. Lorien and
+Khazad-dûm trust its public key, and `ssh-ng` copies retain normal signature
+enforcement.
 
 Ensure every remote target has received the updated deployment wrapper supporting
 read-only generation queries. All target host keys must be pinned before first

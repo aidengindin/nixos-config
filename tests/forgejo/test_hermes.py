@@ -32,17 +32,20 @@ class HermesTests(unittest.TestCase):
         if reported:
             payload["failures"] = statuses["statuses"]
         output = io.StringIO()
-        with patch.object(module, "api", side_effect=[pull, statuses]), patch.object(module.sys, "stdin", io.StringIO(json.dumps(payload))), patch.object(module.sys, "stdout", output), patch.object(module.subprocess, "run"), patch.object(module.subprocess, "check_output", return_value=sha):
+        with patch.object(module, "api", side_effect=[pull, statuses]), patch.object(module.sys, "stdin", io.StringIO(json.dumps(payload))), patch.object(module.sys, "stdout", output), patch.object(module.subprocess, "run") as git_run, patch.object(module.subprocess, "check_output", return_value=sha):
             module.main()
+            self.git_calls = git_run.call_args_list
         return output.getvalue()
 
     def test_valid_failure_prepares_repair_and_deduplicates(self):
         first = self.invoke("a" * 40)
+        first_calls = self.git_calls
         self.assertIn("Attempt 1 of 3", first)
         self.assertIn("push normally", first)
         self.assertEqual(self.invoke("a" * 40), "")
         self.assertEqual(len(self.notifications), 1)
         self.assertIn("repair attempt 1 of 3", self.notifications[0][1])
+        self.assertTrue(any("main:refs/remotes/origin/main" in call.args[0] for call in first_calls))
 
     def test_three_attempt_budget_survives_new_heads(self):
         for i, letter in enumerate("abc", 1):

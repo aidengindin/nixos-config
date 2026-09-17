@@ -1,4 +1,4 @@
-{ ... }:
+{ config, lib, ... }:
 {
   config = {
     nix = {
@@ -14,6 +14,8 @@
         trusted-public-keys = [
           "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
           "jovian.cachix.org-1:8Vq4Txku6VZIRhYrHYki3Ab9XHJRoWmdYqMqj4rB/Uc="
+        ] ++ lib.optionals (builtins.elem config.networking.hostName [ "lorien" "khazad-dum" ]) [
+          "forgejo-deploy.git.gindin.xyz-1:BrywYAd7MN4tHXfoUF0JP/LfuI0MaO7PNa7KQdDBYqg="
         ];
       };
       extraOptions = ''

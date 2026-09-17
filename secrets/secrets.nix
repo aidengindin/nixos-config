@@ -162,6 +162,11 @@ in
     khazad-dumUser
   ];
 
+  "mosquitto-tasmota-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "zigbee2mqtt-mqtt-env.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
@@ -266,6 +271,10 @@ in
   ];
   # Provisioned after Forgejo accounts/runner creation; see docs/forgejo.md.
   "forgejo-controller-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-store-signing-key.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
   ];

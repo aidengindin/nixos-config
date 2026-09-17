@@ -51,6 +51,9 @@
     mosquitto-homeassistant-password = {
       file = ../../secrets/mosquitto-homeassistant-password.age;
     };
+    mosquitto-tasmota-password = {
+      file = ../../secrets/mosquitto-tasmota-password.age;
+    };
     zigbee2mqtt-mqtt-env = {
       file = ../../secrets/zigbee2mqtt-mqtt-env.age;
     };
@@ -468,6 +471,20 @@
           acl = [
             "readwrite zigbee2mqtt/#"
             "readwrite homeassistant/#"
+            "readwrite cmnd/#"
+            "readwrite stat/#"
+            "readwrite tele/#"
+            "readwrite tasmota/#"
+          ];
+        };
+        # Shared by all Tasmota devices (default %prefix%/%topic%/ full topic).
+        tasmota = {
+          passwordFile = config.age.secrets.mosquitto-tasmota-password.path;
+          acl = [
+            "readwrite cmnd/#"
+            "readwrite stat/#"
+            "readwrite tele/#"
+            "readwrite tasmota/#"
           ];
         };
       };

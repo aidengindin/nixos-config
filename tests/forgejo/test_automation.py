@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import importlib.util
+import io
 import json
 import os
 import shutil
@@ -8,12 +9,13 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
-from build import GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
-from common import HOSTS, REPOSITORY, event_sha, selectors
+from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
+from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 from retention import RETENTION_SECONDS, prune_retention
 
@@ -39,11 +41,83 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(signed(body + b" ", digest, "secret"))
         self.assertFalse(signed(body, "", "secret"))
 
-    def test_store_export_denies_writes_and_traversal(self):
+    def test_store_export_denies_generic_protocol_and_traversal(self):
         script = Path(__file__).resolve().parents[2] / "scripts/forgejo/store-export.py"
-        for command in ["nix-store --serve --write", "result ../../etc/passwd lorien", "bash", "result " + SHA + " lorien;id"]:
-            proc = subprocess.run([sys.executable, str(script)], env={**os.environ, "SSH_ORIGINAL_COMMAND": command}, capture_output=True)
+        commands = [
+            "nix-store --serve",
+            "nix-store --serve --write",
+            "result ../../etc/passwd lorien",
+            "bash",
+            "result " + SHA + " lorien;id",
+            "export " + SHA + " lorien;id",
+        ]
+        for command in commands:
+            proc = subprocess.run(
+                [sys.executable, str(script)],
+                env={**os.environ, "SSH_ORIGINAL_COMMAND": command},
+                capture_output=True,
+            )
             self.assertEqual(proc.returncode, 1)
+
+    def test_store_export_is_bound_to_validated_manifest(self):
+        script = Path(__file__).resolve().parents[2] / "scripts/forgejo/store-export.py"
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary) / "state"
+            result = state / "results" / SHA / "lorien.json"
+            result.parent.mkdir(parents=True)
+            manifest = {
+                "repository": REPOSITORY,
+                "sha": SHA,
+                "host": "lorien",
+                "closure": CLOSURE,
+            }
+            result.write_text(json.dumps(manifest))
+            bindir = Path(temporary) / "bin"
+            bindir.mkdir()
+            fake = bindir / "nix-store"
+            fake.write_text(
+                '#!/bin/sh\ncase "$1" in\n'
+                '  --query) printf "%s\\n" "$3";;\n'
+                '  --export) printf archive;;\n'
+                '  *) exit 2;;\n'
+                'esac\n'
+            )
+            fake.chmod(0o755)
+            env = {
+                **os.environ,
+                "FORGEJO_CI_STATE": str(state),
+                "PATH": str(bindir) + ":" + os.environ["PATH"],
+            }
+            metadata = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"result {SHA} lorien"},
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            self.assertEqual(json.loads(metadata.stdout), manifest)
+            archive = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"export {SHA} lorien"},
+                capture_output=True,
+                check=True,
+            )
+            self.assertEqual(archive.stdout, b"archive")
+            manifest["repository"] = "attacker/repository"
+            result.write_text(json.dumps(manifest))
+            denied = subprocess.run(
+                [sys.executable, str(script)],
+                env={**env, "SSH_ORIGINAL_COMMAND": f"export {SHA} lorien"},
+                capture_output=True,
+            )
+            self.assertEqual(denied.returncode, 1)
+
+class WorkflowTests(unittest.TestCase):
+    def test_update_branch_does_not_duplicate_pr_builds(self):
+        workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/build.yml").read_text()
+        self.assertIn("\n  pull_request:", workflow)
+        self.assertNotIn("\n  push:", workflow)
+
 
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):
@@ -60,14 +134,14 @@ class StatusCleanupTests(unittest.TestCase):
             },
         }[path]
         api.statuses.return_value = [{
-            "context": "colmena/weathertop",
+            "context": "colmena/khazad-dum",
             "state": "pending",
             "target_url": "/actions/runs/16",
         }]
         supersede_pending(api, {"number": 78}, SHA, {SHA}, "https://example.test/actions/runs/17")
         api.status.assert_called_once_with(
             old_sha,
-            "colmena/weathertop",
+            "colmena/khazad-dum",
             "error",
             "Superseded by newer PR head",
             "https://example.test/actions/runs/16",
@@ -83,7 +157,7 @@ class StatusCleanupTests(unittest.TestCase):
         close_incomplete_statuses(api, SHA, "https://example.test/run/1")
         self.assertEqual(
             [call.args[1] for call in api.status.call_args_list],
-            ["colmena/osgiliath", "colmena/khazad-dum", "colmena/weathertop"],
+            ["colmena/osgiliath", "colmena/khazad-dum"],
         )
 
     def test_event_sha_uses_pr_head_before_checkout(self):
@@ -95,6 +169,11 @@ class StatusCleanupTests(unittest.TestCase):
 
 
 class RetentionTests(unittest.TestCase):
+    def test_weathertop_is_excluded_from_ci(self):
+        self.assertEqual(BUILD_ORDER, CI_HOSTS)
+        self.assertNotIn("weathertop", CI_HOSTS)
+        self.assertIn("weathertop", HOSTS)
+
     def test_prune_preserves_current_head_and_removes_expired_state(self):
         with tempfile.TemporaryDirectory() as temporary:
             state = Path(temporary)
@@ -127,7 +206,7 @@ class RetentionTests(unittest.TestCase):
     @patch("build.subprocess.run")
     @patch("build.shutil.disk_usage")
     def test_gc_also_preserves_build_headroom(self, disk_usage, run):
-        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 125 * GIB, 35 * GIB)
+        disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 135 * GIB, 25 * GIB)
         self.assertTrue(gc_if_needed(Path("/state")))
         run.assert_called_once_with(["nix-store", "--gc"], check=True)
 
@@ -181,49 +260,173 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", self.job())
         self.assertTrue(any(call.args[0][:2] == ["nix", "copy"] for call in run.call_args_list))
         self.assertFalse(any("build" in call.args[0] for call in run.call_args_list))
+        run.assert_called_once_with(["nix", "copy", "--to", "ssh-ng://nixos-deploy@lorien", CLOSURE], check=True, timeout=3600)
         self.assertEqual(self.c.target.call_count, 3)
+        self.c.target.assert_any_call("lorien", ["readlink", "-f", "/run/current-system"])
+
+    def test_legacy_target_without_readlink_still_activates(self):
+        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}})
+        self.c.pull_closure = Mock(return_value=CLOSURE)
+        self.c.target = Mock(side_effect=[
+            subprocess.CalledProcessError(1, "readlink"), "", "",
+        ])
+        job = self.job()
+        with patch("controller.subprocess.run"):
+            self.c.deploy("1", job)
+        self.assertEqual(job["hosts"]["lorien"]["previous"], "unknown")
+        self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
 
     def test_restart_checks_completed_activation_without_repeating(self):
         job = self.job(); job["started"] = True
         job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating", "previous": "old"}
-        self.c.trusted_statuses = Mock(return_value={})
+        self.c.trusted_statuses = Mock(side_effect=OSError("Forgejo restarting"))
+        self.api.repo.side_effect = OSError("Forgejo restarting")
         self.c.target = Mock(return_value=CLOSURE)
         self.c.deploy("1", job)
         self.c.target.assert_called_once_with("lorien", ["readlink", "-f", "/run/current-system"])
+        self.api.repo.assert_not_called()
+        self.c.trusted_statuses.assert_not_called()
         self.assertEqual(job["hosts"]["lorien"]["stage"], "done")
+
+    def test_restarted_controller_gives_activation_time_to_finish(self):
+        job = self.job(); job["started"] = True
+        job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating"}
+        self.c.trusted_statuses = Mock(return_value={})
+        self.c.target = Mock(return_value="old")
+        with patch("controller.time.time", return_value=1000):
+            self.c.deploy("1", job)
+        self.assertEqual(job["hosts"]["lorien"]["activation_started"], 1000)
+        self.assertEqual(job["hosts"]["lorien"]["stage"], "activating")
 
     def test_ambiguous_activation_never_repeats(self):
         job = self.job(); job["started"] = True
-        job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating"}
+        job["hosts"]["lorien"] = {"closure": CLOSURE, "stage": "activating", "activation_started": time.time() - 301}
         self.c.trusted_statuses = Mock(return_value={})
         self.c.target = Mock(return_value="old")
         with self.assertRaisesRegex(ValueError, "Interrupted activation"):
             self.c.deploy("1", job)
         self.assertEqual(self.c.target.call_count, 1)
 
+    @patch("controller.os.chmod")
+    def test_store_ssh_protects_private_key(self, chmod):
+        with patch.dict(os.environ, {"STORE_KEY": "/state/reader", "STORE_KNOWN_HOSTS": "/state/known", "STORE_PORT": "2223"}):
+            command = self.c.store_ssh()
+        chmod.assert_called_once_with("/state/reader", 0o600)
+        self.assertIn("/state/reader", command)
+
+    @patch("controller.subprocess.run")
+    @patch("controller.subprocess.Popen")
+    @patch("controller.subprocess.check_output")
+    def test_manifest_verified_closure_is_signed_before_retention(self, check_output, popen, run):
+        check_output.return_value = json.dumps({
+            "repository": REPOSITORY, "sha": SHA, "host": "lorien",
+            "run_url": "https://example.test/run/1", "closure": CLOSURE,
+        })
+        exporter = popen.return_value
+        exporter.stdout = io.BytesIO()
+        exporter.wait.return_value = 0
+        run.side_effect = [Mock(returncode=0), Mock(returncode=0), Mock(returncode=0)]
+        self.c.store_ssh = Mock(return_value=["ssh"])
+        with patch.dict(os.environ, {"STORE_SIGNING_KEY": "/run/agenix/signing-key"}):
+            self.assertEqual(self.c.pull_closure(SHA, "lorien", {
+                "target_url": "https://example.test/run/1",
+            }), CLOSURE)
+        self.assertEqual(run.call_args_list[1].args[0], [
+            "nix", "store", "sign", "--recursive", "--key-file",
+            "/run/agenix/signing-key", CLOSURE,
+        ])
+
+    @patch("controller.subprocess.check_output", return_value="")
+    def test_self_activation_uses_restricted_ssh_session(self, check_output):
+        self.c.target("osgiliath", ["sudo", "-H", "--", "nix-env", "--version"])
+        check_output.assert_called_once_with(
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "StrictHostKeyChecking=yes", "nixos-deploy@osgiliath", "sudo", "-H", "--", "nix-env", "--version"],
+            text=True,
+            timeout=600,
+        )
+
+    @patch("controller.subprocess.Popen")
+    def test_self_activation_is_detached_from_controller(self, popen):
+        self.c.start_self_activation(CLOSURE)
+        popen.assert_called_once_with(
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+             "-o", "StrictHostKeyChecking=yes", "nixos-deploy@osgiliath",
+             "sudo", "-H", "--", CLOSURE + "/bin/switch-to-configuration", "switch"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, start_new_session=True,
+        )
+
+    def test_pr_comment_retries_after_forgejo_restart(self):
+        self.c.queue_comment("deploy:1:success", 5, "complete")
+        self.api.comment.side_effect = OSError("Forgejo restarting")
+        with self.assertRaises(OSError):
+            self.c.send_comments()
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT sent FROM comments").fetchone()[0], 0)
+        self.api.comment.side_effect = None
+        self.c.send_comments()
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT sent FROM comments").fetchone()[0], 1)
+
     def test_terminal_build_notification_is_deduplicated(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "success",
-             "target_url": "https://example.test/run/7"} for host in HOSTS
+             "target_url": "https://example.test/run/7"} for host in CI_HOSTS
         ]
         self.c.queue_build_notification(SHA)
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
             rows = db.execute("SELECT id,payload FROM notifications").fetchall()
         self.assertEqual(len(rows), 1)
-        self.assertIn("passed for all four hosts", rows[0][1])
+        self.assertIn("passed for all CI hosts", rows[0][1])
 
     def test_pending_build_has_no_notification(self):
         self.api.pulls.return_value = [self.pr]
         self.api.statuses.return_value = [
             {"context": f"colmena/{host}", "creator": {"id": 2},
-             "state": "pending" if host == "weathertop" else "success"}
-            for host in HOSTS
+             "state": "pending" if host == "khazad-dum" else "success"}
+            for host in CI_HOSTS
         ]
         self.c.queue_build_notification(SHA)
         with self.c.db() as db:
             self.assertEqual(db.execute("SELECT count(*) FROM notifications").fetchone()[0], 0)
+
+    def test_terminal_action_run_closes_unresolved_host_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2},
+             "state": "pending" if host == "khazad-dum" else "failure"}
+            for host in CI_HOSTS
+        ]
+        self.api.repo.return_value = {"workflow_runs": [{
+            "id": 24,
+            "workflow_id": "build.yml",
+            "commit_sha": SHA,
+            "status": "failure",
+            "html_url": "https://example.test/run/24",
+        }]}
+        self.assertTrue(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_called_once_with(
+            SHA,
+            "colmena/khazad-dum",
+            "failure",
+            "Forgejo run failure before this host reported a result",
+            "https://example.test/run/24",
+        )
+
+    def test_running_action_does_not_close_pending_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2}, "state": "pending"}
+            for host in CI_HOSTS
+        ]
+        self.api.repo.return_value = {"workflow_runs": [{
+            "id": 24,
+            "workflow_id": "build.yml",
+            "commit_sha": SHA,
+            "status": "running",
+        }]}
+        self.assertFalse(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_not_called()
 
     def test_untrusted_status_is_ignored(self):
         self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": {"id": 99}, "state": "success"}]
@@ -244,6 +447,15 @@ class ControllerTests(unittest.TestCase):
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()
+
+    def test_ci_excluded_host_cannot_be_deployed_from_pr(self):
+        comment = {"id": 9, "user": {"id": 1}, "body": "/deploy weathertop"}
+        self.api.repo.side_effect = [comment, self.pr]
+        payload = {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": comment, "issue": {"number": 5}}
+        with self.assertRaisesRegex(ValueError, "excluded from CI"):
+            self.c.accept("issue_comment", payload)
+        with self.c.db() as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM jobs").fetchone()[0], 0)
 
     def test_duplicate_comment_is_queued_once(self):
         comment = {"id": 10, "user": {"id": 1}, "body": "/deploy lorien"}

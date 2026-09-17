@@ -14,9 +14,10 @@ import subprocess
 import threading
 import time
 import urllib.request
-from common import API, HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
+from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
+ACTIVATION_GRACE_SECONDS = 300
 
 
 def signed(body, signature, secret):
@@ -34,6 +35,7 @@ class Controller:
             db.execute("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL, state TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS repairs (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
+            db.execute("CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, pr INTEGER NOT NULL, body TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
         self.owner_id = int(os.environ["FORGEJO_OWNER_ID"])
         self.bot_id = int(os.environ["FORGEJO_BOT_ID"])
 
@@ -57,11 +59,23 @@ class Controller:
             db.execute("INSERT OR IGNORE INTO notifications(id,payload) VALUES (?,?)",
                 (key, json.dumps(payload)))
 
+    def queue_comment(self, key, pr, body):
+        with self.db() as db:
+            db.execute("INSERT OR IGNORE INTO comments(id,pr,body) VALUES (?,?,?)", (key, pr, body))
+
+    def send_comments(self):
+        with self.db() as db:
+            rows = db.execute("SELECT id,pr,body FROM comments WHERE sent=0").fetchall()
+        for key, pr, body in rows:
+            self.api.comment(pr, body)
+            with self.db() as db:
+                db.execute("UPDATE comments SET sent=1 WHERE id=?", (key,))
+
     def queue_build_notification(self, sha):
         if not SHA.fullmatch(sha):
             return
         statuses = self.trusted_statuses(sha)
-        host_statuses = {host: statuses.get(f"colmena/{host}") for host in HOSTS}
+        host_statuses = {host: statuses.get(f"colmena/{host}") for host in CI_HOSTS}
         if any(not status or status.get("state") not in ("success", "failure", "error")
                 for status in host_statuses.values()):
             return
@@ -72,7 +86,7 @@ class Controller:
                     if status["state"] in ("failure", "error")]
         run_url = next((status.get("target_url") for status in host_statuses.values()
                         if status.get("target_url")), f"{self.api.url}/{REPOSITORY}/pulls/{pulls[0]['number']}")
-        result = "failed for " + ", ".join(failures) if failures else "passed for all four hosts"
+        result = "failed for " + ", ".join(failures) if failures else "passed for all CI hosts"
         for pull in pulls:
             message = (f"Forgejo CI {result} on PR #{pull['number']} at `{sha[:12]}`.\n"
                 f"Run and logs: {run_url}")
@@ -96,6 +110,9 @@ class Controller:
             if pull["state"] != "open" or pull["head"]["repo"]["full_name"] != REPOSITORY:
                 raise ValueError("Deployment requires an open local PR")
             targets = selectors(real["body"])
+            unsupported = [host for host in targets if host not in CI_HOSTS]
+            if unsupported:
+                raise ValueError("PR deployment is unavailable for hosts excluded from CI: " + ", ".join(unsupported))
             job = {"pr": pr, "sha": pull["head"]["sha"], "targets": targets, "created": time.time(), "hosts": {}}
             key = str(comment["id"])
             with self.db() as db:
@@ -125,14 +142,39 @@ class Controller:
             trusted[status["context"]] = status
         return trusted
 
+    def reconcile_terminal_build(self, sha):
+        """Close host statuses when Forgejo ended a run before cleanup ran."""
+        statuses = self.trusted_statuses(sha)
+        unresolved = [
+            host for host in CI_HOSTS
+            if statuses.get(f"colmena/{host}", {}).get("state")
+            not in ("success", "failure", "error")
+        ]
+        if not unresolved:
+            return False
+        runs = self.api.repo("actions/runs?limit=50").get("workflow_runs", [])
+        run = next((
+            item for item in runs
+            if item.get("workflow_id") == "build.yml" and item.get("commit_sha") == sha
+        ), None)
+        if not run or run.get("status") not in ("success", "failure", "cancelled"):
+            return False
+        state = "failure" if run["status"] == "failure" else "error"
+        description = f"Forgejo run {run['status']} before this host reported a result"
+        run_url = run.get("html_url") or f"{self.api.url}/{REPOSITORY}/actions/runs/{int(run['id'])}"
+        for host in unresolved:
+            self.api.status(sha, f"colmena/{host}", state, description, run_url)
+        return True
+
     def queue_repair(self, sha):
         if not SHA.fullmatch(sha):
             return
         statuses = self.trusted_statuses(sha)
-        if any(statuses.get(f"colmena/{host}", {}).get("state") not in ("success", "failure", "error") for host in HOSTS):
+        if any(statuses.get(f"colmena/{host}", {}).get("state") not in ("success", "failure", "error") for host in CI_HOSTS):
             return
+        ci_contexts = {f"colmena/{host}" for host in CI_HOSTS}
         failures = [s for s in statuses.values()
-                    if s["state"] in ("failure", "error") and (s["context"].startswith("colmena/") or s["context"] == "updates")]
+                    if s["state"] in ("failure", "error") and (s["context"] in ci_contexts or s["context"] == "updates")]
         for pull in self.api.pulls():
             if pull["head"]["sha"] != sha or pull["head"]["ref"] != UPDATE_BRANCH or not failures:
                 continue
@@ -170,15 +212,26 @@ class Controller:
                 db.execute("UPDATE notifications SET sent=1 WHERE id=?", (key,))
 
     def store_ssh(self):
+        os.chmod(os.environ["STORE_KEY"], 0o600)
         return ["ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15",
             "-o", "UserKnownHostsFile=" + os.environ["STORE_KNOWN_HOSTS"],
             "-i", os.environ["STORE_KEY"], "-p", os.environ["STORE_PORT"]]
 
+    @staticmethod
+    def target_command(host, command):
+        return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+            "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command]
+
     def target(self, host, command):
-        if host == "osgiliath":
-            return subprocess.check_output(command, text=True, timeout=600).strip()
-        return subprocess.check_output(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
-            "-o", "StrictHostKeyChecking=yes", f"nixos-deploy@{host}", *command], text=True, timeout=600).strip()
+        return subprocess.check_output(self.target_command(host, command), text=True, timeout=600).strip()
+
+    def start_self_activation(self, closure):
+        # Activation stops forgejo-controller.service. Do not leave stdout or a
+        # controlling session tied to the controller process that systemd kills.
+        subprocess.Popen(self.target_command("osgiliath", [
+            "sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch",
+        ]), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, start_new_session=True)
 
     def pull_closure(self, sha, host, status):
         raw = subprocess.check_output(self.store_ssh() + ["store-export@127.0.0.1", f"result {sha} {host}"], text=True, timeout=30)
@@ -188,11 +241,31 @@ class Controller:
         if result.get("run_url") != status.get("target_url") or not STORE_PATH.fullmatch(result.get("closure", "")):
             raise ValueError("Build result does not match successful status")
         closure = result["closure"]
-        import shlex
-        env = dict(os.environ, NIX_SSHOPTS=shlex.join(self.store_ssh()[1:]))
-        # Only this explicit, authenticated import bypasses signatures. The VM
-        # is not a globally trusted substitute source for arbitrary host builds.
-        subprocess.run(["nix", "copy", "--no-check-sigs", "--from", "ssh://store-export@127.0.0.1", closure], env=env, check=True, timeout=3600)
+        exporter = subprocess.Popen(
+            self.store_ssh() + ["store-export@127.0.0.1", f"export {sha} {host}"],
+            stdout=subprocess.PIPE,
+        )
+        try:
+            # nixos-deploy is the trusted local controller user. Disable
+            # signature checks only for this manifest-bound import stream.
+            imported = subprocess.run(
+                ["nix-store", "--import", "--option", "require-sigs", "false"],
+                stdin=exporter.stdout,
+                stdout=subprocess.DEVNULL,
+                timeout=3600,
+            )
+        finally:
+            exporter.stdout.close()
+        export_rc = exporter.wait(timeout=30)
+        if imported.returncode or export_rc:
+            raise subprocess.CalledProcessError(imported.returncode or export_rc, "restricted closure transfer")
+        # Only closures bound to the verified CI manifest reach this point.
+        # Sign the full closure so remote targets can retain normal signature
+        # enforcement during the subsequent ssh-ng copy.
+        subprocess.run([
+            "nix", "store", "sign", "--recursive", "--key-file",
+            os.environ["STORE_SIGNING_KEY"], closure,
+        ], check=True, timeout=3600)
         root = self.state / "roots" / sha / host
         root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["nix-store", "--realise", closure, "--add-root", str(root), "--indirect"], check=True)
@@ -202,11 +275,11 @@ class Controller:
         sha, pr = job["sha"], job["pr"]
         if time.time() - job["created"] > 13 * 3600 and not job.get("started"):
             raise ValueError("Timed out waiting for builds")
-        pull = self.api.repo(f"pulls/{pr}")
-        if not job.get("started") and (pull["state"] != "open" or pull["head"]["sha"] != sha):
-            raise ValueError("PR changed; submit a new /deploy command")
-        statuses = self.trusted_statuses(sha)
         if not job.get("started"):
+            pull = self.api.repo(f"pulls/{pr}")
+            if pull["state"] != "open" or pull["head"]["sha"] != sha:
+                raise ValueError("PR changed; submit a new /deploy command")
+            statuses = self.trusted_statuses(sha)
             for host in job["targets"]:
                 status = statuses.get(f"colmena/{host}")
                 if status and status["state"] in ("failure", "error"):
@@ -239,19 +312,40 @@ class Controller:
                     item["stage"] = "done"
                     self.save(key, job)
                     continue
+                started = item.get("activation_started")
+                if started is None:
+                    item["activation_started"] = time.time()
+                    self.save(key, job)
+                    return
+                if time.time() - started < ACTIVATION_GRACE_SECONDS:
+                    return
                 # An interrupted activation is ambiguous. Never repeat it.
                 raise ValueError(f"Interrupted activation on {host}; inspect manually before retrying")
-            item["previous"] = self.target(host, ["readlink", "-f", "/nix/var/nix/profiles/system"])
+            try:
+                item["previous"] = self.target(host, ["readlink", "-f", "/run/current-system"])
+            except subprocess.CalledProcessError:
+                if host == "osgiliath":
+                    raise
+                # Legacy target wrappers did not allow generation queries. The
+                # closure switch below upgrades the wrapper for future deploys.
+                LOG.warning("Cannot read active generation on legacy target %s", host)
+                item["previous"] = "unknown"
             if host != "osgiliath":
-                subprocess.run(["nix", "copy", "--to", f"ssh://nixos-deploy@{host}", closure], check=True, timeout=3600)
+                subprocess.run(["nix", "copy", "--to", f"ssh-ng://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"
+            item["activation_started"] = time.time()
             self.save(key, job)
             self.target(host, ["sudo", "-H", "--", "nix-env", "--profile", "/nix/var/nix/profiles/system", "--set", closure])
+            if host == "osgiliath":
+                self.start_self_activation(closure)
+                # The controller will be stopped by activation. Its replacement
+                # confirms the active generation before completing the job.
+                return
             self.target(host, ["sudo", "-H", "--", closure + "/bin/switch-to-configuration", "switch"])
             item["stage"] = "done"
             self.save(key, job)
         summary = self.summary(job, "Deployment complete")
-        self.api.comment(pr, summary)
+        self.queue_comment(f"deploy:{key}:success", pr, summary)
         self.queue_notification(f"deploy:{key}:success", f"Forgejo {summary}")
         self.save(key, job, "done")
         # Current target generations now retain the closures. Keep this audit
@@ -281,14 +375,16 @@ class Controller:
                         LOG.exception("Deployment %s failed", key)
                         self.save(key, job, "failed")
                         summary = self.summary(job, "Deployment stopped: " + str(exc))
-                        self.api.comment(job["pr"], summary)
+                        self.queue_comment(f"deploy:{key}:failure", job["pr"], summary)
                         self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
                 # Reconcile dropped status webhooks after Forgejo/controller restart.
                 for pull in self.api.pulls():
+                    self.reconcile_terminal_build(pull["head"]["sha"])
                     self.queue_build_notification(pull["head"]["sha"])
                     if pull["head"]["ref"] == UPDATE_BRANCH:
                         self.queue_repair(pull["head"]["sha"])
                 self.send_repairs()
+                self.send_comments()
                 self.send_notifications()
             except Exception:
                 LOG.exception("Controller reconciliation failed; retrying")

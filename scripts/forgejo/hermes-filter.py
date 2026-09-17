@@ -92,6 +92,10 @@ def main():
         if not checkout.exists():
             subprocess.run(["git", "clone", "--branch", BRANCH, "--single-branch",
                 os.environ["FORGEJO_URL"].rstrip("/") + "/" + REPO + ".git", str(checkout)], env=env, check=True, stdout=subprocess.DEVNULL)
+        # A single-branch clone does not create origin/main, which repairs need
+        # to distinguish update changes from the current base branch.
+        subprocess.run(["git", "-C", str(checkout), "fetch", "origin",
+            "main:refs/remotes/origin/main"], env=env, check=True, stdout=subprocess.DEVNULL)
         actual = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
         if actual != payload["sha"]:
             return
@@ -106,7 +110,10 @@ def main():
         f"at `{payload['sha'][:12]}`.\nFailures:\n{logs}")
     print(f"""Repair automated update PR #{pull['number']} in {checkout}.
 Expected head: {payload['sha']}. Attempt {len(attempted)} of 3 this update cycle.
-Inspect the Forgejo build/update logs through its API using FORGEJO_TOKEN:
+Inspect the Forgejo build/update logs through its API using FORGEJO_TOKEN.
+Use curl or Python with an Authorization token header; the generic web fetch tool
+is blocked by Forgejo robots.txt:
+Do not inspect /var/lib/forgejo-ci; that path exists only inside the CI VM.
 {logs}
 Fix the underlying update or build failure. Do not change secrets, workflows,
 deployment controls, or repair policy. Do not merge, deploy, force-push, or run

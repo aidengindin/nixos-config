@@ -7,6 +7,7 @@ import urllib.request
 
 REPOSITORY = "aidengindin/nixos-config"
 HOSTS = ("lorien", "osgiliath", "khazad-dum", "weathertop")
+CI_HOSTS = tuple(host for host in HOSTS if host != "weathertop")
 TAGS = {"server": HOSTS[:2], "onprem": HOSTS[:2], "laptop": ("khazad-dum",),
         "gaming": ("weathertop",), "mobile": HOSTS[2:]}
 UPDATE_BRANCH = "automation/update"

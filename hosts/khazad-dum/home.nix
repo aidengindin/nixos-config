@@ -43,6 +43,11 @@
         };
       };
     };
+    pseg-import = {
+      enable = true;
+      tokenFile = config.age.secrets.khazad-dum-homeassistant-token.path;
+    };
+
     kitty.enable = true;
     latex.enable = true;
     chromium.enable = true;
