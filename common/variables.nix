@@ -14,6 +14,7 @@ let
       prometheusNodeExporter = 10003;
       postgresExporter = 10006;
       caddyMetrics = 10007;
+      unpoller = 10008;
       blockyHttp = 4000;
       loki = 10004;
       alloy = 10005;

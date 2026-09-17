@@ -298,4 +298,9 @@ in
     osgiliathHost
     khazad-dumUser
   ];
+
+  "unpoller-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
 }

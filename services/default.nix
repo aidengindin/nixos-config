@@ -36,6 +36,7 @@
     ./alloy.nix
     ./restic.nix
     ./tandoor.nix
+    ./unpoller.nix
     ./withings-sync.nix
     ./zigbee2mqtt.nix
   ];

@@ -227,6 +227,8 @@
 
     alloy.enable = true;
 
+    unpoller.enable = true;
+
     grafana = {
       enable = true;
       openLokiPort = true;
@@ -314,6 +316,11 @@
           port = globalVars.ports.anduinWeb;
           metrics_path = "/-/metrics";
         }
+        {
+          name = "unpoller";
+          host = "127.0.0.1";
+          port = globalVars.ports.unpoller;
+        }
       ];
       dashboards = [
         {
@@ -359,6 +366,30 @@
         {
           name = "observability";
           source = ../../dashboards/observability.json;
+        }
+        {
+          name = "unifi-network-sites";
+          source = ../../dashboards/unifi-network-sites.json;
+        }
+        {
+          name = "unifi-usg-insights";
+          source = ../../dashboards/unifi-usg-insights.json;
+        }
+        {
+          name = "unifi-usw-insights";
+          source = ../../dashboards/unifi-usw-insights.json;
+        }
+        {
+          name = "unifi-uap-insights";
+          source = ../../dashboards/unifi-uap-insights.json;
+        }
+        {
+          name = "unifi-client-insights";
+          source = ../../dashboards/unifi-client-insights.json;
+        }
+        {
+          name = "unifi-client-dpi";
+          source = ../../dashboards/unifi-client-dpi.json;
         }
       ];
       alerting = {
