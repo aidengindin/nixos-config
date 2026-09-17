@@ -54,7 +54,10 @@
   "panels": [
     {
       "content": "<center>If this dashboard contains no data that means you need to enable DPI. It must be enabled on your UniFi controller AND in UniFi Poller. Two places! Please carefully check your <a href=\"https://github.com/unifi-poller/unifi-poller/wiki/Configuration\">configurations</a>.</center>",
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -76,7 +79,10 @@
     },
     {
       "columns": [],
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "This shows lifetime rx+tx total and totals accumulated during the selected time range. The filters at the top of this page control _all_ of the graphs, and in some cases control the visibility of graphs. ie. Adding more clients displays more graphs under the collapsed Clients rows.",
       "fieldConfig": {
         "defaults": {
@@ -309,7 +315,10 @@
         "label": "Other",
         "threshold": "0.005"
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "decimals": null,
       "description": "Showing traffic by category.\nThis updates with the variables on the dashboard.",
       "fieldConfig": {
@@ -367,7 +376,10 @@
         "label": "Other",
         "threshold": "0.009"
       },
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "decimals": null,
       "description": "Showing traffic by application for selected clients. This updates with the variables on the dashboard.",
       "fieldConfig": {
@@ -422,7 +434,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Bytes Transferred by Category. Receive is on the negative axis.",
       "fieldConfig": {
         "defaults": {
@@ -537,7 +552,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "description": "Packets Transferred by Category. Receive is on the negative axis.",
       "fieldConfig": {
         "defaults": {
@@ -647,7 +665,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -661,7 +682,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -771,7 +795,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -883,7 +910,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -995,7 +1025,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1107,7 +1140,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1219,7 +1255,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1331,7 +1370,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1443,7 +1485,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1555,7 +1600,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1667,7 +1715,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1779,7 +1830,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -1891,7 +1945,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2003,7 +2060,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2115,7 +2175,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2227,7 +2290,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2339,7 +2405,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2451,7 +2520,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2563,7 +2635,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2675,7 +2750,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2787,7 +2865,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -2899,7 +2980,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3011,7 +3095,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3123,7 +3210,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3235,7 +3325,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3347,7 +3440,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3459,7 +3555,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3571,7 +3670,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3683,7 +3785,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3795,7 +3900,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -3907,7 +4015,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4019,7 +4130,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4131,7 +4245,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4243,7 +4360,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4355,7 +4475,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4467,7 +4590,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4579,7 +4705,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4691,7 +4820,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4803,7 +4935,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -4915,7 +5050,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5027,7 +5165,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5139,7 +5280,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5251,7 +5395,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5363,7 +5510,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5475,7 +5625,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5587,7 +5740,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5699,7 +5855,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5811,7 +5970,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -5923,7 +6085,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6035,7 +6200,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6147,7 +6315,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6259,7 +6430,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6371,7 +6545,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6483,7 +6660,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6595,7 +6775,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6707,7 +6890,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6819,7 +7005,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -6931,7 +7120,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7043,7 +7235,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7155,7 +7350,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7267,7 +7465,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7379,7 +7580,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7491,7 +7695,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7603,7 +7810,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7715,7 +7925,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7827,7 +8040,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -7939,7 +8155,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8051,7 +8270,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8163,7 +8385,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8275,7 +8500,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8387,7 +8615,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8499,7 +8730,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8612,7 +8846,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -8626,7 +8863,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8736,7 +8976,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8848,7 +9091,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -8960,7 +9206,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9072,7 +9321,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9184,7 +9436,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9296,7 +9551,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9408,7 +9666,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9520,7 +9781,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9632,7 +9896,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9744,7 +10011,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9856,7 +10126,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -9968,7 +10241,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10080,7 +10356,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10192,7 +10471,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10304,7 +10586,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10416,7 +10701,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10528,7 +10816,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10640,7 +10931,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10752,7 +11046,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10864,7 +11161,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -10976,7 +11276,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11088,7 +11391,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11200,7 +11506,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11312,7 +11621,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11424,7 +11736,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11536,7 +11851,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11648,7 +11966,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11760,7 +12081,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11872,7 +12196,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -11984,7 +12311,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12096,7 +12426,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12208,7 +12541,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12320,7 +12656,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12432,7 +12771,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12544,7 +12886,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12656,7 +13001,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12768,7 +13116,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12880,7 +13231,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -12992,7 +13346,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13104,7 +13461,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13216,7 +13576,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13328,7 +13691,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13440,7 +13806,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13552,7 +13921,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13664,7 +14036,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13776,7 +14151,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -13888,7 +14266,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14000,7 +14381,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14112,7 +14496,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14224,7 +14611,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14336,7 +14726,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14448,7 +14841,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14560,7 +14956,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14672,7 +15071,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14784,7 +15186,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -14896,7 +15301,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15008,7 +15416,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15120,7 +15531,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15232,7 +15646,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15344,7 +15761,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15456,7 +15876,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15568,7 +15991,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15681,7 +16107,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -15695,7 +16124,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15805,7 +16237,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -15917,7 +16352,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16029,7 +16467,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16141,7 +16582,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16253,7 +16697,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16365,7 +16812,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16477,7 +16927,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16589,7 +17042,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16701,7 +17157,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16813,7 +17272,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -16925,7 +17387,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17037,7 +17502,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17149,7 +17617,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17261,7 +17732,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17373,7 +17847,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17485,7 +17962,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17597,7 +18077,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17709,7 +18192,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17821,7 +18307,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -17933,7 +18422,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18045,7 +18537,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18157,7 +18652,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18269,7 +18767,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18381,7 +18882,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18493,7 +18997,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18605,7 +19112,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18717,7 +19227,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18829,7 +19342,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -18941,7 +19457,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19053,7 +19572,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19165,7 +19687,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19277,7 +19802,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19389,7 +19917,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19501,7 +20032,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19613,7 +20147,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19725,7 +20262,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19837,7 +20377,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -19949,7 +20492,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20061,7 +20607,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20173,7 +20722,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20285,7 +20837,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20397,7 +20952,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20509,7 +21067,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20621,7 +21182,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20733,7 +21297,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20845,7 +21412,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -20957,7 +21527,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21069,7 +21642,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21181,7 +21757,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21293,7 +21872,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21405,7 +21987,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21517,7 +22102,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21629,7 +22217,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21741,7 +22332,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21853,7 +22447,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -21965,7 +22562,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22077,7 +22677,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22189,7 +22792,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22301,7 +22907,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22413,7 +23022,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22525,7 +23137,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22637,7 +23252,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22750,7 +23368,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -22764,7 +23385,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22875,7 +23499,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -22988,7 +23615,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23101,7 +23731,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23214,7 +23847,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23327,7 +23963,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23440,7 +24079,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23553,7 +24195,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23666,7 +24311,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23779,7 +24427,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -23892,7 +24543,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24005,7 +24659,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24118,7 +24775,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24231,7 +24891,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24344,7 +25007,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24457,7 +25123,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24570,7 +25239,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24683,7 +25355,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24796,7 +25471,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -24909,7 +25587,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25022,7 +25703,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25135,7 +25819,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25248,7 +25935,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25361,7 +26051,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25474,7 +26167,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25587,7 +26283,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25700,7 +26399,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25813,7 +26515,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -25926,7 +26631,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26039,7 +26747,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26152,7 +26863,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26265,7 +26979,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26378,7 +27095,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26491,7 +27211,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26604,7 +27327,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26717,7 +27443,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26830,7 +27559,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -26943,7 +27675,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27056,7 +27791,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27169,7 +27907,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27282,7 +28023,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27395,7 +28139,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27508,7 +28255,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27621,7 +28371,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27734,7 +28487,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27847,7 +28603,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -27960,7 +28719,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28073,7 +28835,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28186,7 +28951,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28299,7 +29067,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28412,7 +29183,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28525,7 +29299,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28638,7 +29415,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28751,7 +29531,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28864,7 +29647,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -28977,7 +29763,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29090,7 +29879,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29203,7 +29995,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29316,7 +30111,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29429,7 +30227,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29542,7 +30343,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29655,7 +30459,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29768,7 +30575,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Application for $Client",
           "fieldConfig": {
             "defaults": {
@@ -29883,7 +30693,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -29897,7 +30710,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Bytes per Client / Application",
           "fieldConfig": {
             "defaults": {
@@ -30005,7 +30821,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Bytes per Client / Application",
           "fieldConfig": {
             "defaults": {
@@ -30112,7 +30931,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Receive Packets per Client / Application",
           "fieldConfig": {
             "defaults": {
@@ -30220,7 +31042,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Transmit Packets per Client / Application",
           "fieldConfig": {
             "defaults": {
@@ -30340,7 +31165,10 @@
       {
         "allValue": ".*",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(source)",
         "hide": 2,
         "includeAll": true,
@@ -30362,7 +31190,10 @@
       {
         "allValue": "",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(unpoller_client_uptime_seconds{source=~\"$Controller\"},site_name)",
         "hide": 0,
         "includeAll": false,
@@ -30413,7 +31244,10 @@
       {
         "allValue": "",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(unpoller_client_dpi_transmit_bytes{site_name=~\"$Site\"},[[Identifier]])",
         "hide": 0,
         "includeAll": true,
@@ -30435,7 +31269,10 @@
       {
         "allValue": ".*",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(unpoller_client_dpi_transmit_bytes{site_name=~\"$Site\"},category)",
         "hide": 0,
         "includeAll": true,

@@ -56,7 +56,10 @@
   "panels": [
     {
       "columns": [],
-      "datasource": "local-prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "editable": true,
       "error": false,
       "fieldConfig": {
@@ -348,7 +351,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "${DS_UNIFI_POLLER}",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -359,7 +365,10 @@
       "panels": [
         {
           "cacheTimeout": null,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -433,7 +442,10 @@
         },
         {
           "cacheTimeout": null,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -515,7 +527,10 @@
         },
         {
           "cacheTimeout": null,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -597,7 +612,10 @@
         },
         {
           "cacheTimeout": null,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "fieldConfig": {
             "defaults": {
               "custom": {},
@@ -692,7 +710,10 @@
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 0,
           "description": "WAN Port Speed",
           "fieldConfig": {
@@ -787,7 +808,10 @@
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 0,
           "fieldConfig": {
             "defaults": {
@@ -882,7 +906,10 @@
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 0,
           "fieldConfig": {
             "defaults": {
@@ -976,7 +1003,10 @@
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 0,
           "fieldConfig": {
             "defaults": {
@@ -1071,7 +1101,10 @@
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 0,
           "fieldConfig": {
             "defaults": {
@@ -1165,7 +1198,10 @@
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 0,
           "fieldConfig": {
             "defaults": {
@@ -1259,7 +1295,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "editable": true,
           "error": false,
           "fieldConfig": {
@@ -1391,7 +1430,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Spikes on this graph that are missing from the LAN graph indicate gateway-originated traffic, like a scheduled speed test. Rx is on the negative axis.",
           "editable": true,
           "error": false,
@@ -1528,7 +1570,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "description": "Spikes on this graph that do not appear on the WAN graph indicate inter-VLAN-routing. Rx is on the negative axis.",
           "editable": true,
           "error": false,
@@ -1651,7 +1696,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": null,
           "description": "PPS on the WAN interface. Rx is on the negative axis.",
           "editable": true,
@@ -1778,7 +1826,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": null,
           "description": "PPS on the LAN interface. Rx is on the negative axis.",
           "editable": true,
@@ -1907,7 +1958,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": 2,
           "description": "",
           "editable": true,
@@ -2046,7 +2100,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": null,
           "description": "May show problems with your WAN interface. Rx on negative axis.",
           "editable": true,
@@ -2183,7 +2240,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "local-prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "local-prometheus"
+          },
           "decimals": null,
           "description": "",
           "editable": true,
@@ -2304,7 +2364,10 @@
     },
     {
       "collapsed": true,
-      "datasource": "${DS_UNIFI_POLLER}",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "local-prometheus"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2330,7 +2393,10 @@
       {
         "allValue": ".*",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(unpoller_device_info{type=~\"udm|usg|ugw\"},source)",
         "hide": 2,
         "includeAll": true,
@@ -2352,7 +2418,10 @@
       {
         "allValue": "",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(unpoller_device_info{source=~\"$Controller\", type=~\"udm|usg|ugw\"},site_name)",
         "hide": 0,
         "includeAll": true,
@@ -2374,7 +2443,10 @@
       {
         "allValue": "",
         "current": {},
-        "datasource": "local-prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "local-prometheus"
+        },
         "definition": "label_values(unpoller_device_info{site_name=~\"$Site\", type=~\"udm|usg|ugw\"},name)",
         "hide": 2,
         "includeAll": true,
