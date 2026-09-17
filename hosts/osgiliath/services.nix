@@ -502,7 +502,16 @@
       enable = true;
       acceleration = "intel";
       mediaLocation = "/media/frigate";
-      retentionDays = 30;
+      # A single Reolink main stream writes ~30 GB/day. 3 days of continuous
+      # footage plus 7 days of motion caps this camera at ~225 GB; motion
+      # detection is currently unmasked and fires almost constantly, so treat
+      # motionDays as the real bound.
+      retention = {
+        continuousDays = 3;
+        motionDays = 7;
+        alertsDays = 30;
+        detectionsDays = 14;
+      };
       cameras = [
         {
           name = "reolink";
