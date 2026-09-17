@@ -34,6 +34,13 @@
           enable = true;
           envFile = config.age.secrets.khazad-dum-intervals-env.path;
         };
+        homeAssistant = {
+          enable = true;
+          # Tailscale, not the Nabu Casa remote URL: its relay drops TLS
+          # handshakes when ha-mcp opens several connections at once.
+          url = "http://homeassistant.tail64748.ts.net:8123";
+          tokenFile = config.age.secrets.khazad-dum-homeassistant-token.path;
+        };
       };
     };
     pseg-import = {
