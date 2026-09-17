@@ -162,6 +162,11 @@ in
     khazad-dumUser
   ];
 
+  "mosquitto-tasmota-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+
   "zigbee2mqtt-mqtt-env.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
@@ -244,6 +249,53 @@ in
   "arr-api-keys.age".publicKeys = [
     osgiliathHost
     osgiliathUser
+    khazad-dumUser
+  ];
+
+  # OIDC client credentials for Dawarich against Pocket ID, as OIDC_CLIENT_ID=
+  # and OIDC_CLIENT_SECRET= env lines. The client is created by hand in the
+  # Pocket ID UI, so this can only be filled in after Dawarich is reachable.
+  "dawarich-oidc-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
+  # INTERVALS_API_KEY and DAWARICH_API_KEY for the intervals.icu -> Dawarich
+  # GPX sync. The Dawarich key comes from its account page, which means this
+  # secret can only be written after the first login.
+  "intervals-dawarich-sync-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+  # Provisioned after Forgejo accounts/runner creation; see docs/forgejo.md.
+  "forgejo-controller-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-store-signing-key.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-runner-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-hermes-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-recovery-password.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-oidc-env.age".publicKeys = [
+    osgiliathHost
+    khazad-dumUser
+  ];
+  "forgejo-mirror-token.age".publicKeys = [
+    osgiliathHost
     khazad-dumUser
   ];
 }

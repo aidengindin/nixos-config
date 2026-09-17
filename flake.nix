@@ -46,6 +46,12 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
+    # The DMS greeter moved out of the DankMaterialShell repo into its own.
+    dank-greeter = {
+      url = "github:AvengeMedia/dank-greeter";
+      inputs.nixpkgs.follows = "unstable";
+    };
+
     zwift = {
       url = "github:netbrain/zwift";
       inputs.nixpkgs.follows = "unstable";
@@ -58,7 +64,6 @@
 
     mcp-servers-nix = {
       url = "github:natsukium/mcp-servers-nix";
-      inputs.nixpkgs.follows = "unstable";
     };
 
     # Pin Hermes to a tagged release: its upstream Nix support is Tier 2 and
@@ -96,6 +101,7 @@
       auto-headache-tracker,
       anduin,
       dms,
+      dank-greeter,
       nixvim,
     }:
     let
@@ -128,7 +134,7 @@
         disko.nixosModules.disko
         jovian.nixosModules.default
         liftosaur-sync.nixosModules.default
-        dms.nixosModules.greeter
+        dank-greeter.nixosModules.default
       ];
 
       # special args for all NixOS systems

@@ -6,7 +6,11 @@ set -euo pipefail
 
 CHROMIUM_FILE="linux/chromium.nix"
 
-LATEST_TAG=$(gh api repos/gorhill/uBlock/releases/latest --jq '.tag_name')
+if [[ -n "${GH_TOKEN:-}" ]]; then
+  LATEST_TAG=$(gh api repos/gorhill/uBlock/releases/latest --jq '.tag_name')
+else
+  LATEST_TAG=$(curl -fsSL https://api.github.com/repos/gorhill/uBlock/releases/latest | jq -er '.tag_name')
+fi
 LATEST_VERSION="${LATEST_TAG#v}"  # strip leading 'v' if present
 DOWNLOAD_URL="https://github.com/gorhill/uBlock/releases/download/${LATEST_TAG}/uBlock0_${LATEST_VERSION}.chromium.zip"
 

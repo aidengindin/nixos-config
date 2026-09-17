@@ -3,6 +3,11 @@ let
   globalVars = {
     ports = {
       postgres = 5432;
+      forgejo = 8430;
+      forgejoSsh = 2222;
+      forgejoController = 8431;
+      forgejoVmSsh = 2223;
+      hermesWebhook = 8644;
 
       grafana = 10001;
       prometheus = 10002;
@@ -59,6 +64,8 @@ let
 
       anduinWeb = 8410;
 
+      dawarich = 8420;
+
       hermesDashboard = 9119;
 
       zigbee2mqtt = 8400;
@@ -74,6 +81,14 @@ let
         host = "192.168.200.1";
         local = "192.168.200.2";
       };
+    };
+
+    # Home Assistant runs on a separate HAOS box, not managed by this flake.
+    homeAssistant = {
+      lanUrl = "http://10.88.88.3:8123";
+      # Reachable from anywhere on the tailnet, so jobs on the laptop keep
+      # working away from the house. MagicDNS survives the IP changing.
+      tailscaleUrl = "http://homeassistant.tail64748.ts.net:8123";
     };
 
     keys = {

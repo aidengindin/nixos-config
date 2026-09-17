@@ -13,6 +13,8 @@
   chatgpt-desktop = pkgs.callPackage ./chatgpt-desktop.nix { };
   claude-desktop = pkgs.callPackage ./claude-desktop.nix { };
   intervals-mcp-server = pkgs.callPackage ./intervals-mcp-server.nix { };
+  intervals-dawarich-sync = pkgs.callPackage ./intervals-dawarich-sync.nix { };
+  pseg-import = pkgs.callPackage ./pseg-import.nix { };
   headache-sync = auto-headache-tracker.packages.${pkgs.system}.headache-sync;
   anduin = anduin.packages.${pkgs.system}.anduin;
 }

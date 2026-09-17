@@ -9,6 +9,7 @@
     claude-code.enable = true;
     claude.desktop.enable = true;
     codex.enable = true;
+    element-desktop.enable = true;
     neovim.enable = true;
 
     mcp = {
@@ -35,6 +36,11 @@
         };
       };
     };
+    pseg-import = {
+      enable = true;
+      tokenFile = config.age.secrets.khazad-dum-homeassistant-token.path;
+    };
+
     kitty.enable = true;
     latex.enable = true;
     chromium.enable = true;
@@ -42,6 +48,7 @@
     mpv.enable = true;
     neomutt.enable = true;
     spotify.enable = true;
+    vesktop.enable = true;
   };
 
   home-manager.users.agindin.home.sessionVariablesExtra = ''

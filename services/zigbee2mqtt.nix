@@ -117,6 +117,10 @@ in
       settings = {
         homeassistant.enabled = true;
         permit_join = false;
+        # Mark devices offline when they stop checking in (default passive
+        # timeout 25h for battery devices), so Home Assistant sees them as
+        # unavailable and can report dead devices.
+        availability.enabled = true;
         serial = {
           port = cfg.serialPort;
           adapter = cfg.serialAdapter;

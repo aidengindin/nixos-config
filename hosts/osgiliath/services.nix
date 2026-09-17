@@ -51,6 +51,9 @@
     mosquitto-homeassistant-password = {
       file = ../../secrets/mosquitto-homeassistant-password.age;
     };
+    mosquitto-tasmota-password = {
+      file = ../../secrets/mosquitto-tasmota-password.age;
+    };
     zigbee2mqtt-mqtt-env = {
       file = ../../secrets/zigbee2mqtt-mqtt-env.age;
     };
@@ -78,6 +81,18 @@
       group = "hermes";
       mode = "0440";
     };
+    dawarich-oidc-env = {
+      file = ../../secrets/dawarich-oidc-env.age;
+      owner = "dawarich";
+      group = "dawarich";
+      mode = "0440";
+    };
+    intervals-dawarich-sync-env = {
+      file = ../../secrets/intervals-dawarich-sync-env.age;
+      owner = "intervals-dawarich-sync";
+      group = "intervals-dawarich-sync";
+      mode = "0400";
+    };
     arr-api-keys = {
       file = ../../secrets/arr-api-keys.age;
       mode = "0400";
@@ -100,6 +115,7 @@
 
   agindin.services = {
     blocky.enable = true;
+    forgejo.enable = true;
 
     hermes = {
       enable = true;
@@ -139,6 +155,7 @@
       withings.enable = true;
       intervals.enable = true;
       liftosaur.enable = true;
+      headache.enable = true;
       web = {
         enable = true;
         domain = "anduin.gindin.xyz";
@@ -389,6 +406,22 @@
       };
     };
 
+    # Location history, fed by the Home Assistant integration (set up in HA,
+    # not here) and by intervals-dawarich-sync below.
+    dawarich = {
+      enable = true;
+      oidc.environmentFile = config.age.secrets.dawarich-oidc-env.path;
+      # Applied on every switch, but only takes effect once the account exists,
+      # which means after its first Pocket ID sign-in.
+      adminEmails = [ "aiden@aidengindin.com" ];
+    };
+
+    intervals-dawarich-sync = {
+      enable = true;
+      environmentFile = config.age.secrets.intervals-dawarich-sync-env.path;
+      athleteId = "i95355";
+    };
+
     linkwarden.enable = true;
 
     netalertx.enable = true;
@@ -438,6 +471,20 @@
           acl = [
             "readwrite zigbee2mqtt/#"
             "readwrite homeassistant/#"
+            "readwrite cmnd/#"
+            "readwrite stat/#"
+            "readwrite tele/#"
+            "readwrite tasmota/#"
+          ];
+        };
+        # Shared by all Tasmota devices (default %prefix%/%topic%/ full topic).
+        tasmota = {
+          passwordFile = config.age.secrets.mosquitto-tasmota-password.path;
+          acl = [
+            "readwrite cmnd/#"
+            "readwrite stat/#"
+            "readwrite tele/#"
+            "readwrite tasmota/#"
           ];
         };
       };

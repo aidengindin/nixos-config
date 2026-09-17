@@ -13,11 +13,14 @@
     ./calibre-news.nix
     ./calibre-web.nix
     ./chaptarr.nix
+    ./dawarich.nix
+    ./forgejo.nix
     ./frigate.nix
     ./grafana.nix
     ./headache-sync.nix
     ./hermes.nix
     ./immich.nix
+    ./intervals-dawarich-sync.nix
     ./jellyfin.nix
     ./keepalived.nix
     ./liftosaur-sync.nix

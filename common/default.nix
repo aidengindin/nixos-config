@@ -10,6 +10,7 @@
     ./mcp.nix
     ./dev.nix
     ./direnv.nix
+    ./element-desktop.nix
     ./git.nix
     ./kitty.nix
     ./latex.nix
@@ -17,8 +18,10 @@
     ./neomutt.nix
     ./nvim.nix
     ./opencode.nix
+    ./pseg-import.nix
     ./spotify.nix
     ./starship.nix
+    ./vesktop.nix
     ./yazi.nix
     ./zoxide.nix
   ];
