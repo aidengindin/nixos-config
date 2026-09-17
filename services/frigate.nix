@@ -51,19 +51,30 @@ let
   frigateSettings =
     {
       mqtt.enabled = false;
+      # 0.17 flipped the default for detect.enabled from true to false, which
+      # silently turns off object detection on upgrade.
+      detect.enabled = cfg.detect.enable;
       record = {
         enabled = true;
-        # 0.17 dropped `record.retain` in favour of separate continuous and
-        # motion retention. Frigate's own migration maps the old
-        # `retain.days` with the default `mode = "all"` onto both, so do the
-        # same here.
-        continuous.days = cfg.retentionDays;
-        motion.days = cfg.retentionDays;
+        # 0.17 splits retention into continuous / motion / tracked-object
+        # tiers. Continuous is by far the most expensive: a single main-stream
+        # camera writes ~30 GB/day, so retaining it for a month costs ~1 TB.
+        # Keep a short continuous window, then fall back to motion-only, then
+        # to segments overlapping alerts/detections.
+        continuous.days = cfg.retention.continuousDays;
+        motion.days = cfg.retention.motionDays;
+        alerts.retain = {
+          days = cfg.retention.alertsDays;
+          mode = cfg.retention.alertsMode;
+        };
+        detections.retain = {
+          days = cfg.retention.detectionsDays;
+          mode = cfg.retention.detectionsMode;
+        };
       };
       cameras = cameraSettings;
     }
     // lib.optionalAttrs (cfg.acceleration == "intel") {
-      ffmpeg.hwaccel_args = "preset-vaapi";
       detectors.ov = {
         type = "openvino";
         device = "GPU";
@@ -76,6 +87,9 @@ let
         path = "/openvino-model/ssdlite_mobilenet_v2.xml";
         labelmap_path = "/openvino-model/coco_91cl_bkgr.txt";
       };
+    }
+    // lib.optionalAttrs (cfg.acceleration == "intel" && cfg.ffmpegHwaccel) {
+      ffmpeg.hwaccel_args = "preset-vaapi";
     };
 
   configFile = yamlFormat.generate "frigate-config.yml" frigateSettings;
@@ -115,10 +129,110 @@ in
       description = "Host directory for recordings, clips, and snapshots.";
     };
 
-    retentionDays = mkOption {
-      type = types.ints.positive;
-      default = 30;
-      description = "Number of days to retain recordings.";
+    ffmpegHwaccel = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Use VAAPI for ffmpeg decoding. Requires acceleration = "intel".
+
+        This only affects the detect stream: Frigate appends hwaccel args
+        solely to the input holding the "detect" role, because the record
+        input is a stream copy with nothing to decode. So the only thing this
+        buys is offloading substream decode, and it costs a hwdownload of
+        every frame back to system memory to reach the detector.
+
+        Off by default because that hwdownload intermittently fails on the
+        iGPU ("Failed to sync surface" / "Failed to download frame: -5"),
+        killing the ffmpeg process and stalling detection. A detect substream
+        is small enough that software decode is cheap.
+      '';
+    };
+
+    detect = mkOption {
+      default = { };
+      description = "Object detection settings.";
+      type = types.submodule {
+        options = {
+          enable = mkOption {
+            type = types.bool;
+            default = true;
+            description = ''
+              Run object detection. Frigate 0.17 changed the upstream default
+              for `detect.enabled` from true to false, so this is set
+              explicitly rather than left implicit. With detection off,
+              nothing populates the alerts/detections retention tiers and
+              recordings are kept on the continuous/motion tiers alone.
+            '';
+          };
+        };
+      };
+    };
+
+    retention = mkOption {
+      default = { };
+      description = ''
+        Recording retention policy. Frigate keeps a segment for as long as
+        the longest matching tier says to, so these stack: continuous is the
+        floor for every segment, motion extends segments containing motion,
+        and alerts/detections extend segments overlapping tracked objects.
+
+        Continuous retention dominates storage — budget roughly
+        (main stream bitrate) x 86400 per camera per day.
+      '';
+      type = types.submodule {
+        options = {
+          continuousDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 3;
+            description = ''
+              Days to keep 24/7 footage. Set to 0 to only keep footage that
+              matches one of the tiers below.
+            '';
+          };
+          motionDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 7;
+            description = ''
+              Days to keep segments containing motion. This only saves space
+              if motion detection is actually selective; an unmasked, noisy
+              scene can flag motion on nearly every frame, in which case this
+              behaves like continuous retention.
+            '';
+          };
+          alertsDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 30;
+            description = "Days to keep segments overlapping review alerts.";
+          };
+          alertsMode = mkOption {
+            type = types.enum [
+              "all"
+              "motion"
+              "active_objects"
+            ];
+            default = "motion";
+            description = ''
+              Which segments within an alert's time range to keep: "all"
+              footage, only segments with "motion", or only segments with
+              "active_objects".
+            '';
+          };
+          detectionsDays = mkOption {
+            type = types.numbers.nonnegative;
+            default = 14;
+            description = "Days to keep segments overlapping review detections.";
+          };
+          detectionsMode = mkOption {
+            type = types.enum [
+              "all"
+              "motion"
+              "active_objects"
+            ];
+            default = "motion";
+            description = "Same as alertsMode, for detections.";
+          };
+        };
+      };
     };
 
     domain = mkOption {
