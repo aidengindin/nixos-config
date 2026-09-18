@@ -128,6 +128,9 @@
   };
 
   agindin.services = {
+    # Serve time to the LAN so devices survive a WAN outage without drifting.
+    ntp.enable = true;
+
     blocky.enable = true;
     forgejo.enable = true;
 
