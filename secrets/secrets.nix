@@ -261,6 +261,24 @@ in
     khazad-dumUser
   ];
 
+  # Firefly III's Laravel app key, as a single "base64:..." line. Generate with
+  # echo "base64:$(head -c 32 /dev/urandom | base64)". Rotating this invalidates
+  # every encrypted field already in the database, so don't.
+  "firefly-iii-app-key.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
+  # Firefly III Personal Access Token for the data importer. Minted from the
+  # Firefly III UI (Options -> Profile -> OAuth), so like the Dawarich OIDC
+  # secret above it can only be filled in after the first login.
+  "firefly-iii-importer-token.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
   # INTERVALS_API_KEY and DAWARICH_API_KEY for the intervals.icu -> Dawarich
   # GPX sync. The Dawarich key comes from its account page, which means this
   # secret can only be written after the first login.

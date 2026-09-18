@@ -87,6 +87,20 @@
       group = "dawarich";
       mode = "0440";
     };
+    # Read directly by the service user rather than through LoadCredential,
+    # because that's how the upstream firefly-iii modules consume _FILE values.
+    firefly-iii-app-key = {
+      file = ../../secrets/firefly-iii-app-key.age;
+      owner = "firefly-iii";
+      group = "caddy";
+      mode = "0400";
+    };
+    firefly-iii-importer-token = {
+      file = ../../secrets/firefly-iii-importer-token.age;
+      owner = "firefly-iii-data-importer";
+      group = "caddy";
+      mode = "0400";
+    };
     intervals-dawarich-sync-env = {
       file = ../../secrets/intervals-dawarich-sync-env.age;
       owner = "intervals-dawarich-sync";
@@ -147,6 +161,16 @@
     postgres.enable = true;
 
     anduin-postgres.enable = true;
+
+    # Single shared household ledger. Firefly III gives each user a completely
+    # separate administration, so "shared" here means one login in the password
+    # manager rather than per-person Pocket ID accounts. Acceptable because
+    # Caddy only listens on tailscale0.
+    firefly-iii = {
+      enable = true;
+      appKeyFile = config.age.secrets.firefly-iii-app-key.path;
+      importerAccessTokenFile = config.age.secrets.firefly-iii-importer-token.path;
+    };
 
     anduin = {
       enable = true;
