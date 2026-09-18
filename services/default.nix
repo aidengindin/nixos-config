@@ -14,6 +14,7 @@
     ./calibre-web.nix
     ./chaptarr.nix
     ./dawarich.nix
+    ./firefly-iii.nix
     ./forgejo.nix
     ./frigate.nix
     ./grafana.nix
