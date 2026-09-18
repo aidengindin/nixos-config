@@ -29,6 +29,7 @@
     ./miniflux.nix
     ./mosquitto.nix
     ./netalertx.nix
+    ./ntp.nix
     ./ollama.nix
     ./openwebui.nix
     ./pocket-id.nix
