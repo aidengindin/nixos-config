@@ -54,6 +54,29 @@ in
         }
       );
     };
+    extraSites = mkOption {
+      description = ''
+        Sites that aren't reverse proxies, so `proxyHosts` can't express them.
+        Firefly III is the motivating case: it's PHP-FPM, so Caddy has to serve
+        a document root out of the Nix store and speak FastCGI over a Unix
+        socket rather than forwarding to a listening port.
+
+        The TLS block is appended automatically, so these get the same
+        ACME/Cloudflare handling as `proxyHosts`.
+      '';
+      default = [ ];
+      type = types.listOf (
+        types.submodule {
+          options = {
+            domain = mkOption { type = types.str; };
+            config = mkOption {
+              type = types.lines;
+              description = "Caddyfile body for this site, minus the TLS block.";
+            };
+          };
+        }
+      );
+    };
   };
 
   config = mkMerge [
@@ -101,6 +124,12 @@ in
               ${tlsSetup}
             }
           '') cfg.proxyHosts
+          + lib.strings.concatMapStringsSep "\n" (site: ''
+            ${site.domain} {
+              ${site.config}
+              ${tlsSetup}
+            }
+          '') cfg.extraSites
           + ''
             :${toString globalVars.ports.caddyMetrics} {
               metrics /metrics
@@ -125,7 +154,7 @@ in
         globalVars.ports.caddyMetrics
       ];
 
-      # Open udp/443 for http/3 
+      # Open udp/443 for http/3
       networking.firewall.interfaces.tailscale0.allowedUDPPorts = [ 443 ];
 
       # Also allow on local interface for scraping
