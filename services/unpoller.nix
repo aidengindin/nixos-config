@@ -53,7 +53,7 @@ in
           pass = config.age.secrets.unpollerPassword.path;
           # UniFi consoles ship a self-signed certificate.
           verify_ssl = false;
-          save_dpi = true;
+          save_dpi = false;
           save_sites = true;
         }
       ];
