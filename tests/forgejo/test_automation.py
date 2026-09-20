@@ -118,6 +118,9 @@ class WorkflowTests(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/build.yml").read_text()
         self.assertIn("\n  pull_request:", workflow)
         self.assertNotIn("\n  push:", workflow)
+        # Removing `push` left the update PR with no trigger at all, so
+        # update.py dispatches this workflow itself. Keep the inputs it sends.
+        self.assertIn("workflow_dispatch:", workflow)
 
 
 class StatusCleanupTests(unittest.TestCase):
@@ -146,6 +149,30 @@ class StatusCleanupTests(unittest.TestCase):
             "error",
             "Superseded by newer PR head",
             "https://example.test/actions/runs/16",
+        )
+
+    def test_dispatched_run_status_is_superseded(self):
+        # update.py asks for its build through workflow_dispatch, so Forgejo
+        # names the generated check for that event, not for pull_request.
+        old_sha = "d" * 40
+        context = "Colmena PR builds / build (workflow_dispatch)"
+        api = Mock()
+        api.url = "https://example.test"
+        api.repo.side_effect = lambda path: {
+            "pulls/93/commits?limit=100": [{"sha": old_sha}],
+            "actions/runs?limit=50": {"workflow_runs": []},
+        }[path]
+        api.statuses.return_value = [
+            {"context": context, "state": "pending", "target_url": "/actions/runs/72"},
+            {"context": "unrelated / check (workflow_dispatch)", "state": "pending", "target_url": ""},
+        ]
+        supersede_pending(api, {"number": 93}, SHA, {SHA}, "https://example.test/actions/runs/73")
+        api.status.assert_called_once_with(
+            old_sha,
+            context,
+            "error",
+            "Superseded by newer PR head",
+            "https://example.test/actions/runs/72",
         )
 
     def test_unexpected_failure_closes_missing_and_pending_hosts(self):

@@ -226,54 +226,6 @@ in
           };
         };
 
-        # DMS bug: gamma control (night mode) is only applied to outputs that
-        # exist when the shell starts, so a hotplugged monitor never gets night
-        # mode. Until that's fixed upstream, watch Hyprland's event socket and
-        # restart DMS whenever a monitor is connected.
-        systemd.user.services.dms-monitor-restart = {
-          Unit = {
-            Description = "Restart DMS when a monitor is connected";
-            After = [ "graphical-session.target" ];
-            PartOf = [ "graphical-session.target" ];
-          };
-          Service = {
-            ExecStart = lib.getExe (
-              pkgs.writeShellApplication {
-                name = "dms-monitor-restart";
-                runtimeInputs = [ pkgs.socat ];
-                text = ''
-                  socket="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2"
-
-                  # The socket can appear slightly after graphical-session.target.
-                  for _ in $(seq 1 50); do
-                    [[ -S $socket ]] && break
-                    sleep 0.2
-                  done
-                  [[ -S $socket ]]
-
-                  socat -u "UNIX-CONNECT:$socket" - | while IFS= read -r line; do
-                    case $line in
-                    "monitoradded>>"*)
-                      # Let the output settle, then drain the pipe so a burst of
-                      # events (e.g. a dock with several displays) coalesces
-                      # into a single restart.
-                      sleep 2
-                      while IFS= read -r -t 0.1 line; do :; done
-                      systemctl --user try-restart dms.service
-                      ;;
-                    esac
-                  done
-                '';
-              }
-            );
-            # socat exits when Hyprland goes away; always come back up so a
-            # compositor restart doesn't leave us dead.
-            Restart = "always";
-            RestartSec = 2;
-          };
-          Install.WantedBy = [ "graphical-session.target" ];
-        };
-
         # Signal dark mode preference to all apps via xdg-desktop-portal-gtk.
         # Required for Chromium (and others) to report prefers-color-scheme: dark.
         dconf.settings."org/gnome/desktop/interface" = {
