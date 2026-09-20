@@ -23,6 +23,7 @@
     ./immich.nix
     ./intervals-dawarich-sync.nix
     ./jellyfin.nix
+    ./job-scraper.nix
     ./keepalived.nix
     ./liftosaur-sync.nix
     ./linkwarden.nix

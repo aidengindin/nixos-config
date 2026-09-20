@@ -147,6 +147,18 @@ in
     khazad-dumUser
   ];
 
+  "job-scraper-env.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
+  "job-scraper-google-sa.age".publicKeys = [
+    osgiliathHost
+    osgiliathUser
+    khazad-dumUser
+  ];
+
   "frigate-reolink-rtsp-password.age".publicKeys = [
     osgiliathHost
     khazad-dumUser

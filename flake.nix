@@ -79,6 +79,11 @@
       url = "github:aidengindin/anduin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    job-scraper = {
+      url = "git+ssh://git@git.gindin.xyz/aidengindin/job-scraper";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -100,6 +105,7 @@
       hermes-agent,
       auto-headache-tracker,
       anduin,
+      job-scraper,
       dms,
       dank-greeter,
       nixvim,
@@ -150,7 +156,7 @@
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
-          inherit unstablePkgs auto-headache-tracker anduin;
+          inherit unstablePkgs auto-headache-tracker anduin job-scraper;
         };
       };
 
@@ -286,7 +292,7 @@
       }
       // (import ./packages {
         pkgs = stablePkgs;
-        inherit unstablePkgs auto-headache-tracker anduin;
+        inherit unstablePkgs auto-headache-tracker anduin job-scraper;
       });
     };
 }
