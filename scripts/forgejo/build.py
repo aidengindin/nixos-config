@@ -15,7 +15,10 @@ from retention import prune_retention
 def supersede_pending(api, pull, sha, current_heads, run_url):
     """Close custom statuses stranded when Forgejo cancels an older run."""
     host_contexts = {f"colmena/{host}" for host in CI_HOSTS}
-    workflow_context = "Colmena PR builds / build (pull_request)"
+    # Forgejo names the generated check after the event that started the run,
+    # so the update PR's workflow_dispatch builds carry a different suffix than
+    # a pull_request build. Match every event rather than enumerating them.
+    workflow_prefix = "Colmena PR builds / build ("
     commits = api.repo(f"pulls/{pull['number']}/commits?limit=100")
     old_shas = {commit["sha"] for commit in commits}
     # A force-pushed commit disappears from the PR commit list. Forgejo keeps
@@ -38,7 +41,7 @@ def supersede_pending(api, pull, sha, current_heads, run_url):
         for status in api.statuses(old_sha):
             if status["state"] != "pending":
                 continue
-            if status["context"] not in host_contexts and status["context"] != workflow_context:
+            if status["context"] not in host_contexts and not status["context"].startswith(workflow_prefix):
                 continue
             target = status.get("target_url") or run_url
             if target.startswith("/"):

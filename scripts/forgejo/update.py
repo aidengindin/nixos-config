@@ -32,8 +32,10 @@ def main():
         pulls = [p for p in api.pulls() if p["head"]["ref"] == UPDATE_BRANCH]
         git("fetch", "origin", "main")
         remote_branch = subprocess.run(["git", "ls-remote", "--exit-code", "--heads", "origin", UPDATE_BRANCH], stdout=subprocess.DEVNULL).returncode == 0
+        before = None
         if remote_branch:
             git("fetch", "origin", UPDATE_BRANCH)
+            before = git("rev-parse", "FETCH_HEAD", capture=True)
             git("checkout", "-B", UPDATE_BRANCH, "FETCH_HEAD")
             # Refuse to overwrite repairs or human changes; merging main is a
             # normal fast-forward/non-rewriting merge and conflicts fail visibly.
@@ -71,6 +73,14 @@ def main():
             pr = api.repo("pulls", data={"head": UPDATE_BRANCH, "base": "main", "title": "chore: automated flake and package updates", "body": body})
         run_url = f"{api.url}/{REPOSITORY}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         api.status(sha, "updates", "failure" if failures else "success", "Updater failure; partial changes preserved" if failures else "All updater steps passed", run_url)
+        # This PR is opened by the Forgejo Actions user, and Forgejo raises no
+        # workflow events for that actor, so its `pull_request` trigger never
+        # fires. The `push` trigger that used to build this branch was removed
+        # to stop duplicate builds, so ask for the build explicitly. Only a
+        # moved head needs one, which is what `push` would have signalled.
+        if sha != before:
+            api.repo("actions/workflows/build.yml/dispatches",
+                data={"ref": "main", "inputs": {"pr": str(pr["number"]), "sha": sha}})
         return int(bool(failures))
 
 if __name__ == "__main__":
