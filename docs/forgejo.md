@@ -47,7 +47,8 @@ registration credential cross into the VM as systemd credentials.
 
 ## Migration sequence
 
-Run commands from the repository root with Python 3 and `age` available. The
+Run commands from the repository root inside `nix develop`, which supplies
+Python 3, `age`, `agenix`, and Colmena. The
 scripts never print tokens. Protect the temporary bootstrap directory (0700),
 keep credentials out of shell history, and remove it after revoking the temporary
 migration token. Example paths below are private local working files.
@@ -107,6 +108,38 @@ Git remotes are shared by Git worktrees. Cutover changes the common repository's
 `origin`, including other worktrees. A frozen GitHub archive is incompatible with
 receiving mirror updates. Mirror deletions propagate; do not make independent
 GitHub commits.
+
+## Private flake inputs
+
+Inputs hosted on this instance must use `git+https://git.gindin.xyz/<owner>/<repo>.git`.
+The CI guest reaches Forgejo only on 443 through the slirp gateway, so Git SSH on
+2222 is unreachable from it. Nix fetches Git inputs by running `git`, so the guest
+authenticates through `/etc/gitconfig`, whose credential store is written from the
+bot token at boot. Workstations rewrite the same URL back to
+`ssh://git@git.gindin.xyz:2222/` with `url.insteadOf` in `common/git.nix`, which
+leaves the HTTPS URL in `flake.lock`.
+
+The bot token's repository scope is fixed when the token is issued. To add a
+private input:
+
+1. Add the repository to `INPUT_REPOSITORIES` in `scripts/forgejo/common.py` and
+   declare the input with its HTTPS URL.
+2. Run `provision.py automation --state <dir>`. It grants `forgejo-update` read
+   access to each input repository and, because the recorded scope no longer
+   matches, reissues `nixos-config-automation` against the new set and rewrites
+   the agenix files. Commit them and deploy osgiliath.
+
+`--state` is the bootstrap directory holding `credentials.json`; migration used
+`/tmp/forgejo-bootstrap`, which step 10 above deletes. When it is gone, run
+`provision.py adopt --state <dir>` first. It decrypts
+`secrets/forgejo-controller-env.age` with an SSH identity in its recipients
+(`--identity`, default `~/.ssh/id_ed25519`) to recover the webhook, Hermes, and
+CI secrets plus the account IDs, mints a fresh `provision-adopt` administrator
+token from the encrypted recovery password, and resets the bot account password,
+which is unrecoverable and needed for the basic-auth token endpoints. It
+deliberately leaves the token's scope unknown so the following `automation` run
+reissues it. Revoke the `provision-adopt` token afterwards and delete the
+directory.
 
 ## CI and repair loop
 

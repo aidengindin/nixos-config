@@ -63,7 +63,7 @@ in
       default = "/var/lib/job-scraper";
       description = ''
         Holds state.db, the record of every posting already reported. Must
-        persist across reboots — losing it re-appends every currently-open
+        persist across reboots â€” losing it re-appends every currently-open
         posting on the next run. The module registers it with impermanence
         automatically.
       '';

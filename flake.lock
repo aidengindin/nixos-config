@@ -472,11 +472,11 @@
         "rev": "fadf3b5d5bf40ce3b6795738b4ee428ca4e2a004",
         "revCount": 2,
         "type": "git",
-        "url": "ssh://git@git.gindin.xyz/aidengindin/job-scraper"
+        "url": "https://git.gindin.xyz/aidengindin/job-scraper.git"
       },
       "original": {
         "type": "git",
-        "url": "ssh://git@git.gindin.xyz/aidengindin/job-scraper"
+        "url": "https://git.gindin.xyz/aidengindin/job-scraper.git"
       }
     },
     "jovian": {

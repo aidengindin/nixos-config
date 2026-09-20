@@ -40,6 +40,10 @@ This is a personal NixOS configuration repository managing multiple machines usi
 ### Local Operations
 
 ```bash
+# Enter the dev shell before running repository scripts. It provides python3,
+# age, agenix, colmena, and nixfmt, none of which are in the user profile.
+nix develop
+
 # Build a specific host configuration
 nix build .#nixosConfigurations.<hostname>.config.system.build.toplevel
 

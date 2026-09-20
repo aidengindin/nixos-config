@@ -9,9 +9,15 @@
     home-manager.users.agindin = {
       programs.git = {
         enable = true;
-        settings.user = {
-          name = "Aiden Gindin";
-          email = "aiden@aidengindin.com";
+        settings = {
+          user = {
+            name = "Aiden Gindin";
+            email = "aiden@aidengindin.com";
+          };
+          # Flake inputs on git.gindin.xyz are declared with HTTPS URLs so the
+          # CI guest can fetch them with a token. Here, use the SSH key instead;
+          # Forgejo SSH is on 2222. The lock file keeps the HTTPS URL either way.
+          url."ssh://git@git.gindin.xyz:2222/".insteadOf = "https://git.gindin.xyz/";
         };
         lfs.enable = true;
       };
