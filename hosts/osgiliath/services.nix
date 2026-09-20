@@ -505,7 +505,7 @@
       enable = true;
       environmentFile = config.age.secrets.job-scraper-env.path;
       googleCredentialsFile = config.age.secrets.job-scraper-google-sa.path;
-      spreadsheetId = "REPLACE_WITH_SPREADSHEET_ID";
+      spreadsheetId = "1pBco4NjU51Rt71Ig6HDwDbcdjAU5IqJPkF3Ijup5Np0";
     };
 
     headache-sync = {
