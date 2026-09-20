@@ -257,17 +257,25 @@ in
       '';
     };
 
-    # Persist the dedup database through impermanence. Without this, osgiliath's
-    # ephemeral root wipes state.db on every boot and the next run re-appends
-    # every currently-open posting to the sheet.
-    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
-      cfg.stateDir
-    ];
-
-    # Under impermanence, ${cfg.stateDir} is a root-owned bind mount that
-    # StateDirectory= will not re-own. tmpfiles fixes the ownership at boot.
-    systemd.tmpfiles.rules = [
-      "d ${cfg.stateDir} 0700 ${cfg.user} ${cfg.group} -"
+    # Persist the dedup database. Without this, osgiliath's ephemeral root wipes
+    # state.db on every boot and the next run re-appends every currently-open
+    # posting to the sheet.
+    #
+    # Declared directly rather than through agindin.impermanence.systemDirectories
+    # because that option is a plain list of paths and cannot carry ownership.
+    # It has to: impermanence creates the backing directory under /persist and
+    # bind-mounts it, and both ends come out root-owned. A tmpfiles rule does not
+    # fix it -- tmpfiles runs before the mount is established, so the rule lands
+    # on the directory the mount then hides. StateDirectory= does not re-own an
+    # existing mountpoint either. Letting impermanence create it with the right
+    # owner is the only thing that actually sticks across a rebuild and a reboot.
+    environment.persistence."/persist".directories = mkIf config.agindin.impermanence.enable [
+      {
+        directory = cfg.stateDir;
+        user = cfg.user;
+        group = cfg.group;
+        mode = "0700";
+      }
     ];
 
     systemd.timers.job-scraper = {

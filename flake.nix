@@ -159,7 +159,12 @@
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
-          inherit unstablePkgs auto-headache-tracker anduin job-scraper;
+          inherit
+            unstablePkgs
+            auto-headache-tracker
+            anduin
+            job-scraper
+            ;
         };
       };
 
@@ -295,7 +300,12 @@
       }
       // (import ./packages {
         pkgs = stablePkgs;
-        inherit unstablePkgs auto-headache-tracker anduin job-scraper;
+        inherit
+          unstablePkgs
+          auto-headache-tracker
+          anduin
+          job-scraper
+          ;
       });
 
       # `nix fmt`. nixfmt itself reads stdin when invoked without paths, so use

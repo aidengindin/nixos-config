@@ -260,16 +260,27 @@ in
     };
     users.groups.${cfg.group} = { };
 
-    # Persist OAuth tokens (under /var/lib/anduin/state) through impermanence.
-    agindin.impermanence.systemDirectories = mkIf config.agindin.impermanence.enable [
-      "/var/lib/anduin"
+    # Persist OAuth tokens (under /var/lib/anduin/state) through impermanence,
+    # with the mount owned by the service user.
+    #
+    # Declared here rather than via agindin.impermanence.systemDirectories
+    # because that option is a plain list of paths and cannot carry ownership.
+    # It has to: impermanence creates the backing directory under /persist and
+    # bind-mounts it, and both ends come out root-owned otherwise.
+    environment.persistence."/persist".directories = mkIf config.agindin.impermanence.enable [
+      {
+        directory = "/var/lib/anduin";
+        user = cfg.user;
+        group = cfg.group;
+        mode = "0750";
+      }
     ];
 
-    # Own the state tree explicitly. Under impermanence /var/lib/anduin is a
-    # root-owned bind mount, and systemd's StateDirectory= only materializes
-    # when a unit runs (and won't re-own that mountpoint) — so the interactive
+    # Own the state tree explicitly. systemd's StateDirectory= only materializes
+    # when a unit runs (and won't re-own the mountpoint) — so the interactive
     # `anduin-auth` seeder, run before any timer fires, couldn't create the
-    # token subdir. tmpfiles runs at boot and (re)chowns to the service user.
+    # token subdir. These run at boot, after the bind mount is established, and
+    # cover the nested state/ directory that lives inside the mount.
     systemd.tmpfiles.rules = [
       "d /var/lib/anduin 0750 ${cfg.user} ${cfg.group} -"
       "d /var/lib/anduin/state 0700 ${cfg.user} ${cfg.group} -"
