@@ -264,11 +264,15 @@ in
     # Declared directly rather than through agindin.impermanence.systemDirectories
     # because that option is a plain list of paths and cannot carry ownership.
     # It has to: impermanence creates the backing directory under /persist and
-    # bind-mounts it, and both ends come out root-owned. A tmpfiles rule does not
-    # fix it -- tmpfiles runs before the mount is established, so the rule lands
-    # on the directory the mount then hides. StateDirectory= does not re-own an
-    # existing mountpoint either. Letting impermanence create it with the right
-    # owner is the only thing that actually sticks across a rebuild and a reboot.
+    # bind-mounts it, and both ends come out root-owned.
+    #
+    # A tmpfiles rule is not enough on its own. systemd-tmpfiles-setup is
+    # After=local-fs.target and the mount is WantedBy=local-fs.target, so the
+    # rule does land correctly at boot -- but activation on a live deploy runs
+    # tmpfiles before establishing the new mount, so the rule applies to the
+    # directory the mount then hides, and the unit is left running as its own
+    # user against a root-owned directory until the next reboot.
+    # StateDirectory= does not re-own an existing mountpoint either.
     environment.persistence."/persist".directories = mkIf config.agindin.impermanence.enable [
       {
         directory = cfg.stateDir;
