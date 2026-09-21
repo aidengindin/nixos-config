@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
 from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
 from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
-from retention import RETENTION_SECONDS, prune_retention
+from retention import RETENTION_SECONDS, prune_retention, superseded_heads
 
 SHA = "a" * 40
 CLOSURE = "/nix/store/" + "b" * 32 + "-nixos-system-lorien-26.05"
@@ -201,24 +201,84 @@ class RetentionTests(unittest.TestCase):
         self.assertNotIn("weathertop", CI_HOSTS)
         self.assertIn("weathertop", HOSTS)
 
+    @staticmethod
+    def _seed(state, sha, now, age=0, prs=None):
+        for name in ("roots", "results"):
+            (state / name / sha).mkdir(parents=True)
+        if prs is not None:
+            manifest = state / "results" / sha / "osgiliath.json"
+            manifest.write_text(json.dumps({"sha": sha, "prs": prs}))
+        # Set mtimes last: writing the manifest touches the results directory,
+        # which would otherwise stamp it with the real clock and defeat `now`.
+        for name in ("roots", "results"):
+            os.utime(state / name / sha, (now - age,) * 2)
+
     def test_prune_preserves_current_head_and_removes_expired_state(self):
         with tempfile.TemporaryDirectory() as temporary:
             state = Path(temporary)
             current = "b" * 40
             expired = "c" * 40
             now = 2_000_000_000
-            for name in ("roots", "results"):
-                for sha in (current, expired):
-                    directory = state / name / sha
-                    directory.mkdir(parents=True)
-                    os.utime(directory, (now - RETENTION_SECONDS - 1,) * 2)
-            removed = prune_retention(state, {current}, now=now)
+            for sha in (current, expired):
+                self._seed(state, sha, now, age=RETENTION_SECONDS + 1)
+            removed = prune_retention(state, {7: current}, now=now)
             self.assertEqual(len(removed), 2)
             self.assertTrue((state / "roots" / current).exists())
             self.assertTrue((state / "results" / current).exists())
             self.assertFalse((state / "roots" / expired).exists())
             self.assertFalse((state / "results" / expired).exists())
             self.assertEqual((state / "roots" / current).stat().st_mtime, now)
+
+    def test_superseded_head_is_dropped_immediately(self):
+        """A head its own PR has moved past pins a closure nothing can deploy."""
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            current = "b" * 40
+            old = "c" * 40
+            now = 2_000_000_000
+            self._seed(state, current, now, prs=[7])
+            self._seed(state, old, now, prs=[7])
+            removed = prune_retention(state, {7: current}, now=now)
+            self.assertEqual(len(removed), 2)
+            self.assertFalse((state / "roots" / old).exists())
+            self.assertTrue((state / "roots" / current).exists())
+
+    def test_closed_pr_head_keeps_the_transfer_grace_period(self):
+        """PR 7 is gone from pr_heads; its final head must survive to transfer."""
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            landed = "c" * 40
+            now = 2_000_000_000
+            self._seed(state, landed, now, prs=[7])
+            self.assertEqual(prune_retention(state, {}, now=now), [])
+            self.assertTrue((state / "roots" / landed).exists())
+            # ...but not forever.
+            os.utime(state / "roots" / landed, (now - RETENTION_SECONDS - 1,) * 2)
+            os.utime(state / "results" / landed, (now - RETENTION_SECONDS - 1,) * 2)
+            self.assertEqual(len(prune_retention(state, {}, now=now)), 2)
+
+    def test_head_shared_by_a_still_current_pr_is_kept(self):
+        """Two PRs can point at one SHA; one moving on must not evict it."""
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            shared = "c" * 40
+            now = 2_000_000_000
+            self._seed(state, shared, now, prs=[7, 8])
+            self.assertEqual(prune_retention(state, {7: "b" * 40, 8: shared}, now=now), [])
+            self.assertTrue((state / "roots" / shared).exists())
+
+    def test_state_without_a_manifest_falls_back_to_the_age_rule(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            orphan = "c" * 40
+            now = 2_000_000_000
+            self._seed(state, orphan, now)
+            self.assertEqual(superseded_heads(state, {7: "b" * 40}), set())
+            self.assertEqual(prune_retention(state, {7: "b" * 40}, now=now), [])
+            self.assertTrue((state / "roots" / orphan).exists())
+
+    def test_grace_period_is_short_enough_to_bound_the_store(self):
+        self.assertLessEqual(RETENTION_SECONDS, 2 * 86400)
 
     @patch("build.subprocess.run")
     @patch("build.shutil.disk_usage")
