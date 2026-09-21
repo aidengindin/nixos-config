@@ -3,6 +3,7 @@
   unstablePkgs,
   auto-headache-tracker,
   anduin,
+  job-scraper,
   ...
 }:
 {
@@ -17,4 +18,5 @@
   pseg-import = pkgs.callPackage ./pseg-import.nix { };
   headache-sync = auto-headache-tracker.packages.${pkgs.system}.headache-sync;
   anduin = anduin.packages.${pkgs.system}.anduin;
+  job-scraper = job-scraper.packages.${pkgs.system}.job-scraper;
 }

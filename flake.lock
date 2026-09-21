@@ -314,6 +314,24 @@
         "type": "github"
       }
     },
+    "flake-utils_3": {
+      "inputs": {
+        "systems": "systems_4"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "hermes-agent": {
       "inputs": {
         "flake-parts": "flake-parts",
@@ -440,6 +458,27 @@
         "type": "github"
       }
     },
+    "job-scraper": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789937434,
+        "narHash": "sha256-6FhU8RZEr8Ma7I9wcx8Iw8YTfAubqjMAHTBT/S9qhPk=",
+        "ref": "refs/heads/main",
+        "rev": "fadf3b5d5bf40ce3b6795738b4ee428ca4e2a004",
+        "revCount": 2,
+        "type": "git",
+        "url": "https://git.gindin.xyz/aidengindin/job-scraper.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.gindin.xyz/aidengindin/job-scraper.git"
+      }
+    },
     "jovian": {
       "inputs": {
         "nix-github-actions": "nix-github-actions_2",
@@ -463,7 +502,7 @@
     },
     "liftosaur-sync": {
       "inputs": {
-        "flake-utils": "flake-utils_2",
+        "flake-utils": "flake-utils_3",
         "nixpkgs": [
           "unstable"
         ]
@@ -661,7 +700,7 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "systems": "systems_4"
+        "systems": "systems_5"
       },
       "locked": {
         "lastModified": 1789311332,
@@ -762,6 +801,7 @@
         "hm-unstable": "hm-unstable",
         "home-manager": "home-manager_2",
         "impermanence": "impermanence",
+        "job-scraper": "job-scraper",
         "jovian": "jovian",
         "liftosaur-sync": "liftosaur-sync",
         "mcp-servers-nix": "mcp-servers-nix",
@@ -834,6 +874,21 @@
       }
     },
     "systems_4": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_5": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",

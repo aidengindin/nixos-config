@@ -67,6 +67,13 @@ in
   virtualisation.fileSystems."/".autoResize = lib.mkForce true;
   # slirp exposes host loopback as 10.0.2.2; TLS still checks the real name.
   networking.hosts."10.0.2.2" = [ domain ];
+  # Nix fetches git flake inputs by running git, so system-wide credentials are
+  # enough for every private input repository on this Forgejo. The file is
+  # written from the bot token at boot by forgejo-vm-credentials.
+  environment.etc."gitconfig".text = ''
+    [credential "https://${domain}"]
+      helper = store --file=/run/forgejo-git-credentials
+  '';
   # Absorb memory spikes from large evaluations, frontend builds, and kernels
   # on the persistent sparse VM disk without committing all of it as host RAM.
   swapDevices = lib.mkVMOverride [
@@ -146,6 +153,16 @@ in
       systemd-creds --system cat runner-env > /run/forgejo-runner-env
       systemd-creds --system cat api-env > /run/forgejo-api-env
       chmod 0400 /run/forgejo-api-env
+      # Flake inputs hosted on this Forgejo are declared with HTTPS URLs; the
+      # guest may only reach it on 443. Hand git the bot token so private input
+      # repositories resolve for `nix flake update` and every colmena build.
+      set -a
+      # shellcheck disable=SC1091
+      . /run/forgejo-api-env
+      set +a
+      printf 'https://forgejo-update:%s@${domain}\n' "$FORGEJO_TOKEN" > /run/forgejo-git-credentials
+      chown ci:ci /run/forgejo-git-credentials
+      chmod 0400 /run/forgejo-git-credentials
       printf 'restrict,command="${export}" ' > /run/forgejo-store-authorized-key
       systemd-creds --system cat store-reader-public >> /run/forgejo-store-authorized-key
       chmod 0644 /run/forgejo-store-authorized-key

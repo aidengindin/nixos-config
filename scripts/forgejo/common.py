@@ -6,6 +6,10 @@ import re
 import urllib.request
 
 REPOSITORY = "aidengindin/nixos-config"
+# Private repositories consumed as flake inputs. CI clones them over HTTPS with
+# the bot token, so the bot needs read access and the token must be scoped to
+# them. Add new Forgejo-hosted inputs here.
+INPUT_REPOSITORIES = ("aidengindin/job-scraper",)
 HOSTS = ("lorien", "osgiliath", "khazad-dum", "weathertop")
 CI_HOSTS = tuple(host for host in HOSTS if host != "weathertop")
 TAGS = {"server": HOSTS[:2], "onprem": HOSTS[:2], "laptop": ("khazad-dum",),

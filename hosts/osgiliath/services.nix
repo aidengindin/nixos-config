@@ -25,6 +25,17 @@
       owner = "headache-sync";
       group = "headache-sync";
     };
+    job-scraper-env = {
+      file = ../../secrets/job-scraper-env.age;
+      owner = "job-scraper";
+      group = "job-scraper";
+    };
+    job-scraper-google-sa = {
+      file = ../../secrets/job-scraper-google-sa.age;
+      owner = "job-scraper";
+      group = "job-scraper";
+      mode = "0400";
+    };
     anduin-env = {
       file = ../../secrets/anduin-env.age;
       owner = "anduin";
@@ -488,6 +499,13 @@
       enable = true;
       environmentFile = config.age.secrets.liftosaur-sync-env.path;
       syncIntervals = "hourly";
+    };
+
+    job-scraper = {
+      enable = true;
+      environmentFile = config.age.secrets.job-scraper-env.path;
+      googleCredentialsFile = config.age.secrets.job-scraper-google-sa.path;
+      spreadsheetId = "1pBco4NjU51Rt71Ig6HDwDbcdjAU5IqJPkF3Ijup5Np0";
     };
 
     headache-sync = {

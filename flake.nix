@@ -79,6 +79,14 @@
       url = "github:aidengindin/anduin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Private Forgejo repositories are fetched over HTTPS: the CI guest may only
+    # reach Forgejo on 443 and authenticates with the bot token, while personal
+    # machines rewrite this to ssh://git@git.gindin.xyz:2222/ (see common/git.nix).
+    job-scraper = {
+      url = "git+https://git.gindin.xyz/aidengindin/job-scraper.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -100,6 +108,7 @@
       hermes-agent,
       auto-headache-tracker,
       anduin,
+      job-scraper,
       dms,
       dank-greeter,
       nixvim,
@@ -150,7 +159,12 @@
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
           pkgs = stablePkgs;
-          inherit unstablePkgs auto-headache-tracker anduin;
+          inherit
+            unstablePkgs
+            auto-headache-tracker
+            anduin
+            job-scraper
+            ;
         };
       };
 
@@ -286,7 +300,30 @@
       }
       // (import ./packages {
         pkgs = stablePkgs;
-        inherit unstablePkgs auto-headache-tracker anduin;
+        inherit
+          unstablePkgs
+          auto-headache-tracker
+          anduin
+          job-scraper
+          ;
       });
+
+      # `nix fmt`. nixfmt itself reads stdin when invoked without paths, so use
+      # the treefmt wrapper, which walks the tree and formats only *.nix.
+      formatter.x86_64-linux = stablePkgs.nixfmt-tree;
+
+      # Everything the repository's own tooling shells out to. `age` and
+      # `colmena` are deliberately not in the user profile, so run repository
+      # scripts under `nix develop` rather than hunting for missing binaries.
+      devShells.x86_64-linux.default = stablePkgs.mkShell {
+        name = "nixos-config";
+        packages = [
+          stablePkgs.python3
+          stablePkgs.age
+          stablePkgs.nixfmt
+          agenix.packages.x86_64-linux.default
+          colmena.packages.x86_64-linux.colmena
+        ];
+      };
     };
 }

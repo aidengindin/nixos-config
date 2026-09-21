@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
 from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
 from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
+import provision
 from retention import RETENTION_SECONDS, prune_retention, superseded_heads
 
 SHA = "a" * 40
@@ -302,6 +303,44 @@ class RetentionTests(unittest.TestCase):
         disk_usage.return_value = shutil._ntuple_diskusage(160 * GIB, 131 * GIB, 29 * GIB)
         with self.assertRaisesRegex(RuntimeError, "refusing to start"):
             require_build_headroom(Path("/state"))
+
+class AdoptTests(unittest.TestCase):
+    RUNTIME = ("FORGEJO_URL=https://example.test\nFORGEJO_TOKEN=live\nFORGEJO_BOT_ID=2\n"
+        "FORGEJO_OWNER_ID=1\nFORGEJO_WEBHOOK_SECRET=hook\nHERMES_WEBHOOK_SECRET=hermes\n"
+        "CI_WEBHOOK_SECRET=ci\n")
+
+    def test_env_values_ignores_blanks_and_comments(self):
+        self.assertEqual(provision.env_values("# note\n\nA=1\nB=x=y\n"), {"A": "1", "B": "x=y"})
+
+    def test_rebuilds_state_and_leaves_token_scope_unknown(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary) / "state"
+            requests = []
+            def api_request(self, path, data=None, method=None, timeout=60):
+                requests.append((path, method))
+                return {}
+            def fake_basic(api, user, password, path, data=None, method=None):
+                if data is None and method is None:
+                    return [{"name": "provision-adopt"}]
+                return {} if method == "DELETE" else {"sha1": "admin"}
+            with patch.object(provision.shutil, "which", return_value="/usr/bin/age"), \
+                 patch.object(provision, "decrypt", return_value=self.RUNTIME), \
+                 patch.object(provision, "basic", fake_basic), \
+                 patch.object(provision.API, "request", api_request), \
+                 patch("sys.argv", ["provision.py", "adopt", "--state", str(state)]):
+                provision.main()
+            credentials = json.loads((state / "credentials.json").read_text())
+            self.assertEqual(credentials["webhook_secret"], "hook")
+            self.assertEqual(credentials["ci_secret"], "ci")
+            self.assertEqual(credentials["aidengindin_id"], "1")
+            self.assertEqual(credentials["bot_token"], "live")
+            self.assertEqual(credentials["admin_token"], "admin")
+            # automation must reissue the bot token against the current inputs.
+            self.assertNotIn("bot_token_repositories", credentials)
+            # The unrecoverable bot password is replaced, not carried over.
+            self.assertTrue(credentials["forgejo-update_password"])
+            self.assertIn(("admin/users/forgejo-update", "PATCH"), requests)
+
 
 class ControllerTests(unittest.TestCase):
     def setUp(self):

@@ -2,6 +2,8 @@
 """Provision accounts, repository automation, and encrypted runtime credentials.
 
 Run accounts after Forgejo starts; run automation after importing the repository.
+Run adopt when the bootstrap state is gone, to rebuild what automation needs
+from the deployed encrypted runtime file before running automation again.
 Temporary bootstrap credentials are mode 0600 and never printed.
 """
 import argparse
@@ -10,18 +12,39 @@ import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import urllib.error
 import urllib.request
-from common import API, CI_HOSTS, REPOSITORY, atomic_json
+from common import API, CI_HOSTS, INPUT_REPOSITORIES, REPOSITORY, atomic_json
 
 
-def basic(api, user, password, path, data):
+def basic(api, user, password, path, data=None, method=None):
     auth = base64.b64encode((user + ":" + password).encode()).decode()
-    request = urllib.request.Request(api.url + "/api/v1/" + path, data=json.dumps(data).encode(),
+    request = urllib.request.Request(api.url + "/api/v1/" + path,
+        data=None if data is None else json.dumps(data).encode(),
+        method=method or ("GET" if data is None else "POST"),
         headers={"Authorization": "Basic " + auth, "Content-Type": "application/json"})
     with urllib.request.urlopen(request, timeout=60) as response:
-        return json.load(response)
+        body = response.read()
+        # Token deletion answers 204; every caller that reads a result posts.
+        return json.loads(body) if body else {}
+
+
+def decrypt(path, identity, age):
+    """Decrypt an agenix file with an SSH identity its recipients include."""
+    return subprocess.run([age, "-d", "-i", str(identity), str(path)],
+        check=True, stdout=subprocess.PIPE).stdout.decode()
+
+
+def env_values(text):
+    values = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            key, _, value = line.partition("=")
+            values[key.strip()] = value.strip()
+    return values
 
 
 def encrypt_env(path, values, recipients, age):
@@ -38,11 +61,22 @@ def encrypt_env(path, values, recipients, age):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phase", choices=["accounts", "automation"])
+    parser.add_argument("phase", choices=["accounts", "automation", "adopt"])
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--recovery-password-file", type=Path)
     parser.add_argument("--age", default="age")
+    # adopt reads deployed secrets instead of the discarded bootstrap state.
+    parser.add_argument("--identity", type=Path, default=Path.home() / ".ssh/id_ed25519")
+    parser.add_argument("--controller-env", type=Path)
+    parser.add_argument("--recovery-password-age", type=Path)
     args = parser.parse_args()
+    # Every phase encrypts or decrypts, and `age` is not in the user profile
+    # (only `agenix` is). Say so before doing any work.
+    if not shutil.which(args.age):
+        parser.error(f"{args.age} not found; rerun inside `nix develop` or pass --age")
+    root = Path(__file__).resolve().parents[2]
+    args.controller_env = args.controller_env or root / "secrets/forgejo-controller-env.age"
+    args.recovery_password_age = args.recovery_password_age or root / "secrets/forgejo-recovery-password.age"
     os.umask(0o077)
     args.state.mkdir(parents=True, exist_ok=True)
     state_file = args.state / "credentials.json"
@@ -75,13 +109,63 @@ def main():
             atomic_json(state_file, state)
         print("Owner and bot accounts ready. Link the owner to Pocket ID at first sign-in.")
         return
+    if args.phase == "adopt":
+        # Bootstrap credentials are destroyed after migration, so rebuild what
+        # automation needs from the deployed runtime file. Its webhook and CI
+        # secrets must keep their current values or the hooks stop verifying.
+        runtime = env_values(decrypt(args.controller_env, args.identity, args.age))
+        api.url = runtime.get("FORGEJO_URL", url).rstrip("/")
+        for key, name in [("FORGEJO_WEBHOOK_SECRET", "webhook_secret"),
+                ("HERMES_WEBHOOK_SECRET", "hermes_secret"), ("CI_WEBHOOK_SECRET", "ci_secret"),
+                ("FORGEJO_OWNER_ID", "aidengindin_id"), ("FORGEJO_BOT_ID", "forgejo-update_id"),
+                ("FORGEJO_TOKEN", "bot_token")]:
+            state[name] = runtime[key]
+        # The live token's repository scope is recorded nowhere, so leave it
+        # unknown: automation then reissues a token scoped to the current inputs.
+        state.pop("bot_token_repositories", None)
+        if args.recovery_password_file:
+            recovery = args.recovery_password_file.read_text()
+        else:
+            recovery = decrypt(args.recovery_password_age, args.identity, args.age)
+        recovery = recovery.strip()
+        name = "provision-adopt"
+        tokens = basic(api, "forgejo-recovery", recovery, "users/forgejo-recovery/tokens") or []
+        if any(token.get("name") == name for token in tokens):
+            basic(api, "forgejo-recovery", recovery, f"users/forgejo-recovery/tokens/{name}", method="DELETE")
+        state["admin_token"] = basic(api, "forgejo-recovery", recovery,
+            "users/forgejo-recovery/tokens", {"name": name, "scopes": ["all"]})["sha1"]
+        atomic_json(state_file, state)
+        api.token = state["admin_token"]
+        # The bot password cannot be recovered and token endpoints accept only
+        # basic auth. Reset it, persisting first so a failed retry keeps access.
+        state["forgejo-update_password"] = secrets.token_urlsafe(36)
+        atomic_json(state_file, state)
+        api.request("admin/users/forgejo-update", method="PATCH",
+            data={"password": state["forgejo-update_password"], "must_change_password": False})
+        print("Rebuilt bootstrap state. Run the automation phase next, then revoke the"
+            " provision-adopt token and commit the re-encrypted files.")
+        return
     api.repo("collaborators/forgejo-update", data={"permission": "write"}, method="PUT")
     api.request("repos/" + REPOSITORY, data={"has_actions": True}, method="PATCH")
+    # Private flake inputs are cloned by CI with this token, so the bot reads
+    # them too. Token repository scope is fixed at creation: recreate the token
+    # whenever the set of inputs changes.
+    for repository in INPUT_REPOSITORIES:
+        api.request(f"repos/{repository}/collaborators/forgejo-update", data={"permission": "read"}, method="PUT")
+    scope = [REPOSITORY, *INPUT_REPOSITORIES]
+    if state.get("bot_token_repositories") != scope:
+        state.pop("bot_token", None)
     if "bot_token" not in state:
-        token = basic(api, "forgejo-update", state["forgejo-update_password"], "users/forgejo-update/tokens",
-            {"name": "nixos-config-automation", "scopes": ["write:repository", "write:issue"],
-             "repositories": [{"owner": "aidengindin", "name": "nixos-config"}]})
+        password = state["forgejo-update_password"]
+        name = "nixos-config-automation"
+        existing = basic(api, "forgejo-update", password, "users/forgejo-update/tokens") or []
+        if any(t.get("name") == name for t in existing):
+            basic(api, "forgejo-update", password, f"users/forgejo-update/tokens/{name}", method="DELETE")
+        token = basic(api, "forgejo-update", password, "users/forgejo-update/tokens",
+            {"name": name, "scopes": ["write:repository", "write:issue"],
+             "repositories": [{"owner": r.split("/")[0], "name": r.split("/")[1]} for r in scope]})
         state["bot_token"] = token["sha1"]
+        state["bot_token_repositories"] = scope
     state.setdefault("webhook_secret", secrets.token_hex(32))
     state.setdefault("hermes_secret", secrets.token_hex(32))
     state.setdefault("ci_secret", secrets.token_hex(32))
@@ -112,7 +196,6 @@ def main():
     # Stable runner 13.1 retains the legacy registration flow; Forgejo 15 still
     # supports this endpoint. A future runner upgrade must migrate UUID/token.
     runner_token = api.repo("actions/runners/registration-token")["token"]
-    root = Path(__file__).resolve().parents[2]
     import re
     variables = (root / "common/variables.nix").read_text()
     recipients = [re.search(name + r' = "([^"]+)"', variables)[1] for name in ["osgiliathHost", "khazad-dumUser"]]
