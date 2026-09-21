@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import sys
 from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, atomic_json, event_sha
-from retention import prune_retention
+from retention import open_pr_heads, prune_retention
 
 
 def supersede_pending(api, pull, sha, current_heads, run_url):
@@ -104,13 +104,14 @@ def main():
     state.mkdir(exist_ok=True)
     run = os.environ["GITHUB_RUN_ID"]
     run_url = f"{api.url}/{REPOSITORY}/actions/runs/{run}"
-    current_heads = {p["head"]["sha"] for p in open_pulls}
+    pr_heads = {p["number"]: p["head"]["sha"] for p in open_pulls}
+    current_heads = set(pr_heads.values())
     for pull in pulls:
         supersede_pending(api, pull, sha, current_heads, run_url)
     failed = False
     with (state / "build.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        prune_retention(state, current_heads)
+        prune_retention(state, pr_heads)
         gc_if_needed(state)
         for host in CI_HOSTS:
             api.status(sha, f"colmena/{host}", "pending", "Queued exact PR head", run_url)
@@ -173,10 +174,10 @@ def main():
             atomic_json(result_file, {"repository": REPOSITORY, "sha": sha, "host": host,
                 "closure": closure, "run": run, "run_url": run_url, "prs": [p["number"] for p in pulls]})
             api.status(sha, f"colmena/{host}", "success", "Colmena build passed", run_url)
-        # Refresh leases after a long run and remove roots plus diagnostic files
-        # that have been superseded beyond the transfer grace period.
-        current = {p["head"]["sha"] for p in api.pulls()}
-        prune_retention(state, current)
+        # Refresh leases after a long run and drop roots plus diagnostic files
+        # for heads a PR has moved past, or that outlived the grace period.
+        # Re-reads the PR list: a head can be superseded while a build runs.
+        prune_retention(state, open_pr_heads(api))
     return int(failed)
 
 if __name__ == "__main__":
