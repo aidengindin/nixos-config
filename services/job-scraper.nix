@@ -136,7 +136,7 @@ in
       };
       model = mkOption {
         type = types.str;
-        default = "openai/gpt-5.6-luna";
+        default = "openai/gpt-6-luna:floor";
         description = "Model slug as the provider spells it.";
       };
       maxJdChars = mkOption {
