@@ -402,7 +402,7 @@ in
       settings = {
         model = {
           provider = "openrouter";
-          default = "openai/gpt-5.6-luna";
+          default = "openai/gpt-6-luna";
           base_url = "https://openrouter.ai/api/v1";
         };
 
