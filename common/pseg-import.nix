@@ -108,7 +108,13 @@ in
         # manager, and a download landing in the watch directory already implies
         # the network was up. An unreachable Home Assistant is handled by the
         # importer instead, which keeps the file and notifies.
-        Unit.Description = "Import a PSEG hourly usage export into Home Assistant";
+        Unit = {
+          Description = "Import a PSEG hourly usage export into Home Assistant";
+          # A download burst fires this no-op faster than the default 5 starts
+          # per 10s, and hitting that limit also fails the path unit, which
+          # stays dead until restarted by hand.
+          StartLimitIntervalSec = 0;
+        };
         Service = {
           Type = "oneshot";
           ExecStart = getExe cfg.package;
