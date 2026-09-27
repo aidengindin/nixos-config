@@ -19,8 +19,8 @@
 let
   inherit (pkgs) lib;
 
-  version = "26.915.31945";
-  hash = "sha256-0nqcApGc/khNzF80WEueqf0NemXGncyHK1vc+g77WYM=";
+  version = "26.924.22138";
+  hash = "sha256-zjuxqoLM3+MDetov2NGHeW6koNXtAx0OTsitzotwFOc=";
 in
 pkgs.stdenv.mkDerivation {
   pname = "chatgpt-desktop";
