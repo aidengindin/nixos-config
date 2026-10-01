@@ -25,7 +25,7 @@ in
     };
 
     hardwareAcceleration = {
-      enable = mkEnableOption "Intel QuickSync transcoding for Jellyfin";
+      enable = mkEnableOption "Intel VA-API transcoding for Jellyfin";
       device = mkOption {
         type = types.path;
         default = "/dev/dri/renderD128";
@@ -51,7 +51,12 @@ in
 
       hardwareAcceleration = mkIf cfg.hardwareAcceleration.enable {
         enable = true;
-        type = "qsv";
+        # VA-API, not QSV. QSV needs a Media SDK / oneVPL runtime, and this
+        # hardware has neither available: vpl-gpu-rt only covers Gen12+, and
+        # intel-media-sdk (the one runtime that would drive Gen9.5) is marked
+        # insecure in nixpkgs. Without a runtime, `-init_hw_device qsv` fails
+        # outright and every transcode dies with "FFmpeg exited with code 171".
+        type = "vaapi";
         inherit (cfg.hardwareAcceleration) device;
       };
 
@@ -104,7 +109,13 @@ in
 
     hardware.graphics = mkIf cfg.hardwareAcceleration.enable {
       enable = true;
-      extraPackages = [ pkgs.intel-media-driver ];
+      extraPackages = [
+        pkgs.intel-media-driver
+        # OpenCL, needed by tonemap_opencl for HDR content. The non-legacy
+        # intel-compute-runtime supports 12th Gen and newer only; on this
+        # Gen9.5 iGPU it loads but reports zero OpenCL platforms.
+        pkgs.intel-compute-runtime-legacy1
+      ];
     };
 
     agindin.services.caddy.proxyHosts = mkIf config.agindin.services.caddy.enable [
