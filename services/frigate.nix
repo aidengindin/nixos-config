@@ -371,8 +371,14 @@ in
       enable = true;
       extraPackages = with pkgs; [
         intel-media-driver
-        # OpenCL runtime — required for OpenVINO GPU plugin
-        intel-compute-runtime
+        # OpenCL runtime. Must be the legacy build: the regular
+        # intel-compute-runtime supports 12th Gen and newer, and reports zero
+        # OpenCL platforms on this Gen9.5 iGPU. Both packages ship their ICD as
+        # intel-neo.icd, so they collide in /run/opengl-driver and this has to
+        # be a swap rather than an addition — Jellyfin needs the legacy one for
+        # tonemap_opencl. Frigate itself is unaffected either way: the
+        # container ships its own OpenVINO runtime and only gets /dev/dri.
+        intel-compute-runtime-legacy1
       ];
     };
 
