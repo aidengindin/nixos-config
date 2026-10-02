@@ -82,6 +82,14 @@ in
           hevc10bit = true;
         };
         hardwareEncodingCodecs.hevc = true;
+        # Defaults to false, and forceEncodingConfig writes that default into
+        # encoding.xml on every restart. Unthrottled, ffmpeg encodes as fast as
+        # the iGPU allows rather than tracking playback, so the HLS segments for
+        # an entire file pile up in the transcode cache long before anyone
+        # watches them. On 2026-10-02 a 51 Mbps 2160p transcode of a UHD remux
+        # did that for an hour and filled osgiliath's root filesystem, taking
+        # PostgreSQL, Mosquitto and everything behind them down.
+        throttleTranscoding = true;
       };
     };
 

@@ -40,9 +40,11 @@ in
     # Two build cores fit in 8 GiB. Keeping half of osgiliath's RAM outside
     # the guest prevents host-wide reclaim from stalling Forgejo and journald.
     memorySize = 8192;
-    # Sparse upper bound. Existing images are only grown, never recreated or
-    # shrunk, by the host unit before QEMU starts.
-    diskSize = 163840;
+    # Sparse upper bound. The host unit grows an existing image to this size
+    # before QEMU starts, and discards one whose virtual size is above it.
+    # Sized for the stable hosts only; weathertop is no longer built here, so
+    # the second (unstable) nixpkgs closure no longer has to fit.
+    diskSize = 81920;
     graphics = false;
     useNixStoreImage = true;
     mountHostNixStore = false;
@@ -65,6 +67,42 @@ in
   # qemu-vm uses a partitionless ext4 root, so grow it to the enlarged qcow2
   # virtual size during boot.
   virtualisation.fileSystems."/".autoResize = lib.mkForce true;
+  # qemu-vm's root drive carries no discard support, so blocks freed inside the
+  # guest were never returned to the host: the qcow2 only ever grew. It reached
+  # its cap on 2026-10-02, filled osgiliath's root filesystem, and took
+  # PostgreSQL and Mosquitto down with it. A list option cannot be merged
+  # per-element, so both upstream drives are restated here with discard added.
+  # Keep in sync with qemu-vm.nix if its drive definitions change.
+  virtualisation.qemu.drives = lib.mkForce [
+    {
+      name = "root";
+      file = ''"$NIX_DISK_IMAGE"'';
+      driveExtraOpts = {
+        cache = "writeback";
+        werror = "report";
+        discard = "unmap";
+        "detect-zeroes" = "unmap";
+      };
+      deviceExtraOpts = {
+        bootindex = "1";
+        # qemu-vm's rootDriveSerialAttr. The guest finds / by filesystem label,
+        # so this only has to stay stable, not match anything in the guest.
+        serial = "root";
+      };
+    }
+    {
+      name = "nix-store";
+      file = ''"$TMPDIR"/store.img'';
+      driveExtraOpts.format = "raw";
+      deviceExtraOpts.bootindex = "2";
+    }
+  ];
+  # Discard alone changes nothing until the guest actually issues TRIM, which
+  # is what hands the freed extents back to the host qcow2.
+  services.fstrim = {
+    enable = true;
+    interval = "daily";
+  };
   # slirp exposes host loopback as 10.0.2.2; TLS still checks the real name.
   networking.hosts."10.0.2.2" = [ domain ];
   # Nix fetches git flake inputs by running git, so system-wide credentials are
@@ -96,10 +134,13 @@ in
     cores = 2;
     sandbox = true;
   };
+  # Weekly collection at a 14-day horizon let roughly two weeks of superseded
+  # closures accumulate between runs, which is most of what inflated the image.
+  # With a smaller disk the guest has to turn store garbage over faster.
   nix.gc = {
     automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 14d";
+    dates = "daily";
+    options = "--delete-older-than 7d";
   };
   users.groups.ci = { };
   users.users.ci = {
