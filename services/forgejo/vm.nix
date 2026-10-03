@@ -250,6 +250,16 @@ in
       Type = "oneshot";
       EnvironmentFile = "/run/forgejo-api-env";
       ExecStart = lib.getExe retention;
+      # This shares build.lock with build.py, which the runner executes as ci.
+      # Running as root made the lock root-owned the first time retention won
+      # the race, and every later `ci` build then failed to open it. The old
+      # disk image hid this because ci had created the lock long before the
+      # timer ever fired; recreating the image surfaced it immediately, since
+      # Persistent=true fires the timer on a state directory with no stamp.
+      # systemd reads EnvironmentFile as root before dropping privileges, so
+      # the 0400 root-owned api-env is still readable.
+      User = "ci";
+      Group = "ci";
     };
   };
   systemd.timers.forgejo-ci-retention = {
@@ -264,6 +274,11 @@ in
     "d /var/lib/forgejo-ci 0755 ci ci -"
     "d /var/lib/forgejo-ci/results 0755 ci ci -"
     "d /var/lib/forgejo-ci/roots 0755 ci ci -"
+    # Reclaim anything the retention timer left behind from when it ran as
+    # root. A mode of `-` keeps existing permissions, so this only corrects
+    # ownership. Without it, the running image keeps its root-owned build.lock
+    # and every CI job fails on it even once retention itself runs as ci.
+    "Z /var/lib/forgejo-ci - ci ci -"
   ];
   systemd.services.forgejo-runner = {
     wantedBy = [ "multi-user.target" ];
