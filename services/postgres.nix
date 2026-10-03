@@ -61,6 +61,30 @@ in
       '';
     };
 
+    # Upstream allows five starts per 605s but sets no delay between them, so
+    # the allowance is spent as fast as postgres can fail. On 2026-10-02 the
+    # root filesystem filled for about a minute; postgres could not write
+    # postmaster.pid, burned all five attempts in roughly two seconds, and
+    # landed in start-limit-hit. systemd then failed every dependent unit on
+    # the host — Forgejo, Immich, Linkwarden, the *arr stack, Grafana's
+    # datasource — and left them down for three hours, because nothing retries
+    # a unit in that state without `systemctl reset-failed`.
+    #
+    # RestartSec is the actual fix: spacing the attempts means the window
+    # covers minutes of a transient disk-full or I/O stall instead of seconds.
+    # The extra burst keeps ten attempts inside the interval upstream already
+    # chose, so a genuinely broken postgres still gives up and reports failed
+    # rather than restarting forever.
+    #
+    # StartLimitBurst has to be overridden on unitConfig, not through the
+    # startLimitBurst option: systemd.nix reads that option and assigns
+    # unitConfig itself, dropping the priority, so it always loses to the value
+    # the postgresql module writes to unitConfig directly.
+    systemd.services.postgresql = {
+      unitConfig.StartLimitBurst = lib.mkForce 10;
+      serviceConfig.RestartSec = 15;
+    };
+
     services.prometheus.exporters.postgres = {
       enable = true;
       port = globalVars.ports.postgresExporter;

@@ -256,6 +256,10 @@
       enable = true;
       # Same iGPU that Frigate uses for detection.
       hardwareAcceleration.enable = true;
+      # Transcode segments accumulate for the whole of a playback session, so
+      # a 4K remux can write well over 100 GB. Keep that off the root
+      # filesystem, which holds PostgreSQL and everything else.
+      transcodePath = "/media/jellyfin-transcodes";
     };
 
     prometheusExporter = {
