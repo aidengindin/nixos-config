@@ -44,16 +44,20 @@ in
     # before QEMU starts, and discards one whose virtual size is above it.
     #
     # This is a ceiling, not a reservation: with discard enabled below, the
-    # host only pays for blocks the guest is actually using, so a generous
-    # value costs nothing. It was briefly cut to 80 GiB on the theory that a
-    # smaller cap was safer after the image filled osgiliath's disk. That was
-    # the wrong lever — discard is what stops the ratchet — and it broke CI:
-    # a cold store needs every host's closure at once, build.py refuses to
-    # start a host with under 30 GiB free, and the third host was denied with
-    # about 11 GiB left. Budget for all stable closures from an empty store
-    # plus the 16 GiB swapfile plus that reserve. weathertop is no longer
-    # built here, so the unstable closure does not have to fit.
-    diskSize = 131072;
+    # host only pays for blocks the guest is really using — a single fstrim
+    # returned 62 GiB — so sizing this generously costs nothing, while sizing
+    # it short breaks CI outright. Err high.
+    #
+    # The peak is a flake update, not an ordinary PR. A nixpkgs bump shares
+    # almost nothing with what is already built, and retention.py holds the
+    # previous head's closures for two days so they can still be transferred
+    # after a PR lands, so the store has to carry two complete sets of every
+    # stable host at once. 80 GiB could not even hold one set and refused the
+    # third host; 128 GiB held one set but not two, and failed the nixpkgs
+    # update the same way. Budget for two sets, plus the 16 GiB swapfile,
+    # plus the 30 GiB build.py keeps in reserve. weathertop is no longer built
+    # here, so the unstable closure does not have to fit.
+    diskSize = 204800;
     graphics = false;
     useNixStoreImage = true;
     mountHostNixStore = false;
