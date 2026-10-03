@@ -42,9 +42,18 @@ in
     memorySize = 8192;
     # Sparse upper bound. The host unit grows an existing image to this size
     # before QEMU starts, and discards one whose virtual size is above it.
-    # Sized for the stable hosts only; weathertop is no longer built here, so
-    # the second (unstable) nixpkgs closure no longer has to fit.
-    diskSize = 81920;
+    #
+    # This is a ceiling, not a reservation: with discard enabled below, the
+    # host only pays for blocks the guest is actually using, so a generous
+    # value costs nothing. It was briefly cut to 80 GiB on the theory that a
+    # smaller cap was safer after the image filled osgiliath's disk. That was
+    # the wrong lever — discard is what stops the ratchet — and it broke CI:
+    # a cold store needs every host's closure at once, build.py refuses to
+    # start a host with under 30 GiB free, and the third host was denied with
+    # about 11 GiB left. Budget for all stable closures from an empty store
+    # plus the 16 GiB swapfile plus that reserve. weathertop is no longer
+    # built here, so the unstable closure does not have to fit.
+    diskSize = 131072;
     graphics = false;
     useNixStoreImage = true;
     mountHostNixStore = false;
