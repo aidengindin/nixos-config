@@ -31,6 +31,26 @@ in
         default = "/dev/dri/renderD128";
       };
     };
+
+    transcodePath = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      example = "/media/jellyfin-transcodes";
+      description = ''
+        Directory to hold in-progress transcodes, bind-mounted over the
+        transcode subdirectory of Jellyfin's cache.
+
+        Jellyfin keeps every HLS segment of a transcode until the session
+        ends, so one stream can write out the whole re-encoded file: a
+        4K Dolby Vision remux at 72 Mbit/s is about 140 GB over its runtime.
+        Left in the default cache that lands on the root filesystem, next to
+        PostgreSQL and the rest of the state, where filling up takes the host
+        down. Point this at bulk storage so a long transcode can only ever
+        exhaust a disk nothing else depends on.
+
+        Null keeps Jellyfin's default location.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -111,6 +131,27 @@ in
         PrivateUsers = mkForce false;
         SupplementaryGroups = [ "render" ];
       })
+      # A bind mount rather than cacheDir, so only the transcodes move. The
+      # rest of the cache is small random IO that belongs on the SSD, while
+      # transcode segments are large sequential writes a spinning disk serves
+      # fine. Jellyfin offers no option for the transcode path alone, and
+      # forceEncodingConfig owns encoding.xml, so the path is redirected
+      # underneath it instead. Set up at unit start, after CacheDirectory has
+      # created the parent.
+      (mkIf (cfg.transcodePath != null) {
+        BindPaths = [ "${cfg.transcodePath}:${config.services.jellyfin.cacheDir}/transcodes" ];
+      })
+    ];
+
+    # Without this Jellyfin can start before the bulk disk is mounted and
+    # bind a path that is still an empty mountpoint on the root filesystem,
+    # which is the failure this redirect exists to prevent.
+    systemd.services.jellyfin.unitConfig = mkIf (cfg.transcodePath != null) {
+      RequiresMountsFor = cfg.transcodePath;
+    };
+
+    systemd.tmpfiles.rules = mkIf (cfg.transcodePath != null) [
+      "d ${cfg.transcodePath} 0700 jellyfin ${config.services.jellyfin.group} -"
     ];
 
     users.groups.render = mkIf cfg.hardwareAcceleration.enable { };
