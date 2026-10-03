@@ -103,11 +103,18 @@ nix flake check
 
 ### Dual Nixpkgs Channels
 
-The repository uses both stable (25.11) and unstable nixpkgs:
+The repository uses both a stable and an unstable nixpkgs:
 - Most hosts track stable (`isUnstable = false`)
 - weathertop tracks unstable (`isUnstable = true`)
 - Both Home Manager versions are available (stable and unstable)
 - `unstablePkgs` is passed as a special arg to all configurations
+
+**Never state the stable release number from memory or from this file — read
+`inputs.nixpkgs.url` in `flake.nix` instead.** It is one `grep` and it is always
+current, whereas a number written down here goes stale at every release bump and
+has already caused a wrong answer: an option was reported as nonexistent because
+the wrong channel was queried. This matters most when searching for NixOS options,
+where results differ sharply between releases.
 
 ### Custom Service Pattern
 

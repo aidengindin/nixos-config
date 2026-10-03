@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   globalVars,
   ...
 }:
@@ -21,6 +22,28 @@ let
   network = "bookorbit";
 
   containerPort = 3000;
+
+  # docker-bookorbit-db.service going active only means the container started.
+  # Postgres inside may still be replaying WAL, and until it finishes it
+  # rejects every connection with 57P03. The app runs its migrations at
+  # startup, so without a gate it races recovery, exits, and burns its whole
+  # restart allowance into start-limit-hit — which is how a crash left it down
+  # for a day after the 2026-10-02 disk-full incident, and why it then failed
+  # every colmena apply.
+  #
+  # pg_isready reports PQPING_REJECT (non-zero) while the server is in
+  # recovery, which is exactly the state worth waiting out. The DB publishes
+  # no host port and is only reachable on the bookorbit docker network, so the
+  # check runs inside the container rather than from the host.
+  waitForDb = pkgs.writeShellScript "bookorbit-wait-db" ''
+    for _ in $(seq 1 60); do
+      ${config.virtualisation.docker.package}/bin/docker exec bookorbit-db \
+        pg_isready -q -U bookorbit -d bookorbit && exit 0
+      sleep 2
+    done
+    echo "bookorbit: database not ready after 120s" >&2
+    exit 1
+  '';
 in
 {
   options.agindin.services.bookorbit = {
@@ -203,6 +226,11 @@ in
       docker-bookorbit = {
         after = [ "bookorbit-network.service" ];
         requires = [ "bookorbit-network.service" ];
+        # mkAfter so this runs last, after the ExecStartPre entries
+        # oci-containers generates to pull the image and clear a stale
+        # container. serviceConfig values that are lists concatenate, so this
+        # appends rather than replacing them.
+        serviceConfig.ExecStartPre = lib.mkAfter [ waitForDb ];
       };
 
       # The DB lives in a container, so it is outside services/postgres.nix's

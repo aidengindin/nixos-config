@@ -40,9 +40,20 @@ in
     # Two build cores fit in 8 GiB. Keeping half of osgiliath's RAM outside
     # the guest prevents host-wide reclaim from stalling Forgejo and journald.
     memorySize = 8192;
-    # Sparse upper bound. Existing images are only grown, never recreated or
-    # shrunk, by the host unit before QEMU starts.
-    diskSize = 163840;
+    # Sparse upper bound. The host unit grows an existing image to this size
+    # before QEMU starts, and discards one whose virtual size is above it.
+    #
+    # This is a ceiling, not a reservation: with discard enabled below, the
+    # host only pays for blocks the guest is actually using, so a generous
+    # value costs nothing. It was briefly cut to 80 GiB on the theory that a
+    # smaller cap was safer after the image filled osgiliath's disk. That was
+    # the wrong lever — discard is what stops the ratchet — and it broke CI:
+    # a cold store needs every host's closure at once, build.py refuses to
+    # start a host with under 30 GiB free, and the third host was denied with
+    # about 11 GiB left. Budget for all stable closures from an empty store
+    # plus the 16 GiB swapfile plus that reserve. weathertop is no longer
+    # built here, so the unstable closure does not have to fit.
+    diskSize = 131072;
     graphics = false;
     useNixStoreImage = true;
     mountHostNixStore = false;
@@ -65,6 +76,42 @@ in
   # qemu-vm uses a partitionless ext4 root, so grow it to the enlarged qcow2
   # virtual size during boot.
   virtualisation.fileSystems."/".autoResize = lib.mkForce true;
+  # qemu-vm's root drive carries no discard support, so blocks freed inside the
+  # guest were never returned to the host: the qcow2 only ever grew. It reached
+  # its cap on 2026-10-02, filled osgiliath's root filesystem, and took
+  # PostgreSQL and Mosquitto down with it. A list option cannot be merged
+  # per-element, so both upstream drives are restated here with discard added.
+  # Keep in sync with qemu-vm.nix if its drive definitions change.
+  virtualisation.qemu.drives = lib.mkForce [
+    {
+      name = "root";
+      file = ''"$NIX_DISK_IMAGE"'';
+      driveExtraOpts = {
+        cache = "writeback";
+        werror = "report";
+        discard = "unmap";
+        "detect-zeroes" = "unmap";
+      };
+      deviceExtraOpts = {
+        bootindex = "1";
+        # qemu-vm's rootDriveSerialAttr. The guest finds / by filesystem label,
+        # so this only has to stay stable, not match anything in the guest.
+        serial = "root";
+      };
+    }
+    {
+      name = "nix-store";
+      file = ''"$TMPDIR"/store.img'';
+      driveExtraOpts.format = "raw";
+      deviceExtraOpts.bootindex = "2";
+    }
+  ];
+  # Discard alone changes nothing until the guest actually issues TRIM, which
+  # is what hands the freed extents back to the host qcow2.
+  services.fstrim = {
+    enable = true;
+    interval = "daily";
+  };
   # slirp exposes host loopback as 10.0.2.2; TLS still checks the real name.
   networking.hosts."10.0.2.2" = [ domain ];
   # Nix fetches git flake inputs by running git, so system-wide credentials are
@@ -96,10 +143,13 @@ in
     cores = 2;
     sandbox = true;
   };
+  # Weekly collection at a 14-day horizon let roughly two weeks of superseded
+  # closures accumulate between runs, which is most of what inflated the image.
+  # With a smaller disk the guest has to turn store garbage over faster.
   nix.gc = {
     automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 14d";
+    dates = "daily";
+    options = "--delete-older-than 7d";
   };
   users.groups.ci = { };
   users.users.ci = {
@@ -209,6 +259,16 @@ in
       Type = "oneshot";
       EnvironmentFile = "/run/forgejo-api-env";
       ExecStart = lib.getExe retention;
+      # This shares build.lock with build.py, which the runner executes as ci.
+      # Running as root made the lock root-owned the first time retention won
+      # the race, and every later `ci` build then failed to open it. The old
+      # disk image hid this because ci had created the lock long before the
+      # timer ever fired; recreating the image surfaced it immediately, since
+      # Persistent=true fires the timer on a state directory with no stamp.
+      # systemd reads EnvironmentFile as root before dropping privileges, so
+      # the 0400 root-owned api-env is still readable.
+      User = "ci";
+      Group = "ci";
     };
   };
   systemd.timers.forgejo-ci-retention = {
@@ -223,6 +283,11 @@ in
     "d /var/lib/forgejo-ci 0755 ci ci -"
     "d /var/lib/forgejo-ci/results 0755 ci ci -"
     "d /var/lib/forgejo-ci/roots 0755 ci ci -"
+    # Reclaim anything the retention timer left behind from when it ran as
+    # root. A mode of `-` keeps existing permissions, so this only corrects
+    # ownership. Without it, the running image keeps its root-owned build.lock
+    # and every CI job fails on it even once retention itself runs as ci.
+    "Z /var/lib/forgejo-ci - ci ci -"
   ];
   systemd.services.forgejo-runner = {
     wantedBy = [ "multi-user.target" ];

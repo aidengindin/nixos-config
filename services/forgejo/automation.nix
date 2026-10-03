@@ -42,7 +42,15 @@ let
         exit 0
       fi
       current=$(qemu-img info --output=json "$image" | jq -er '."virtual-size"')
-      if (( current < target )); then
+      if (( current > target )); then
+        # Shrinking a qcow2 in place means shrinking the guest ext4 first,
+        # which is not worth the risk for a cache that rebuilds itself. Drop
+        # the image instead: qemu-vm recreates it at the new size on the next
+        # start, and forgejo-runner re-registers because .runner is gone with
+        # it. The cost is one slow CI run while the store refills.
+        echo "Forgejo CI disk is $current bytes, over the $target byte target; recreating it"
+        rm -f "$image"
+      elif (( current < target )); then
         echo "Growing Forgejo CI disk from $current to $target bytes"
         qemu-img resize "$image" "$target"
       fi

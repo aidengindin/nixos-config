@@ -14,6 +14,26 @@ let
     mkOption
     types
     ;
+
+  # services.jellyfin.transcoding.deleteSegments is dead code: the option
+  # exists but the module never writes it into encoding.xml, and there is no
+  # option at all for how long to keep segments. Jellyfin's own
+  # EnableSegmentDeletion defaults to false, so without this a transcode keeps
+  # every HLS segment for the whole session. forceEncodingConfig rewrites
+  # encoding.xml from the store on each start, so the settings are injected
+  # afterwards rather than configured. Deleting the elements before adding
+  # them keeps this idempotent if Jellyfin ever writes them itself.
+  segmentDeletion = pkgs.writeShellScript "jellyfin-enable-segment-deletion" ''
+    set -eu
+    xml=${config.services.jellyfin.configDir}/encoding.xml
+    test -f "$xml" || exit 0
+    ${pkgs.xmlstarlet}/bin/xmlstarlet ed -L \
+      -d '/EncodingOptions/EnableSegmentDeletion' \
+      -d '/EncodingOptions/SegmentKeepSeconds' \
+      -s '/EncodingOptions' -t elem -n EnableSegmentDeletion -v true \
+      -s '/EncodingOptions' -t elem -n SegmentKeepSeconds -v ${toString cfg.segmentKeepSeconds} \
+      "$xml"
+  '';
 in
 {
   options.agindin.services.jellyfin = {
@@ -30,6 +50,43 @@ in
         type = types.path;
         default = "/dev/dri/renderD128";
       };
+    };
+
+    transcodePath = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      example = "/media/jellyfin-transcodes";
+      description = ''
+        Directory to hold in-progress transcodes, bind-mounted over the
+        transcode subdirectory of Jellyfin's cache.
+
+        Jellyfin keeps every HLS segment of a transcode until the session
+        ends, so one stream can write out the whole re-encoded file: a
+        4K Dolby Vision remux at 72 Mbit/s is about 140 GB over its runtime.
+        Left in the default cache that lands on the root filesystem, next to
+        PostgreSQL and the rest of the state, where filling up takes the host
+        down. Point this at bulk storage so a long transcode can only ever
+        exhaust a disk nothing else depends on.
+
+        Null keeps Jellyfin's default location.
+      '';
+    };
+
+    segmentKeepSeconds = mkOption {
+      type = types.ints.positive;
+      default = 720;
+      description = ''
+        How many seconds of already-played HLS segments to keep behind the
+        playback position before deleting them.
+
+        This is what bounds the transcode directory. The cost is roughly this
+        many seconds of the transcode's output bitrate: at the 72 Mbit/s a 4K
+        remux produces, the default 720s is about 6.5 GB, against roughly
+        140 GB if segments are kept for the whole session.
+
+        Seeking backwards further than this re-transcodes, so do not set it so
+        low that ordinary rewinding stutters.
+      '';
     };
   };
 
@@ -82,6 +139,14 @@ in
           hevc10bit = true;
         };
         hardwareEncodingCodecs.hevc = true;
+        # Defaults to false, and forceEncodingConfig writes that default into
+        # encoding.xml on every restart. Unthrottled, ffmpeg encodes as fast as
+        # the iGPU allows rather than tracking playback, so the HLS segments for
+        # an entire file pile up in the transcode cache long before anyone
+        # watches them. On 2026-10-02 a 51 Mbps 2160p transcode of a UHD remux
+        # did that for an hour and filled osgiliath's root filesystem, taking
+        # PostgreSQL, Mosquitto and everything behind them down.
+        throttleTranscoding = true;
       };
     };
 
@@ -103,6 +168,30 @@ in
         PrivateUsers = mkForce false;
         SupplementaryGroups = [ "render" ];
       })
+      # A bind mount rather than cacheDir, so only the transcodes move. The
+      # rest of the cache is small random IO that belongs on the SSD, while
+      # transcode segments are large sequential writes a spinning disk serves
+      # fine. Jellyfin offers no option for the transcode path alone, and
+      # forceEncodingConfig owns encoding.xml, so the path is redirected
+      # underneath it instead. Set up at unit start, after CacheDirectory has
+      # created the parent.
+      (mkIf (cfg.transcodePath != null) {
+        BindPaths = [ "${cfg.transcodePath}:${config.services.jellyfin.cacheDir}/transcodes" ];
+      })
+      # mkAfter so this runs after the upstream pre-start has written
+      # encoding.xml; it edits that file in place.
+      { ExecStartPre = lib.mkAfter [ segmentDeletion ]; }
+    ];
+
+    # Without this Jellyfin can start before the bulk disk is mounted and
+    # bind a path that is still an empty mountpoint on the root filesystem,
+    # which is the failure this redirect exists to prevent.
+    systemd.services.jellyfin.unitConfig = mkIf (cfg.transcodePath != null) {
+      RequiresMountsFor = cfg.transcodePath;
+    };
+
+    systemd.tmpfiles.rules = mkIf (cfg.transcodePath != null) [
+      "d ${cfg.transcodePath} 0700 jellyfin ${config.services.jellyfin.group} -"
     ];
 
     users.groups.render = mkIf cfg.hardwareAcceleration.enable { };
