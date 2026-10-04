@@ -570,6 +570,44 @@ class ControllerTests(unittest.TestCase):
         self.api.repo.return_value = {"commit_sha": "b" * 40}
         self.assertEqual(self.c.trusted_statuses(SHA), {})
 
+    def dispatched_run(self, sha, ref="refs/heads/main", workflow="build.yml"):
+        # A dispatched build runs main's workflow, so Forgejo reports main's
+        # commit; the PR head it built is only in the dispatch inputs.
+        return {"id": 99, "workflow_id": workflow, "commit_sha": "b" * 40,
+            "trigger_event": "workflow_dispatch",
+            "event_payload": json.dumps({"ref": ref, "inputs": {"pr": "5", "sha": sha}})}
+
+    def test_status_without_creator_uses_dispatched_run_inputs(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "success",
+            "target_url": "https://example.test/aidengindin/nixos-config/actions/runs/99"}]
+        self.api.repo.return_value = self.dispatched_run(SHA)
+        self.assertEqual(self.c.trusted_statuses(SHA)["colmena/lorien"]["state"], "success")
+
+    def test_dispatched_run_for_other_sha_is_rejected(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "success",
+            "target_url": "https://example.test/aidengindin/nixos-config/actions/runs/99"}]
+        self.api.repo.return_value = self.dispatched_run("c" * 40)
+        self.assertEqual(self.c.trusted_statuses(SHA), {})
+
+    def test_dispatched_run_outside_main_build_workflow_is_rejected(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "success",
+            "target_url": "https://example.test/aidengindin/nixos-config/actions/runs/99"}]
+        for run in (self.dispatched_run(SHA, ref="refs/heads/evil"), self.dispatched_run(SHA, workflow="other.yml")):
+            self.api.repo.return_value = run
+            self.assertEqual(self.c.trusted_statuses(SHA), {})
+
+    def test_terminal_dispatched_run_closes_unresolved_host_status(self):
+        self.api.statuses.return_value = [
+            {"context": f"colmena/{host}", "creator": {"id": 2},
+             "state": "pending" if host == "khazad-dum" else "success"}
+            for host in CI_HOSTS
+        ]
+        run = self.dispatched_run(SHA) | {"status": "cancelled", "html_url": "https://example.test/run/99"}
+        self.api.repo.return_value = {"workflow_runs": [run]}
+        self.assertTrue(self.c.reconcile_terminal_build(SHA))
+        self.api.status.assert_called_once_with(SHA, "colmena/khazad-dum", "error",
+            "Forgejo run cancelled before this host reported a result", "https://example.test/run/99")
+
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()
