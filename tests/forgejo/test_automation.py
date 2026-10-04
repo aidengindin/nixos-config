@@ -378,6 +378,101 @@ class ControllerTests(unittest.TestCase):
         dispatches = [call for call in self.api.repo.call_args_list if "dispatches" in call.args[0]]
         self.assertEqual(len(dispatches), 1)
 
+    def test_untrusted_status_fails_immediately(self):
+        def statuses(sha, rejected=None):
+            rejected["colmena/lorien"] = "run 99 built " + "b" * 40 + ", not this PR head"
+            return {}
+        self.c.trusted_statuses = statuses
+        with self.assertRaisesRegex(ValueError, "Untrusted colmena/lorien status: run 99 built"):
+            self.c.deploy("1", self.job())
+        self.assertFalse(any("dispatches" in call.args[0] for call in self.api.repo.call_args_list))
+
+    def test_trusted_statuses_reports_rejection_reason(self):
+        self.api.statuses.return_value = [{"context": "colmena/lorien", "creator": None, "state": "success",
+            "target_url": "https://example.test/aidengindin/nixos-config/actions/runs/7"}]
+        self.api.repo.return_value = {"commit_sha": "b" * 40}
+        rejected = {}
+        self.assertEqual(self.c.trusted_statuses(SHA, rejected), {})
+        self.assertEqual(rejected, {"colmena/lorien": "run 7 built " + "b" * 40 + ", not this PR head"})
+
+    def test_long_wait_is_reported_once(self):
+        self.c.trusted_statuses = Mock(return_value={})
+        job = self.job(); job["created"] = time.time() - 31 * 60
+        self.c.deploy("1", job); self.c.deploy("1", job)
+        with self.c.db() as db:
+            rows = db.execute("SELECT body FROM comments").fetchall()
+        self.assertEqual(len(rows), 1)
+        self.assertIn("still waiting on builds for: lorien", rows[0][0])
+
+    def insert(self, key, job, state="queued"):
+        with self.c.db() as db:
+            db.execute("INSERT INTO jobs VALUES (?,?,?)", (key, json.dumps(job), state))
+
+    def states(self):
+        with self.c.db() as db:
+            return dict(db.execute("SELECT id,state FROM jobs").fetchall())
+
+    def test_waiting_job_does_not_block_later_jobs(self):
+        self.insert("1", self.job() | {"targets": ["lorien"]})
+        self.insert("2", self.job() | {"targets": ["khazad-dum"], "pr": 6})
+        seen = []
+        def deploy(key, job):
+            seen.append(key)
+            if key == "2":
+                job["started"] = True
+        self.c.deploy = deploy
+        self.c.run_jobs()
+        self.assertEqual(seen, ["1", "2"])
+
+    def test_started_job_runs_alone(self):
+        self.insert("1", self.job())
+        self.insert("2", self.job() | {"targets": ["khazad-dum"], "started": True})
+        self.c.deploy = Mock()
+        self.c.run_jobs()
+        self.assertEqual([call.args[0] for call in self.c.deploy.call_args_list], ["2"])
+
+    def test_only_one_waiting_job_starts_per_pass(self):
+        self.insert("1", self.job())
+        self.insert("2", self.job() | {"targets": ["khazad-dum"]})
+        def deploy(key, job):
+            job["started"] = True
+        self.c.deploy = Mock(side_effect=deploy)
+        self.c.run_jobs()
+        self.assertEqual(self.c.deploy.call_count, 1)
+
+    def test_newer_deploy_supersedes_waiting_job_for_same_host(self):
+        self.insert("1", self.job() | {"targets": ["lorien", "osgiliath"], "pr": 4})
+        self.insert("2", self.job() | {"targets": ["osgiliath"], "pr": 6})
+        self.c.deploy = Mock()
+        self.c.run_jobs()
+        self.assertEqual(self.states(), {"1": "failed", "2": "queued"})
+        self.assertEqual([call.args[0] for call in self.c.deploy.call_args_list], ["2"])
+        with self.c.db() as db:
+            pr, body = db.execute("SELECT pr,body FROM comments").fetchone()
+        self.assertEqual(pr, 4)
+        self.assertIn("superseded by a newer /deploy on #6", body)
+
+    def test_started_job_is_never_superseded(self):
+        self.insert("1", self.job() | {"started": True})
+        self.insert("2", self.job() | {"pr": 6})
+        self.c.deploy = Mock()
+        self.c.run_jobs()
+        self.assertEqual(self.states(), {"1": "queued", "2": "queued"})
+
+    def test_api_error_while_waiting_retries_instead_of_failing(self):
+        self.insert("1", self.job())
+        self.c.deploy = Mock(side_effect=OSError("Forgejo restarting"))
+        self.c.run_jobs()
+        self.assertEqual(self.states(), {"1": "queued"})
+
+    def test_failed_waiting_job_does_not_stop_the_pass(self):
+        self.insert("1", self.job())
+        self.insert("2", self.job() | {"targets": ["khazad-dum"]})
+        self.c.deploy = Mock(side_effect=[ValueError("PR changed"), None])
+        self.c.run_jobs()
+        self.assertEqual(self.states(), {"1": "failed", "2": "queued"})
+        self.assertEqual(self.c.deploy.call_count, 2)
+
     def test_unrelated_host_failure_does_not_block(self):
         self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}, "colmena/weathertop": {"state": "failure"}})
         self.c.pull_closure = Mock(return_value=CLOSURE)
