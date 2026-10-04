@@ -20,6 +20,21 @@ LOG = logging.getLogger("forgejo-controller")
 ACTIVATION_GRACE_SECONDS = 300
 
 
+def built_sha(run):
+    """Return the PR head an action run built, or None if it is untrusted."""
+    if run.get("trigger_event") != "workflow_dispatch":
+        return run.get("commit_sha")
+    # A dispatched build runs main's workflow, so commit_sha is main's head;
+    # build.yml checks out the exact PR head named by its `sha` input instead.
+    try:
+        payload = json.loads(run.get("event_payload") or "{}")
+    except json.JSONDecodeError:
+        return None
+    if run.get("workflow_id") != "build.yml" or payload.get("ref") != "refs/heads/main":
+        return None
+    return (payload.get("inputs") or {}).get("sha")
+
+
 def signed(body, signature, secret):
     signature = signature.removeprefix("sha256=")
     return hmac.compare_digest(hmac.new(secret.encode(), body, hashlib.sha256).hexdigest(), signature)
@@ -137,7 +152,7 @@ class Controller:
                 if not run_id.isdigit():
                     continue
                 run = self.api.repo(f"actions/runs/{run_id}")
-                if run.get("commit_sha") != sha:
+                if built_sha(run) != sha:
                     continue
             trusted[status["context"]] = status
         return trusted
@@ -155,7 +170,7 @@ class Controller:
         runs = self.api.repo("actions/runs?limit=50").get("workflow_runs", [])
         run = next((
             item for item in runs
-            if item.get("workflow_id") == "build.yml" and item.get("commit_sha") == sha
+            if item.get("workflow_id") == "build.yml" and built_sha(item) == sha
         ), None)
         if not run or run.get("status") not in ("success", "failure", "cancelled"):
             return False
