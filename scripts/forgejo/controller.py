@@ -18,6 +18,7 @@ from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, se
 
 LOG = logging.getLogger("forgejo-controller")
 ACTIVATION_GRACE_SECONDS = 300
+WAIT_REPORT_SECONDS = 30 * 60
 
 
 def built_sha(run):
@@ -139,20 +140,33 @@ class Controller:
             self.queue_build_notification(sha)
             self.queue_repair(sha)
 
-    def trusted_statuses(self, sha):
+    def trusted_statuses(self, sha, rejected=None):
+        """Return verified statuses by context; record why others were dropped.
+
+        API errors propagate so callers retry; only a status that exists and
+        fails verification lands in `rejected`.
+        """
         trusted = {}
+        rejected = {} if rejected is None else rejected
         prefix = f"{self.api.url}/{REPOSITORY}/actions/runs/"
         for status in self.api.statuses(sha):
             creator = (status.get("creator") or {}).get("id")
             if creator != self.bot_id:
                 target = status.get("target_url", "")
-                if creator is not None or not target.startswith(prefix):
+                if creator is not None:
+                    rejected[status["context"]] = f"posted by untrusted user {creator}"
+                    continue
+                if not target.startswith(prefix):
+                    rejected[status["context"]] = f"links outside this repository's runs: {target or 'none'}"
                     continue
                 run_id = target[len(prefix):].split("/", 1)[0]
                 if not run_id.isdigit():
+                    rejected[status["context"]] = f"links to an invalid run: {target}"
                     continue
                 run = self.api.repo(f"actions/runs/{run_id}")
-                if built_sha(run) != sha:
+                built = built_sha(run)
+                if built != sha:
+                    rejected[status["context"]] = f"run {run_id} built {built or 'an unverifiable commit'}, not this PR head"
                     continue
             trusted[status["context"]] = status
         return trusted
@@ -286,6 +300,30 @@ class Controller:
         subprocess.run(["nix-store", "--realise", closure, "--add-root", str(root), "--indirect"], check=True)
         return closure
 
+    def note_waiting(self, key, job, hosts):
+        if job.get("waiting") != hosts:
+            LOG.info("Deployment %s for PR #%s waiting on builds for %s", key, job["pr"], ", ".join(hosts))
+            job["waiting"] = hosts
+        if not job.get("wait_reported") and time.time() - job["created"] > WAIT_REPORT_SECONDS:
+            self.queue_comment(f"deploy:{key}:waiting", job["pr"],
+                f"Deployment for `{job['sha']}` is still waiting on builds for: {', '.join(hosts)}.")
+            job["wait_reported"] = True
+
+    def supersede(self, jobs):
+        """Fail waiting jobs whose hosts a newer /deploy also targets."""
+        claimed, kept = {}, []
+        for key, job in reversed(jobs):
+            newer = next((claimed[host] for host in job["targets"] if host in claimed), None)
+            for host in job["targets"]:
+                claimed.setdefault(host, job["pr"])
+            if newer is not None and not job.get("started"):
+                self.save(key, job, "failed")
+                summary = self.summary(job, f"Deployment superseded by a newer /deploy on #{newer}")
+                self.queue_comment(f"deploy:{key}:superseded", job["pr"], summary)
+                continue
+            kept.append((key, job))
+        return kept[::-1]
+
     def deploy(self, key, job):
         sha, pr = job["sha"], job["pr"]
         if time.time() - job["created"] > 13 * 3600 and not job.get("started"):
@@ -294,17 +332,27 @@ class Controller:
             pull = self.api.repo(f"pulls/{pr}")
             if pull["state"] != "open" or pull["head"]["sha"] != sha:
                 raise ValueError("PR changed; submit a new /deploy command")
-            statuses = self.trusted_statuses(sha)
+            rejected = {}
+            statuses = self.trusted_statuses(sha, rejected)
+            waiting = []
             for host in job["targets"]:
-                status = statuses.get(f"colmena/{host}")
+                context = f"colmena/{host}"
+                status = statuses.get(context)
+                # Waiting cannot make a rejected status trustworthy. Fail now
+                # rather than sit silently until the build timeout.
+                if context in rejected:
+                    raise ValueError(f"Untrusted {context} status: {rejected[context]}")
                 if status and status["state"] in ("failure", "error"):
                     raise ValueError(f"Build failed for {host}")
                 if not status or status["state"] != "success":
-                    if not job.get("dispatched"):
-                        self.api.repo("actions/workflows/build.yml/dispatches", data={"ref": "main", "inputs": {"pr": str(pr), "sha": sha}})
-                        job["dispatched"] = True
-                        self.save(key, job)
-                    return
+                    waiting.append(host)
+            if waiting:
+                if not job.get("dispatched"):
+                    self.api.repo("actions/workflows/build.yml/dispatches", data={"ref": "main", "inputs": {"pr": str(pr), "sha": sha}})
+                    job["dispatched"] = True
+                self.note_waiting(key, job, waiting)
+                self.save(key, job)
+                return
             # Transfer all requested closures before any activation.
             for host in job["targets"]:
                 if host not in job["hosts"]:
@@ -376,22 +424,43 @@ class Controller:
             lines.append(f"- {host}: {item.get('stage', 'not started')}; previous: `{item.get('previous', 'unknown')}`")
         return "\n".join(lines)
 
+    def run_jobs(self):
+        """Advance queued deployments without letting a waiting job block others.
+
+        Activation stays serial: a started job runs alone until it finishes,
+        and at most one waiting job starts per pass.
+        """
+        with self.db() as db:
+            rows = db.execute("SELECT id,data FROM jobs WHERE state='queued' ORDER BY rowid").fetchall()
+        jobs = self.supersede([(key, json.loads(data)) for key, data in rows])
+        started = [(key, job) for key, job in jobs if job.get("started")]
+        for key, job in started[:1] or jobs:
+            try:
+                self.deploy(key, job)
+            except OSError as exc:
+                if job.get("started"):
+                    self.fail(key, job, exc)
+                    return
+                # Forgejo restarting while a job waits is not a deploy failure.
+                LOG.warning("Deployment %s could not check builds; retrying", key, exc_info=True)
+                continue
+            except Exception as exc:
+                self.fail(key, job, exc)
+                continue
+            if job.get("started"):
+                return
+
+    def fail(self, key, job, exc):
+        LOG.exception("Deployment %s failed", key)
+        self.save(key, job, "failed")
+        summary = self.summary(job, "Deployment stopped: " + str(exc))
+        self.queue_comment(f"deploy:{key}:failure", job["pr"], summary)
+        self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
+
     def work(self):
         while True:
             try:
-                with self.db() as db:
-                    row = db.execute("SELECT id,data FROM jobs WHERE state='queued' ORDER BY rowid LIMIT 1").fetchone()
-                if row:
-                    key, data = row
-                    job = json.loads(data)
-                    try:
-                        self.deploy(key, job)
-                    except Exception as exc:
-                        LOG.exception("Deployment %s failed", key)
-                        self.save(key, job, "failed")
-                        summary = self.summary(job, "Deployment stopped: " + str(exc))
-                        self.queue_comment(f"deploy:{key}:failure", job["pr"], summary)
-                        self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
+                self.run_jobs()
                 # Reconcile dropped status webhooks after Forgejo/controller restart.
                 for pull in self.api.pulls():
                     self.reconcile_terminal_build(pull["head"]["sha"])
