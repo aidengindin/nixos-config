@@ -54,6 +54,12 @@
       };
     };
 
+    # Every host has a 511 MiB ESP and a kernel+initrd pair is ~75 MiB, so
+    # the ESP holds about six pairs. Unlimited entries filled khazad-dum's ESP
+    # and failed a switch; five leaves room for a new pair during install even
+    # if every retained generation has a different kernel.
+    boot.loader.systemd-boot.configurationLimit = lib.mkDefault 5;
+
     environment.systemPackages = with pkgs; [
       lm_sensors
       (lib.hiPrio pkgs.uutils-coreutils-noprefix)
