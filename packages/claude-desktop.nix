@@ -15,8 +15,8 @@
 let
   inherit (pkgs) lib;
 
-  version = "2.7032.0";
-  hash = "sha256-Hn9FBLylsvay08QSPRRdcnZH538u4tBGhQcR5h59exE=";
+  version = "2.9939.4";
+  hash = "sha256-PP3bI78pEeBeJ7TtOFa455XflGQ7LDW1nesxfPmVvKA=";
 in
 pkgs.stdenv.mkDerivation {
   pname = "claude-desktop";
