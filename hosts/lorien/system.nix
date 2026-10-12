@@ -5,6 +5,8 @@
     ../../linux
   ];
 
+  agindin.watchdog.enable = true;
+
   agindin.ssh = {
     enable = true;
     allowedKeys = [
