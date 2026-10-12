@@ -59,6 +59,7 @@ pkgs.stdenv.mkDerivation {
     nspr
     nss
     pango
+    pipewire # claude-native-binding.node links libpipewire-0.3 since 2.31226
     systemd
     libayatana-appindicator
     libx11
