@@ -71,6 +71,12 @@
 
   services.fwupd.enable = true;
 
+  # External monitor brightness over DDC/CI (e.g. `ddcutil setvcp 10 50`).
+  # hardware.i2c loads i2c-dev and grants the i2c group access to /dev/i2c-*.
+  hardware.i2c.enable = true;
+  users.users.agindin.extraGroups = [ "i2c" ];
+  environment.systemPackages = [ pkgs.ddcutil ];
+
   agindin.zwift.enable = true;
 
   agindin.steam.enable = true;

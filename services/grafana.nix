@@ -1108,6 +1108,11 @@ in
         memberlist.bind_addr = [ "127.0.0.1" ];
 
         common = {
+          # Pin the instance address so Loki never derives it from the
+          # [eth0 en0 lo] interface list. Early in boot lo has no address
+          # yet, and Loki's 100ms restarts exhaust the start limit within
+          # seconds, leaving it failed until someone restarts it.
+          instance_addr = "127.0.0.1";
           path_prefix = lokiDir;
           replication_factor = 1;
           ring = {
