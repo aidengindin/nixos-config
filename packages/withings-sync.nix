@@ -1,35 +1,16 @@
 { unstablePkgs, ... }:
 let
-  pythonPackagesOverride = unstablePkgs.python312.override {
-    packageOverrides = _self: super: {
-      jaraco-test = super.jaraco-test.overridePythonAttrs (_old: {
-        doCheck = false;
-        doInstallCheck = false;
-      });
-      logfire = super.logfire.overridePythonAttrs (_old: {
-        dontCheckRuntimeDeps = true;
-        pythonImportsCheck = [ ];
-      });
-      garth = super.garth.overridePythonAttrs (_old: {
-        doCheck = false;
-        doInstallCheck = false;
-      });
-      inline-snapshot = super.inline-snapshot.overridePythonAttrs (_old: {
-        doCheck = false;
-        doInstallCheck = false;
-      });
-    };
-  };
+  python3Packages = unstablePkgs.python3Packages;
 in
-pythonPackagesOverride.pkgs.withings-sync.overrideAttrs (oldAttrs: {
+python3Packages.withings-sync.overrideAttrs (oldAttrs: {
   src = unstablePkgs.fetchFromGitHub {
     owner = "aidengindin";
     repo = "withings-sync";
     rev = "feat/credential-file-env-variable";
-    sha256 = "sha256-mZi07BzzyKyAPqF/2AZLegeQxV+1Yx/3fwbN+BT1T/w=";
+    sha256 = "sha256-S3qxa9lJgsbXopoNIgbhwJAK/4poVetc+CpLqBP/wRE=";
   };
   propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or [ ]) ++ [
-    pythonPackagesOverride.pkgs.setuptools
+    python3Packages.setuptools
   ];
   doCheck = false;
   doInstallCheck = false;
