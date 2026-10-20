@@ -211,7 +211,10 @@ in
                   type = "discord";
                   settings = {
                     url = "$__file{${config.age.secrets.grafanaDiscordWebhook.path}}";
-                    message = "{{ .CommonAnnotations.summary }}";
+                    # One line per alert: a group can hold several instances (e.g. two
+                    # failed units on one host) whose summaries differ, which would
+                    # leave .CommonAnnotations.summary empty.
+                    message = "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}";
                     title = "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}";
                   };
                   disableResolveMessage = false;
@@ -682,7 +685,7 @@ in
                       execErrState = "Error";
                       for = "2m";
                       annotations = {
-                        summary = "Systemd service(s) failed on ${host}";
+                        summary = "{{ $labels.name }} failed on ${host}";
                       };
                       labels = {
                         host = host;
