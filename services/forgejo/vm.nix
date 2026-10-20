@@ -226,6 +226,13 @@ in
     requires = [ "forgejo-vm-credentials.service" ];
     after = [ "forgejo-vm-credentials.service" ];
   };
+  # sshd-keygen replaces an empty or missing host key with a random one. Left
+  # unordered it can win the race against the credential copy above, and the
+  # controller's pinned known_hosts entry then rejects the VM.
+  systemd.services.sshd-keygen = {
+    requires = [ "forgejo-vm-credentials.service" ];
+    after = [ "forgejo-vm-credentials.service" ];
+  };
   # The generated read-only lower store changes with the VM closure, while
   # the writable overlay and Nix database persist. Remove registrations for
   # paths that existed only in an older lower image before accepting jobs.

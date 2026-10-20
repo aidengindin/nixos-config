@@ -394,7 +394,10 @@ class Controller:
                 LOG.warning("Cannot read active generation on legacy target %s", host)
                 item["previous"] = "unknown"
             if host != "osgiliath":
-                subprocess.run(["nix", "copy", "--to", f"ssh-ng://nixos-deploy@{host}", closure], check=True, timeout=3600)
+                # Let the target fetch public paths from its own substituters
+                # (compressed, parallel); only the rest streams from here.
+                subprocess.run(["nix", "copy", "--substitute-on-destination", "--to",
+                    f"ssh-ng://nixos-deploy@{host}", closure], check=True, timeout=3600)
             item["stage"] = "activating"
             item["activation_started"] = time.time()
             self.save(key, job)

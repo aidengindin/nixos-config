@@ -15,8 +15,8 @@
 let
   inherit (pkgs) lib;
 
-  version = "2.9939.4";
-  hash = "sha256-PP3bI78pEeBeJ7TtOFa455XflGQ7LDW1nesxfPmVvKA=";
+  version = "2.42304.0";
+  hash = "sha256-dM0szCnSQWUUTkVcvIcsbMKiSiY7g+c0IOlfiRZtSqQ=";
 in
 pkgs.stdenv.mkDerivation {
   pname = "claude-desktop";
@@ -59,6 +59,7 @@ pkgs.stdenv.mkDerivation {
     nspr
     nss
     pango
+    pipewire # claude-native-binding.node links libpipewire-0.3 since 2.31226
     systemd
     libayatana-appindicator
     libx11

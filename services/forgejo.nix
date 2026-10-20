@@ -239,8 +239,16 @@ in
       };
       script = ''
         set -euo pipefail
-        # createdb must succeed first: never delete a pre-existing database.
-        runuser -u postgres -- createdb forgejo_restore_check
+        marker='forgejo-restore-check scratch'
+        # A crash skips the EXIT trap and leaves the scratch database behind.
+        # Drop a leftover only if it carries our marker comment.
+        existing=$(runuser -u postgres -- psql -At -v ON_ERROR_STOP=1 -d postgres -c "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = 'forgejo_restore_check'")
+        if test "$existing" = "$marker"; then
+          echo "Dropping scratch database left by an interrupted run"
+          runuser -u postgres -- dropdb forgejo_restore_check
+        fi
+        # createdb must succeed first: never delete a database this check did not create.
+        runuser -u postgres -- createdb forgejo_restore_check "$marker"
         trap 'runuser -u postgres -- dropdb forgejo_restore_check' EXIT
         runuser -u postgres -- pg_restore --exit-on-error --no-owner -d forgejo_restore_check < /var/backup/forgejo/current/database.dump
         actual=$(runuser -u postgres -- psql -At -v ON_ERROR_STOP=1 -d forgejo_restore_check -c 'SELECT count(*) FROM repository')
