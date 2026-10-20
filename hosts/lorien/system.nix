@@ -5,6 +5,13 @@
     ../../linux
   ];
 
+  agindin.watchdog = {
+    enable = true;
+    # The BIOS leaves the iTCO counter frozen (it arms but never counts
+    # down), so it can never fire. The OC watchdog resets the board.
+    driver = "intel_oc_wdt";
+  };
+
   agindin.ssh = {
     enable = true;
     allowedKeys = [
