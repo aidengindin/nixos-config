@@ -213,8 +213,9 @@ in
                     url = "$__file{${config.age.secrets.grafanaDiscordWebhook.path}}";
                     # One line per alert: a group can hold several instances (e.g. two
                     # failed units on one host) whose summaries differ, which would
-                    # leave .CommonAnnotations.summary empty.
-                    message = "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}";
+                    # leave .CommonAnnotations.summary empty. Each line carries its own
+                    # status, since a group stays "firing" while any member still is.
+                    message = "{{ range .Alerts }}{{ if eq .Status \"firing\" }}🔴{{ else }}✅{{ end }} {{ .Annotations.summary }}\n{{ end }}";
                     title = "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}";
                   };
                   disableResolveMessage = false;
