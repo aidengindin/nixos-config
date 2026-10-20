@@ -87,9 +87,10 @@ let
         path = "/openvino-model/ssdlite_mobilenet_v2.xml";
         labelmap_path = "/openvino-model/coco_91cl_bkgr.txt";
       };
-    }
-    // lib.optionalAttrs (cfg.acceleration == "intel" && cfg.ffmpegHwaccel) {
-      ffmpeg.hwaccel_args = "preset-vaapi";
+      # Set explicitly either way: 0.17 defaults hwaccel_args to "auto", which
+      # resolves to preset-vaapi whenever /dev/dri is present. An empty list is
+      # what Frigate leaves alone as "no hwaccel".
+      ffmpeg.hwaccel_args = if cfg.ffmpegHwaccel then "preset-vaapi" else [ ];
     };
 
   configFile = yamlFormat.generate "frigate-config.yml" frigateSettings;
@@ -140,6 +141,9 @@ in
         input is a stream copy with nothing to decode. So the only thing this
         buys is offloading substream decode, and it costs a hwdownload of
         every frame back to system memory to reach the detector.
+
+        When off, hwaccel is explicitly disabled rather than left unset,
+        because Frigate's "auto" default would pick VAAPI anyway.
 
         Off by default because that hwdownload intermittently fails on the
         iGPU ("Failed to sync surface" / "Failed to download frame: -5"),
