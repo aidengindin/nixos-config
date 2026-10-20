@@ -103,6 +103,9 @@ in
       serviceConfig = {
         User = "postgres";
         Type = "oneshot";
+        # Without this the unit goes inactive after each run, so every
+        # pocket-id restart re-runs it and a crash loop trips its start limit.
+        RemainAfterExit = true;
         ExecStart = ''
           ${config.services.postgresql.package}/bin/psql -d pocket-id -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS "pgcrypto";'
         '';
@@ -116,6 +119,10 @@ in
     systemd.services.pocket-id = {
       requires = [ "pocket-id-db-init.service" ];
       after = [ "pocket-id-db-init.service" ];
+      # After an unclean shutdown, pocket-id refuses to start until the stale
+      # actor-host registration from the previous boot expires. Retry slowly so
+      # it outlasts the lease instead of exhausting the start limit in seconds.
+      serviceConfig.RestartSec = lib.mkForce "30s";
     };
   };
 }
