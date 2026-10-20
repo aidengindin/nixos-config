@@ -481,7 +481,7 @@ class ControllerTests(unittest.TestCase):
             self.c.deploy("1", self.job())
         self.assertTrue(any(call.args[0][:2] == ["nix", "copy"] for call in run.call_args_list))
         self.assertFalse(any("build" in call.args[0] for call in run.call_args_list))
-        run.assert_called_once_with(["nix", "copy", "--to", "ssh-ng://nixos-deploy@lorien", CLOSURE], check=True, timeout=3600)
+        run.assert_called_once_with(["nix", "copy", "--substitute-on-destination", "--to", "ssh-ng://nixos-deploy@lorien", CLOSURE], check=True, timeout=3600)
         self.assertEqual(self.c.target.call_count, 3)
         self.c.target.assert_any_call("lorien", ["readlink", "-f", "/run/current-system"])
 
