@@ -129,7 +129,12 @@ in
         };
         service.DISABLE_REGISTRATION = true;
         service.ALLOW_ONLY_EXTERNAL_REGISTRATION = true;
-        session.COOKIE_SECURE = true;
+        # The default memory provider drops every login whenever Forgejo
+        # restarts, which happens on each deploy and nightly snapshot.
+        session = {
+          COOKIE_SECURE = true;
+          PROVIDER = "db";
+        };
         oauth2_client = {
           ENABLE_AUTO_REGISTRATION = true;
           ACCOUNT_LINKING = "auto";
