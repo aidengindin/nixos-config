@@ -135,9 +135,10 @@ in
             ];
             timerConfig = {
               OnCalendar = "02:00";
+              # No OnClockChange/OnTimezoneChange: NixOS activation trips them,
+              # so every deploy ran a full backup (and on osgiliath, a Forgejo
+              # snapshot that stops Forgejo). Persistent covers missed runs.
               Persistent = true;
-              OnClockChange = true;
-              OnTimezoneChange = true;
             };
             user = "restic";
           };
