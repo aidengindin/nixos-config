@@ -209,6 +209,7 @@ in
         Type = "oneshot";
         UMask = "0077";
       };
+      onSuccess = [ "forgejo-restore-check.service" ];
       script = ''
         set -euo pipefail
         mkdir -p /var/backup/forgejo
@@ -228,9 +229,15 @@ in
     };
     systemd.services.forgejo-restore-check = {
       description = "Verify the Forgejo snapshot by restoring a scratch database";
-      wantedBy = [ "multi-user.target" ];
-      requires = [ "forgejo-snapshot.service" ];
-      after = [ "forgejo-snapshot.service" ];
+      # Triggered by forgejo-snapshot's OnSuccess. Being wanted by
+      # multi-user.target re-ran it on every switch, and its Requires= then
+      # took a fresh snapshot, which stops Forgejo.
+      requires = [ "postgresql-setup.service" ];
+      after = [
+        "postgresql-setup.service"
+        "forgejo-snapshot.service"
+      ];
+      unitConfig.RequiresMountsFor = [ "/var/backup/forgejo" ];
       path = [
         pkgs.coreutils
         pkgs.findutils
