@@ -96,7 +96,17 @@ in
         # a Pocket ID account.
         ACTUAL_USER_CREATION_MODE = "manual";
       };
-      serviceConfig.EnvironmentFile = cfg.oidc.environmentFile;
+      serviceConfig = {
+        EnvironmentFile = cfg.oidc.environmentFile;
+        # Upstream lists server-files and user-files in ReadWritePaths but only
+        # creates the parent via StateDirectory. systemd builds the mount
+        # namespace before Actual gets a chance to create them, so a fresh
+        # install dies at step NAMESPACE. Restating them here creates them at
+        # unit start, after the impermanence bind mount.
+        #
+        # mkForce because upstream already defines StateDirectory.
+        StateDirectory = lib.mkForce "actual actual/server-files actual/user-files";
+      };
       restartTriggers = ageSourceOf cfg.oidc.environmentFile;
     };
 
