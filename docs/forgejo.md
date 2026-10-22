@@ -191,6 +191,41 @@ Matrix home room without an agent turn. It reports only terminal four-host build
 results, Hermes repair starts and exhaustion, and deployment outcomes. Forgejo
 statuses, logs, and PR comments remain the durable record.
 
+## Update cooldown and pinning
+
+The weekly updater adopts nothing younger than seven days (supply-chain
+cooldown). Steps in `scripts/forgejo/update.py`, in order: `nix flake update`;
+`cooldown.py`; `tags.py`; `nix-update` and `scripts/update-*.sh`; `images.py`.
+`nix-update` runs from the flake's locked nixpkgs (`--inputs-from .`), not the
+mutable registry. Add `--dry-run` to `cooldown.py`, `tags.py` or `images.py` to
+print decisions without writing.
+
+- **Flake inputs** (`cooldown.py`): every lock node, including transitive ones,
+  whose new `locked.lastModified` is under seven days old is re-pinned to the
+  newest commit on the same ref that is old enough (GitHub commits API, then
+  `nix flake prefetch` for `narHash`). Only `locked` changes. A commit already
+  in the committed lock is kept and never downgraded. The lock is then checked
+  with `nix flake metadata --no-update-lock-file`; if it would need re-locking
+  the uncooled lock is restored and the step fails. Held-back inputs (upstream
+  head age, pinned age) and unsupported young non-GitHub inputs are listed in the PR
+  body. **Exempt**: `nixos/nixpkgs` on `nixos-*`, `nixpkgs-*` or `release-*`
+  branches and the `channels.nixos.org` tarball, `nix-community/home-manager`,
+  owner `aidengindin`, and anything on `git.gindin.xyz`. Nodes pinned to a rev or
+  a version tag are skipped.
+- **Tag-pinned inputs** (`tags.py`): any `name.url = "github:owner/repo/<vtag>"`
+  in `flake.nix` (today `hermes-agent`) moves to the newest non-prerelease GitHub
+  release published at least seven days ago, then `nix flake update <name>` and a
+  second cooldown pass for newly pulled transitive inputs. "Newest" is by
+  publication time because projects change tag schemes.
+- **Container images** (`images.py`): every OCI image in `services/*.nix` must be
+  written `repo:tag@sha256:digest`; the updater finds them by that pattern and
+  reports unpinned ones. Within the same track (same major, or major.minor while
+  the major is 0; same tag prefix and suffix such as `-pg18`; no rc, beta, dev or
+  nightly tags) it picks the newest tag whose image config `created` is at least
+  seven days old and rewrites tag and digest. To add an image, pin it first:
+  `skopeo` is available in the CI VM; `images.py resolve repo:tag` prints the
+  pinned form.
+
 ## Deploy a PR
 
 Comment as your configured Forgejo user:
