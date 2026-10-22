@@ -235,10 +235,47 @@ class RenderTests(unittest.TestCase):
         self.assertIn("New", comment)
         self.assertIn("CVE-1", comment)
         self.assertIn("Resolved", comment)
-        self.assertIn(cve_scan.PING_MARKER, cve_scan.render_comment(self.STATE, ["CVE-1|openssl"], [], ping=["CVE-1|openssl"]))
+        self.assertIn(cve_scan.PING_PREFIX + " CVE-1 -->", cve_scan.render_comment(self.STATE, ["CVE-1|openssl"], [], ping=["CVE-1|openssl"]))
 
 
 ROW = {"cve": "CVE-1", "package": "openssl", "version": "3", "cvss": 5.0, "target": "lorien", "fix": None, "classify": "x"}
+
+
+class CommentTests(unittest.TestCase):
+    @staticmethod
+    def item(cvss, kev=False):
+        return {"targets": ["lorien"], "cvss": cvss, "kev": kev, "version": "1", "fix": None,
+            "first_seen": "2026-10-22", "last_seen": "2026-10-22"}
+
+    def state(self):
+        return {"findings": {"CVE-1|a": self.item(7.5), "CVE-2|b": self.item(9.8), "CVE-2|c": self.item(9.8),
+            "CVE-3|d": self.item(9.8, kev=True), "CVE-4|e": self.item(3.0), "CVE-5|f": self.item(5.0)}}
+
+    def test_ping_line_lists_cve_ids_by_severity(self):
+        state = self.state()
+        comment = cve_scan.render_comment(state, sorted(state["findings"]), [],
+            ping=["CVE-2|b", "CVE-2|c", "CVE-3|d", "CVE-1|a"])
+        self.assertEqual(comment.splitlines()[0], "<!-- cve-ping: CVE-3,CVE-2,CVE-1 -->")
+
+    def test_no_ping_line_without_ping(self):
+        state = self.state()
+        self.assertNotIn(cve_scan.PING_PREFIX, cve_scan.render_comment(state, ["CVE-2|b"], []))
+
+    def test_low_severity_new_findings_are_counted_not_listed(self):
+        state = self.state()
+        comment = cve_scan.render_comment(state, sorted(state["findings"]), [])
+        self.assertIn("CVE-1", comment)
+        self.assertNotIn("CVE-4", comment)
+        self.assertNotIn("CVE-5", comment)
+        self.assertIn("Plus 2 lower-severity new findings; see the issue's counts.", comment)
+        self.assertLess(comment.index("CVE-3"), comment.index("CVE-1"))
+
+    def test_resolved_list_is_capped(self):
+        resolved = [f"CVE-{i}|p" for i in range(60)]
+        comment = cve_scan.render_comment({"findings": {}}, [], resolved)
+        self.assertIn("CVE-49 in p", comment)
+        self.assertNotIn("CVE-50 in p", comment)
+        self.assertIn("and 10 more", comment)
 
 
 class ScanTests(unittest.TestCase):
@@ -430,7 +467,7 @@ class MainTests(unittest.TestCase):
         code, calls = self.run_main({}, {"lorien", "osgiliath"})
         self.assertEqual(code, 0)
         state = cve_scan.state_from_body([c for c in calls if isinstance(c, tuple)][-1][3]["body"])
-        self.assertEqual(state["last_success"], datetime.date.today().isoformat())
+        self.assertEqual(state["last_success"], datetime.datetime.now(datetime.timezone.utc).date().isoformat())
 
     def test_record_failure_only_writes_last_failure(self):
         api = mock.MagicMock()
@@ -440,7 +477,7 @@ class MainTests(unittest.TestCase):
             self.assertEqual(cve_scan.main(["--record-failure"]), 0)
         hook.assert_not_called()
         state = cve_scan.state_from_body(api.repo.call_args.kwargs["data"]["body"])
-        self.assertIn(datetime.date.today().isoformat(), state["last_failure"])
+        self.assertIn(datetime.datetime.now(datetime.timezone.utc).date().isoformat(), state["last_failure"])
 
 
 

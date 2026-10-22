@@ -33,7 +33,8 @@ FLAP_DAYS = 14
 IGNORE_KEYS = {"cve", "package", "reason", "expires"}
 ISSUE_TITLE = "CVE report"
 STATE_START, STATE_END = "<!-- cve-state", "cve-state -->"
-PING_MARKER = "<!-- cve-ping -->"
+PING_PREFIX = "<!-- cve-ping:"
+MAX_RESOLVED = 50
 ROOT = Path(__file__).resolve().parents[2]
 KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 SECRET_ENV = ("FORGEJO_TOKEN", "CI_WEBHOOK_SECRET")
@@ -220,16 +221,28 @@ def render_issue(state):
 
 
 def render_comment(state, new, resolved, ping=(), escalated=()):
-    lines = [PING_MARKER] if ping else []
+    findings = state["findings"]
+    rank = lambda k: (-(findings[k]["cvss"] or 0), not findings[k]["kev"], k)
+    lines = []
+    if ping:
+        ids = list(dict.fromkeys(k.split("|", 1)[0] for k in sorted(ping, key=rank)))
+        lines.append(f"{PING_PREFIX} {','.join(ids)} -->")
     header = ["| CVE | CVSS | Package | Fixed in | Targets | First seen |", "|---|---|---|---|---|---|"]
     if new:
-        lines += ["### New", *header]
-        lines += [_line(k, state["findings"][k]) for k in new]
+        shown = sorted((k for k in new if findings[k]["kev"] or (findings[k]["cvss"] or 0) >= HIGH), key=rank)
+        lines.append("### New")
+        if shown:
+            lines += [*header, *(_line(k, findings[k]) for k in shown)]
+        if len(new) > len(shown):
+            lines += ["", f"Plus {len(new) - len(shown)} lower-severity new findings; see the issue's counts."]
     if escalated:
         lines += ["", "### Now known-exploited", *header]
         lines += [_line(k, state["findings"][k]) for k in escalated]
     if resolved:
-        lines += ["", "### Resolved", ", ".join(k.replace("|", " in ") for k in resolved)]
+        text = ", ".join(k.replace("|", " in ") for k in resolved[:MAX_RESOLVED])
+        if len(resolved) > MAX_RESOLVED:
+            text += f" and {len(resolved) - MAX_RESOLVED} more"
+        lines += ["", "### Resolved", text]
     return "\n".join(lines)
 
 
@@ -376,7 +389,7 @@ def main(argv=None):
     parser.add_argument("--record-failure", action="store_true", help="called by the workflow's failure() step")
     parser.add_argument("--report-dir", default="cve-report")
     args = parser.parse_args(argv)
-    today = datetime.date.today()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
     api = None if args.dry_run else API()
     issue = find_issue(api) if api else {"number": 0, "body": ""}
     previous = state_from_body(issue["body"] or "")
