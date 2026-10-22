@@ -402,7 +402,7 @@ class ControllerTests(unittest.TestCase):
         self.assertNotIn("CVE-2026-6", message)
 
     def test_non_cve_advisory_ids_are_accepted(self):
-        ids = "GO-2026-1234,RUSTSEC-2026-0001,PYSEC-2026-5,ALSA-2026-1.x,CVE-2026-9"
+        ids = "GO-2026-1234,RUSTSEC-2026-0001,PYSEC-2026-5,ALSA-2026:1234,CVE-2026-9"
         self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {ids} -->"))
         self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
         self.assertIn("GO-2026-1234", self.notifications()[0][1])

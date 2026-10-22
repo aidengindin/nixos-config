@@ -129,7 +129,7 @@ class Controller:
             raise ValueError("Comment is not a CVE ping on the CVE report")
         ping = re.search(r"^<!-- cve-ping: ([^ ]+) -->$", comment["body"], re.MULTILINE)
         cves = ping[1].split(",") if ping else []
-        if not 0 < len(cves) <= 200 or not all(re.fullmatch(r"[A-Z][A-Z0-9]*-[A-Za-z0-9._-]+", cve) for cve in cves):
+        if not 0 < len(cves) <= 200 or not all(re.fullmatch(r"[A-Z][A-Z0-9]*-[A-Za-z0-9._:-]+", cve) for cve in cves):
             raise ValueError("Comment has no valid CVE ping line")
         listed = ", ".join(cves[:5]) + (f" and {len(cves) - 5} more" if len(cves) > 5 else "")
         self.queue_notification(f"cve:{comment_id}",
