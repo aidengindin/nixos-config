@@ -5,6 +5,7 @@ tests need no scanners, network or Forgejo."""
 import csv
 import datetime
 import io
+import json
 import re
 import tomllib
 
@@ -13,7 +14,11 @@ import tomllib
 NOT_VULNERABLE = {"err_not_vulnerable_based_on_repology"}
 SCANNER_WARNING = re.compile(r"scan_(vulnix|grype|osv)\(\)")
 CRITICAL = 9.0
+HIGH = 7.0
 FLAP_DAYS = 14
+ISSUE_TITLE = "CVE report"
+STATE_START, STATE_END = "<!-- cve-state", "cve-state -->"
+PING_MARKER = "<!-- cve-ping -->"
 
 
 def _score(text):
@@ -120,3 +125,59 @@ def diff(previous, current, scanned, today):
 
 def to_ping(state, new):
     return [k for k in new if state["findings"][k]["kev"] or (state["findings"][k]["cvss"] or 0) >= CRITICAL]
+
+
+def state_from_body(body):
+    start = body.find(STATE_START)
+    end = body.find(STATE_END, start)
+    if start < 0 or end < 0:
+        return {"findings": {}}
+    return json.loads(body[start + len(STATE_START):end])
+
+
+def _bucket(cvss):
+    if cvss is None:
+        return "Unscored"
+    return "Critical" if cvss >= CRITICAL else "High" if cvss >= HIGH else "Medium" if cvss >= 4 else "Low"
+
+
+def _line(key, item):
+    cve, package = key.split("|", 1)
+    kev = " **KEV**" if item["kev"] else ""
+    fix = item["fix"] or "–"
+    return (f"| [{cve}](https://nvd.nist.gov/vuln/detail/{cve}){kev} | {item['cvss'] or '?'} | {package} "
+            f"{item['version']} | {fix} | {', '.join(item['targets'])} | {item['first_seen']} |")
+
+
+def render_issue(state):
+    findings = state["findings"]
+    shown = sorted((k for k, v in findings.items() if v["kev"] or (v["cvss"] or 0) >= HIGH),
+        key=lambda k: (-(findings[k]["cvss"] or 0), k))
+    counts = {}
+    for key, item in findings.items():
+        if key not in shown:
+            counts[_bucket(item["cvss"])] = counts.get(_bucket(item["cvss"]), 0) + 1
+    lines = [f"Last successful scan: **{state.get('last_success') or 'never'}**"
+             f" · last failure: {state.get('last_failure') or 'none'}", ""]
+    for name, url in sorted(state.get("unscanned", {}).items()):
+        lines.append(f"- :warning: `{name}` not scanned this run ([log]({url}))")
+    for note in state.get("notes", []):
+        lines.append(f"- :warning: {note}")
+    if state.get("databases"):
+        lines.append("- Databases: " + ", ".join(f"{k} {v}" for k, v in sorted(state["databases"].items())))
+    lines += ["", "| CVE | CVSS | Package | Fixed in | Targets | First seen |", "|---|---|---|---|---|---|"]
+    lines += [_line(k, findings[k]) for k in shown] or ["| none | | | | | |"]
+    lines += ["", "Not listed: " + (", ".join(f"{k}: {v}" for k, v in sorted(counts.items())) or "nothing"),
+              "", "Suppress a finding with a reasoned entry in `security/cve-ignore.toml`.", "",
+              STATE_START + json.dumps(state, sort_keys=True) + STATE_END]
+    return "\n".join(lines)
+
+
+def render_comment(state, new, resolved, ping=()):
+    lines = [PING_MARKER] if ping else []
+    if new:
+        lines += ["### New", "| CVE | CVSS | Package | Fixed in | Targets | First seen |", "|---|---|---|---|---|---|"]
+        lines += [_line(k, state["findings"][k]) for k in new]
+    if resolved:
+        lines += ["", "### Resolved", ", ".join(k.replace("|", " in ") for k in resolved)]
+    return "\n".join(lines)

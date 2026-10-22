@@ -121,5 +121,39 @@ class DiffTests(unittest.TestCase):
         self.assertEqual(new, ["CVE-1|p"])
 
 
+class RenderTests(unittest.TestCase):
+    STATE = {"version": 1, "last_success": "2026-10-22", "last_failure": None, "resolved": {},
+        "databases": {"grype": "2026-10-22"}, "notes": ["KEV feed unavailable"],
+        "unscanned": {"khazad-dum": "https://ci/run/1"},
+        "findings": {
+            "CVE-1|openssl": {"targets": ["lorien"], "cvss": 9.8, "kev": True, "version": "1", "fix": "2",
+                              "first_seen": "2026-10-22", "last_seen": "2026-10-22"},
+            "CVE-2|zlib": {"targets": ["lorien"], "cvss": 5.0, "kev": False, "version": "1", "fix": None,
+                           "first_seen": "2026-10-22", "last_seen": "2026-10-22"}}}
+
+    def test_state_round_trips_through_body(self):
+        body = cve_scan.render_issue(self.STATE)
+        self.assertEqual(cve_scan.state_from_body(body), self.STATE)
+
+    def test_body_lists_high_and_counts_rest(self):
+        body = cve_scan.render_issue(self.STATE)
+        self.assertIn("CVE-1", body)
+        self.assertIn("**KEV**", body)
+        self.assertNotIn("| CVE-2", body)
+        self.assertIn("Medium: 1", body)
+        self.assertIn("khazad-dum", body)
+        self.assertIn("KEV feed unavailable", body)
+
+    def test_missing_state_is_empty(self):
+        self.assertEqual(cve_scan.state_from_body("hand-written issue"), {"findings": {}})
+
+    def test_comment_and_ping_message(self):
+        comment = cve_scan.render_comment(self.STATE, ["CVE-1|openssl"], ["CVE-9|old"])
+        self.assertIn("New", comment)
+        self.assertIn("CVE-1", comment)
+        self.assertIn("Resolved", comment)
+        self.assertIn(cve_scan.PING_MARKER, cve_scan.render_comment(self.STATE, ["CVE-1|openssl"], [], ping=["CVE-1|openssl"]))
+
+
 if __name__ == "__main__":
     unittest.main()
