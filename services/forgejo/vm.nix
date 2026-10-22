@@ -332,6 +332,7 @@ in
       openssh
       python3
       gh
+      skopeo
       util-linux
     ];
     environment = {
@@ -387,6 +388,7 @@ in
     openssh
     python3
     gh
+    skopeo
     util-linux
   ];
   # HTTP(S) to Forgejo via the slirp gateway is the only internal service access.

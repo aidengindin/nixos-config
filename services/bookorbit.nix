@@ -89,7 +89,7 @@ in
 
     appImage = mkOption {
       type = types.str;
-      default = "ghcr.io/bookorbit/bookorbit:latest";
+      default = "ghcr.io/bookorbit/bookorbit:3.5.0@sha256:1534bc7d696179141875b0298ea7916be4469eb2eb9250347873eaaa9728b5a8";
       description = "BookOrbit application image.";
     };
 
@@ -97,7 +97,7 @@ in
       type = types.str;
       # Upstream's docker-compose.yml pins this; BookOrbit needs pgvector
       # alongside uuid-ossp and pg_trgm.
-      default = "pgvector/pgvector:pg18";
+      default = "pgvector/pgvector:0.8.7-pg18@sha256:2358fcba361ed2233a5ed81b5fe4ca779ccb304120ce531a3bf51c0ed7e2bc11";
       description = "PostgreSQL image for BookOrbit's database.";
     };
 
