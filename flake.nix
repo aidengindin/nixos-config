@@ -58,7 +58,7 @@
 
     # Pin Hermes to a tagged release: its upstream Nix support is Tier 2 and
     # main may break between releases.
-    hermes-agent.url = "github:NousResearch/hermes-agent/v2026.8.3";
+    hermes-agent.url = "github:NousResearch/hermes-agent/v2026.9.24";
 
     anduin = {
       url = "github:aidengindin/anduin";
