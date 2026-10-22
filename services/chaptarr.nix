@@ -32,11 +32,11 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "chaptarr/chaptarr:0.9.936";
+      default = "chaptarr/chaptarr:0.9.936@sha256:e7aa84d7d65c460c914d36438529592181dca9c60146efdd4914a8baad2953be";
       description = ''
-        Pinned deliberately rather than tracking `latest`. Chaptarr is pre-1.0
-        and publishes a pre-release every few days, so upgrades should be a
-        commit you chose to make, not something that lands on a restart.
+        Pinned to tag and digest rather than tracking `latest`. Chaptarr is pre-1.0
+        and publishes a pre-release every few days, so upgrades are a reviewed
+        weekly-updater PR (7-day cooldown), not something that lands on a restart.
 
         Note the Docker tags carry no `v` prefix even though the git tags do,
         and that `latest` currently lags the newest pre-release by weeks.
