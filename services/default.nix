@@ -3,6 +3,7 @@
 {
   imports = [
     ./acsm.nix
+    ./actual.nix
     ./anduin.nix
     ./anduin-postgres.nix
     ./arr.nix
@@ -14,7 +15,6 @@
     ./calibre-web.nix
     ./chaptarr.nix
     ./dawarich.nix
-    ./firefly-iii.nix
     ./forgejo.nix
     ./frigate.nix
     ./grafana.nix
