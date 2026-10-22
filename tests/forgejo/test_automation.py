@@ -401,8 +401,21 @@ class ControllerTests(unittest.TestCase):
         self.assertNotIn("CVE-2025", message)
         self.assertNotIn("CVE-2026-6", message)
 
+    def test_non_cve_advisory_ids_are_accepted(self):
+        ids = "GO-2026-1234,RUSTSEC-2026-0001,PYSEC-2026-5,ALSA-2026-1.x,CVE-2026-9"
+        self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {ids} -->"))
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        self.assertIn("GO-2026-1234", self.notifications()[0][1])
+
+    def test_ping_of_exactly_200_ids_is_accepted(self):
+        ids = ",".join(f"CVE-2026-{n}" for n in range(200))
+        self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {ids} -->"))
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        self.assertIn("(200)", self.notifications()[0][1])
+
     def test_malformed_id_in_ping_line_is_rejected(self):
-        for line in ("CVE-2026-1,not-an-id", "CVE-26-1", "CVE-2026-1,", ""):
+        for line in ("CVE-2026-1,not-an-id", "CVE-2026-1,", "", "CVE-2026-1,GO 2026", "CVE-2026-1,GO-<b>x",
+                     "lower-1", "cve-2026-1", "CVE-2026-1,GO-x>y", ",".join(f"CVE-2026-{n}" for n in range(201))):
             self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {line} -->"))
             with self.assertRaises(ValueError, msg=line):
                 self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
