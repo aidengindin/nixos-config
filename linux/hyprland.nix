@@ -3,6 +3,7 @@
   lib,
   pkgs,
   unstablePkgs,
+  dmsPluginSources,
   ...
 }:
 let
@@ -11,20 +12,10 @@ let
 
   jsonFormat = pkgs.formats.json { };
 
-  # Two DMS plugins we install live in monorepos; fetch each repo once and
-  # point the individual plugin `src`s at the relevant subdirectory.
-  avengeDmsPlugins = pkgs.fetchFromGitHub {
-    owner = "AvengeMedia";
-    repo = "dms-plugins";
-    rev = "f4583449f12920e0a2f16808b00a860c27f0173d";
-    hash = "sha256-QkQPqP7Wmo5DLRyKNSY5NuOau4LSaSfz3DYdHDLxluA=";
-  };
-  nderscoreDmsPlugins = pkgs.fetchFromGitHub {
-    owner = "nderscore";
-    repo = "dms-plugins";
-    rev = "851e06ca204f17a97414a666728246fd3acad3c6";
-    hash = "sha256-7sirKRVHVibRJFco4uqPpC7sfwIIqG7bqvDG6EAJSRw=";
-  };
+  # Plugin sources are `flake = false` inputs (see flake.nix), locked in
+  # flake.lock and bumped by the updater under its 7-day cooldown. Two of them
+  # are monorepos; point those plugins' `src` at the relevant subdirectory.
+  src = dmsPluginSources;
 
   # Third-party DMS plugins. Each attr name MUST equal the plugin's manifest
   # `id` (from its plugin.json): programs.dms-shell installs the source to
@@ -35,41 +26,16 @@ let
   # (barConfigs); launcher plugins are reached by their trigger string.
   dmsPlugins = {
     # Launchers (spotlight triggers): ":e" emoji, "=" calc, "nix" pkgs.
-    emojiLauncher.src = pkgs.fetchFromGitHub {
-      owner = "devnullvoid";
-      repo = "dms-emoji-launcher";
-      rev = "8ff394e3ddfcb2fd755ed2e7b4c6f01f3e26e596";
-      hash = "sha256-fmIddCvACwO8wbAtLBMtDnEXXQJjb7+o2s4jW3f8VIU=";
-    };
-    calculator.src = pkgs.fetchFromGitHub {
-      owner = "rochacbruno";
-      repo = "DankCalculator";
-      rev = "1db5865419a40a33171a475855a59e0b8bf7187f";
-      hash = "sha256-j8C62+sevr6b+akzVSAqUVysIhb6Vbr8jnWcTXeOtE8=";
-    };
-    nixPackageRunner.src = pkgs.fetchFromGitHub {
-      owner = "iahccc";
-      repo = "NixPackageRunner";
-      rev = "829ad93c15b7c0ec82a6d7483728029037442601";
-      hash = "sha256-ur+1oN+QmTu7p5ZMpL3rCd4JGYbkerko4twa+tH6uvg=";
-    };
+    emojiLauncher.src = src.emojiLauncher;
+    calculator.src = src.calculator;
+    nixPackageRunner.src = src.nixPackageRunner;
 
     # Bar widgets (placed in dms/settings.json barConfigs).
-    amdGpuMonitorRevive.src = pkgs.fetchFromGitHub {
-      owner = "JDKamalakar";
-      repo = "DMS-AMD_GPU_Monitor_Revive";
-      rev = "d99d4f0673635a7e71bc457fbbd3319f84c18b52";
-      hash = "sha256-/NceDiewqhi55w8psJvOhEhscME/s4bxqykcobCdgtI=";
-    };
-    ambientSound.src = pkgs.fetchFromGitHub {
-      owner = "hthienloc";
-      repo = "dms-ambient-sound";
-      rev = "d1db2c49ec410a601f2611d805cbfb97aaa7c0cb";
-      hash = "sha256-PwmKzTVgEsL8NYuaPXav3gMZtQzSiEdyp1LvuEQX8AU=";
-    };
-    hyprlandSubmapIndicator.src = "${nderscoreDmsPlugins}/HyprlandSubmapIndicator";
-    dankKDEConnect.src = "${avengeDmsPlugins}/DankKDEConnect";
-    dankPomodoroTimer.src = "${avengeDmsPlugins}/DankPomodoroTimer";
+    amdGpuMonitorRevive.src = src.amdGpuMonitor;
+    ambientSound.src = src.ambientSound;
+    hyprlandSubmapIndicator.src = "${src.nderscore}/HyprlandSubmapIndicator";
+    dankKDEConnect.src = "${src.avenge}/DankKDEConnect";
+    dankPomodoroTimer.src = "${src.avenge}/DankPomodoroTimer";
   };
 
   # ~/.config/DankMaterialShell/plugin_settings.json: one { enabled = true; }

@@ -54,6 +54,38 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Third-party DankMaterialShell plugins (QML/JS run inside the desktop
+    # shell). Inputs rather than fetchFromGitHub so each is locked in
+    # flake.lock and moves only through the updater's 7-day cooldown.
+    dms-plugins-avenge = {
+      url = "github:AvengeMedia/dms-plugins";
+      flake = false;
+    };
+    dms-plugins-nderscore = {
+      url = "github:nderscore/dms-plugins";
+      flake = false;
+    };
+    dms-plugin-emoji-launcher = {
+      url = "github:devnullvoid/dms-emoji-launcher";
+      flake = false;
+    };
+    dms-plugin-calculator = {
+      url = "github:rochacbruno/DankCalculator";
+      flake = false;
+    };
+    dms-plugin-nix-package-runner = {
+      url = "github:iahccc/NixPackageRunner";
+      flake = false;
+    };
+    dms-plugin-amd-gpu-monitor = {
+      url = "github:JDKamalakar/DMS-AMD_GPU_Monitor_Revive";
+      flake = false;
+    };
+    dms-plugin-ambient-sound = {
+      url = "github:hthienloc/dms-ambient-sound";
+      flake = false;
+    };
+
     # Private Forgejo repositories are fetched over HTTPS: the CI guest may only
     # reach Forgejo on 443 and authenticates with the bot token, while personal
     # machines rewrite this to ssh://git@git.gindin.xyz:2222/ (see common/git.nix).
@@ -81,7 +113,8 @@
       anduin,
       job-scraper,
       nixvim,
-    }:
+      ...
+    }@inputs:
     let
       inherit (nixpkgs.lib) mapAttrs;
 
@@ -122,6 +155,15 @@
           ;
         hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
+        dmsPluginSources = {
+          avenge = inputs.dms-plugins-avenge;
+          nderscore = inputs.dms-plugins-nderscore;
+          emojiLauncher = inputs.dms-plugin-emoji-launcher;
+          calculator = inputs.dms-plugin-calculator;
+          nixPackageRunner = inputs.dms-plugin-nix-package-runner;
+          amdGpuMonitor = inputs.dms-plugin-amd-gpu-monitor;
+          ambientSound = inputs.dms-plugin-ambient-sound;
+        };
         customPkgs = import ./packages {
           pkgs = stablePkgs;
           inherit
