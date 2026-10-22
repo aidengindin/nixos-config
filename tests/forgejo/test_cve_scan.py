@@ -49,5 +49,31 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(rows[0]["target"], "ghcr.io/a/b:1")
 
 
+TODAY = datetime.date(2026, 10, 22)
+
+
+class IgnoreTests(unittest.TestCase):
+    def rules(self, text):
+        return cve_scan.load_ignores(text, TODAY)
+
+    def test_package_scoped_and_global(self):
+        rules = self.rules('[[ignore]]\ncve="CVE-1"\npackage="a"\nreason="r"\n'
+                           '[[ignore]]\ncve="CVE-2"\nreason="r"\n')
+        self.assertTrue(cve_scan.ignored({"cve": "CVE-1", "package": "a"}, rules))
+        self.assertFalse(cve_scan.ignored({"cve": "CVE-1", "package": "b"}, rules))
+        self.assertTrue(cve_scan.ignored({"cve": "CVE-2", "package": "z"}, rules))
+
+    def test_expired_rule_is_dropped(self):
+        rules = self.rules('[[ignore]]\ncve="CVE-1"\nreason="r"\nexpires=2026-10-21\n')
+        self.assertFalse(cve_scan.ignored({"cve": "CVE-1", "package": "a"}, rules))
+
+    def test_reason_is_required(self):
+        with self.assertRaisesRegex(ValueError, "reason"):
+            self.rules('[[ignore]]\ncve="CVE-1"\n')
+
+    def test_empty_file(self):
+        self.assertEqual(self.rules(""), [])
+
+
 if __name__ == "__main__":
     unittest.main()

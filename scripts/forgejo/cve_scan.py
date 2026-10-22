@@ -5,6 +5,7 @@ tests need no scanners, network or Forgejo."""
 import csv
 import io
 import re
+import tomllib
 
 # Repology says the local version is outside the CVE's range. Everything else,
 # including err_invalid_version, stays visible: an unknown answer is not "safe".
@@ -54,3 +55,18 @@ def parse_grype(report, target):
         rows.append({"cve": cve, "package": artifact["name"], "version": artifact["version"], "cvss": cvss,
             "target": target, "fix": fixes[0] if fixes else None, "classify": "grype"})
     return rows
+
+
+def load_ignores(text, today):
+    rules = []
+    for rule in tomllib.loads(text).get("ignore", []):
+        if not rule.get("cve") or not str(rule.get("reason", "")).strip():
+            raise ValueError(f"cve-ignore entry needs cve and reason: {rule}")
+        if rule.get("expires") and rule["expires"] < today:
+            continue
+        rules.append(rule)
+    return rules
+
+
+def ignored(row, rules):
+    return any(r["cve"] == row["cve"] and r.get("package") in (None, row["package"]) for r in rules)
