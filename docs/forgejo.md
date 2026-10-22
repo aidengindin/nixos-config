@@ -30,8 +30,9 @@ khazad-dum's SSH recipients:
 - `forgejo-runner-env.age`: repository runner registration `TOKEN`.
 - `forgejo-controller-env.age`: repository-scoped bot token, numeric owner/bot
   IDs, Forgejo webhook secret, and Hermes webhook secret.
-- `forgejo-hermes-env.age`: the same repository bot token and Hermes webhook
-  secret. It is added to the existing gateway, not a second Hermes instance.
+- `forgejo-hermes-env.age`: only the Hermes webhook secret, for the Matrix
+  notification route on the existing gateway. Hermes holds no Forgejo
+  credential.
 
 Keep the mirror token in `forgejo-mirror-token.age`. Its GitHub fine-grained
 permissions are Contents and Workflows read/write, limited to this repository.
@@ -88,9 +89,9 @@ migration token. Example paths below are private local working files.
 7. Run `provision.py automation --state /tmp/forgejo-bootstrap`. It creates the
    scoped bot credential, required build checks, webhook, Actions secrets, and
    encrypted runtime files. Build/deploy osgiliath again to start the runner,
-   controller, and Hermes route. Preserve the runtime files in Git.
+   controller, and Hermes notification route. Preserve the runtime files in Git.
 8. Push this implementation to a Forgejo branch and open a PR. Verify the build
-   and repair paths below before merging. The scheduled updater exists only on
+   path below before merging. The scheduled updater exists only on
    the default branch, so do not merge it until GitHub Actions is disabled.
 9. Once restoration, import, mirror, and CI checks pass, create the
    `manual-verification-complete` marker in the snapshot directory and run the
@@ -141,7 +142,7 @@ deliberately leaves the token's scope unknown so the following `automation` run
 reissues it. Revoke the `provision-adopt` token afterwards and delete the
 directory.
 
-## CI and repair loop
+## CI and notifications
 
 The VM has 6 vCPUs, 8 GiB RAM, 16 GiB guest swap, a 160 GiB sparse disk, and capacity one. Its host unit applies memory and I/O limits so a fresh build cannot starve Forgejo, PostgreSQL, or journald on osgiliath. Existing disk images grow in place and are never shrunk or recreated. It runs
 Forgejo Runner 13.1 from the stable pin using its supported legacy registration
@@ -176,20 +177,23 @@ one fails, and records `Update-Cycle` in the PR body. Ordinary pushes refuse
 concurrent branch changes.
 
 When a CI job completes, it sends a signed webhook through the tailnet-only
-`/_automation/events` route. The controller waits for builds to settle and verifies the
-repository/bot/status through Forgejo, filters to the update PR, and sends a signed
-local webhook to Hermes. Periodic reconciliation covers lost webhook deliveries.
-The route rechecks the head and failures, deduplicates by SHA, and permits three
-attempts per update cycle. Hermes has a checkout per SHA, commits directly using
-a normal repository-scoped bot token, and pushes to trigger another build.
-No automatic merge or deployment occurs. The 30-minute repair instruction is an
-agent instruction; the persisted attempt counter is the enforced loop bound.
+`/_automation/events` route. The controller waits for builds to settle and
+verifies the repository/bot/status through Forgejo. Periodic reconciliation
+covers lost webhook deliveries. Failed update builds are repaired by hand: an
+earlier Hermes auto-repair loop was removed because it let an LLM that reads
+upstream build output push to this repository.
+
+Only `aidengindin` may merge into `main` (a merge whitelist on the branch
+protection). The bot token can post the required `colmena/*` statuses, so
+without the whitelist a leaked token could self-certify and merge its own PR.
+Required approvals cannot serve instead, since Forgejo forbids approving your
+own PR.
 
 The controller persistently queues and deduplicates notifications, then uses a
 signed loopback Hermes webhook route to deliver them directly to the configured
-Matrix home room without an agent turn. It reports only terminal four-host build
-results, Hermes repair starts and exhaustion, and deployment outcomes. Forgejo
-statuses, logs, and PR comments remain the durable record.
+Matrix home room without an agent turn. It reports only terminal build results
+and deployment outcomes. Forgejo statuses, logs, and PR comments remain the
+durable record.
 
 ## Deploy a PR
 
@@ -252,7 +256,6 @@ The CI disk is disposable cache and is not backed up.
 Run `python3 -m unittest discover -s tests/forgejo -v` and build osgiliath with
 Colmena. Live acceptance includes a passing PR, a failing PR, exact-SHA closure
 transfer without rebuilding, unauthorized/duplicate comments, selected-host gates,
-stale heads, offline hosts, partial deployment, controller restart recovery, and
-failure → Hermes commit → fresh CI. Test repair exhaustion and concurrent edits.
+stale heads, offline hosts, partial deployment, and controller restart recovery.
 Check `systemctl --failed` and `journalctl -u forgejo-controller -u forgejo-ci-vm`.
 The existing Alloy/systemd monitoring collects service failures.

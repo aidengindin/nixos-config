@@ -230,7 +230,7 @@ in
       };
     };
     systemd.services.forgejo-controller = {
-      description = "Forgejo PR deployment and repair event controller";
+      description = "Forgejo PR deployment and notification controller";
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
       after = [
@@ -254,7 +254,6 @@ in
         STORE_KEY = "${state}/store-reader";
         STORE_KNOWN_HOSTS = "${state}/known_hosts";
         STORE_SIGNING_KEY = config.age.secrets.forgejo-store-signing-key.path;
-        HERMES_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-repair";
         HERMES_NOTIFY_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-notify";
       };
       path = [
@@ -277,7 +276,9 @@ in
       };
     };
     environment.systemPackages = [ controller ];
-    # Reuse the existing gateway, with its own checkout and a normal bot PAT.
+    # Hermes only relays controller notifications to Matrix. It holds that
+    # route's webhook secret and no Forgejo credential: an LLM gateway that
+    # also reads the web must not be able to push to this repository.
     services.hermes-agent =
       lib.mkIf
         (config.agindin.services.hermes.enable && builtins.pathExists ../../secrets/forgejo-hermes-env.age)
@@ -286,17 +287,9 @@ in
           environment = {
             WEBHOOK_ENABLED = "true";
             WEBHOOK_PORT = toString ports.hermesWebhook;
-            HERMES_NOTIFY_URL = "http://127.0.0.1:${toString ports.hermesWebhook}/webhooks/forgejo-notify";
           };
           settings.platforms.webhook.extra = {
             host = "127.0.0.1";
-            script_timeout_seconds = 120;
-            routes.forgejo-repair = {
-              events = [ "forgejo_repair" ];
-              script = "forgejo-repair-filter.py";
-              prompt = "{script_output}";
-              deliver = "log";
-            };
             routes.forgejo-notify = {
               events = [ "forgejo_notification" ];
               prompt = "{message}";
@@ -311,14 +304,13 @@ in
         {
           restartTriggers = [ ../../secrets/forgejo-hermes-env.age ];
           path = [
-            pkgs.git
             pkgs.python3
             pkgs.curl
           ];
+          # Clear out the retired repair route's filter and per-SHA checkouts.
           preStart = lib.mkAfter ''
-            mkdir -p /var/lib/hermes/.hermes/scripts
             rm -f /var/lib/hermes/.hermes/scripts/forgejo-repair-filter.py
-            install -m 0700 ${../../scripts/forgejo/hermes-filter.py} /var/lib/hermes/.hermes/scripts/forgejo-repair-filter.py
+            rm -rf /var/lib/hermes/workspace/forgejo
           '';
         };
   };
