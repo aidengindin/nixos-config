@@ -1,15 +1,15 @@
-{ pkgs, ... }:
+# `src` is the intervals-mcp-server flake input (flake = false), locked in
+# flake.lock and bumped under the updater's 7-day cooldown.
+{ pkgs, src, ... }:
+let
+  d = src.lastModifiedDate;
+in
 pkgs.python3Packages.buildPythonPackage {
   pname = "intervals-mcp-server";
-  version = "0-unstable-2026-08-02";
+  version = "0-unstable-${builtins.substring 0 4 d}-${builtins.substring 4 2 d}-${builtins.substring 6 2 d}";
   pyproject = true;
 
-  src = pkgs.fetchFromGitHub {
-    owner = "mvilanova";
-    repo = "intervals-mcp-server";
-    rev = "cb1fbcac81095cf3e094e995decf04b8b1f259f8";
-    hash = "sha256-YSE1YdOAlz4+IsEbwIHpcR9N7ngFfHqYjxGbYkti8OA=";
-  };
+  inherit src;
 
   build-system = [ pkgs.python3Packages.hatchling ];
 

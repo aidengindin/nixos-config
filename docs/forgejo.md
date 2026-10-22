@@ -206,10 +206,16 @@ durable record.
 
 The weekly updater adopts nothing younger than seven days (supply-chain
 cooldown). Steps in `scripts/forgejo/update.py`, in order: `nix flake update`;
-`cooldown.py`; `tags.py`; `nix-update` and `scripts/update-*.sh`; `images.py`.
-`nix-update` runs from the flake's locked nixpkgs (`--inputs-from .`), not the
-mutable registry. Add `--dry-run` to `cooldown.py`, `tags.py` or `images.py` to
-print decisions without writing.
+`cooldown.py`; `tags.py`; `scripts/update-*.sh`; `images.py`. Add `--dry-run`
+to `cooldown.py`, `tags.py` or `images.py` to print decisions without writing.
+
+Third-party source code is never fetched with a hard-coded `fetchFromGitHub`
+commit: the DMS plugins and the sources for `packages/` are `flake = false`
+inputs, so the cooldown governs them like any other input. Every run also lists,
+in the PR body, each third-party input whose locked commit differs from `main`,
+with a GitHub compare link (NixOS nixpkgs, Home Manager and the owner's own
+repositories are left out). The cooldown only catches compromises found within
+a week; skim those diffs before deploying.
 
 - **Flake inputs** (`cooldown.py`): every lock node, including transitive ones,
   whose new `locked.lastModified` is under seven days old is re-pinned to the

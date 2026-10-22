@@ -49,7 +49,9 @@ class DispatchTests(unittest.TestCase):
             ("rev-parse", "FETCH_HEAD"): self.BEFORE,
             ("rev-parse", "HEAD"): self.AFTER if moved else self.BEFORE}
         def git(*args, capture=False):
-            return captures[args] if capture else None
+            # Reads the test does not care about (such as main's flake.lock
+            # for the review list) return nothing, which update.py tolerates.
+            return captures.get(args) if capture else None
         api = Mock(); api.url = "https://forgejo.test"
         api.pulls.return_value = [{"number": 93, "head": {"ref": "automation/update"}}] if existing else []
         api.repo.return_value = {"number": 93}
@@ -68,6 +70,51 @@ class DispatchTests(unittest.TestCase):
 
     def test_unmoved_head_is_not_rebuilt(self):
         self.assertEqual(self.dispatches(moved=False, changed=False), [])
+
+
+def node(owner, repo, rev, **original):
+    return {"locked": {"type": "github", "owner": owner, "repo": repo, "rev": rev},
+            "original": {"type": "github", "owner": owner, "repo": repo, **original}}
+
+
+class ReviewTests(unittest.TestCase):
+    """Every third-party input the PR moves is listed with an upstream diff."""
+
+    def lock(self, **nodes):
+        return {"nodes": {"root": {"inputs": {}}, **nodes}}
+
+    def test_moved_third_party_input_gets_a_compare_link(self):
+        moved = update.moved_inputs(self.lock(agenix=node("ryantm", "agenix", "a" * 40)),
+                                    self.lock(agenix=node("ryantm", "agenix", "b" * 40)))
+        self.assertEqual(moved, [{"name": "agenix", "old": "a" * 40, "new": "b" * 40,
+            "link": f"https://github.com/ryantm/agenix/compare/{'a' * 40}...{'b' * 40}"}])
+
+    def test_unmoved_channel_and_own_inputs_are_left_out(self):
+        old = self.lock(
+            agenix=node("ryantm", "agenix", "a" * 40),
+            nixpkgs=node("NixOS", "nixpkgs", "a" * 40, ref="nixos-26.05"),
+            anduin=node("aidengindin", "anduin", "a" * 40),
+            job=dict(locked={"type": "git", "url": "https://git.gindin.xyz/aidengindin/job-scraper.git", "rev": "a" * 40}, original={}))
+        new = self.lock(
+            agenix=node("ryantm", "agenix", "a" * 40),
+            nixpkgs=node("NixOS", "nixpkgs", "b" * 40, ref="nixos-26.05"),
+            anduin=node("aidengindin", "anduin", "b" * 40),
+            job=dict(locked={"type": "git", "url": "https://git.gindin.xyz/aidengindin/job-scraper.git", "rev": "b" * 40}, original={}))
+        self.assertEqual(update.moved_inputs(old, new), [])
+
+    def test_renumbered_node_is_matched_by_its_original(self):
+        old = self.lock(nixvim_2=node("nix-community", "nixvim", "a" * 40))
+        new = self.lock(nixvim=node("nix-community", "nixvim", "b" * 40))
+        self.assertEqual(update.moved_inputs(old, new)[0]["old"], "a" * 40)
+
+    def test_new_input_links_to_its_tree(self):
+        moved = update.moved_inputs(self.lock(), self.lock(x=node("o", "r", "c" * 40)))
+        self.assertIsNone(moved[0]["old"])
+        self.assertIn("/tree/" + "c" * 40, moved[0]["link"])
+        self.assertIn("new input", update.review_section(moved))
+
+    def test_nothing_moved_says_so(self):
+        self.assertIn("No third-party", update.review_section([]))
 
 
 class ModeTests(unittest.TestCase):

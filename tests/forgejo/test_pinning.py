@@ -311,9 +311,12 @@ class ReportTests(unittest.TestCase):
 
     def test_commands_run_in_the_documented_order(self):
         names = [" ".join(c) for c in update.COMMANDS]
-        order = [next(i for i, n in enumerate(names) if k in n) for k in ("flake update", "cooldown.py", "tags.py", "nix-update", "images.py")]
+        order = [next(i for i, n in enumerate(names) if k in n) for k in ("flake update", "cooldown.py", "tags.py", "update-caddy-hash.sh", "images.py")]
         self.assertEqual(order, sorted(order))
-        self.assertTrue(all("--inputs-from" in n for n in names if "nix-update" in n))
+        # Package sources move through flake inputs and the cooldown, never
+        # through nix-update, and no step runs code from the global registry.
+        self.assertFalse(any("nix-update" in n for n in names))
+        self.assertTrue(all("--inputs-from" in n for n in names if "nixpkgs#" in n))
 
 
 if __name__ == "__main__":
