@@ -2,13 +2,14 @@
   config,
   lib,
   pkgs,
-  dmsFlake,
   unstablePkgs,
   ...
 }:
 let
   cfg = config.agindin.hyprland;
   inherit (lib) mkIf mkEnableOption;
+
+  jsonFormat = pkgs.formats.json { };
 
   # Two DMS plugins we install live in monorepos; fetch each repo once and
   # point the individual plugin `src`s at the relevant subdirectory.
@@ -24,8 +25,96 @@ let
     rev = "851e06ca204f17a97414a666728246fd3acad3c6";
     hash = "sha256-7sirKRVHVibRJFco4uqPpC7sfwIIqG7bqvDG6EAJSRw=";
   };
+
+  # Third-party DMS plugins. Each attr name MUST equal the plugin's manifest
+  # `id` (from its plugin.json): programs.dms-shell installs the source to
+  # /etc/xdg/quickshell/dms-plugins/<name> (a system plugin dir DMS scans) AND
+  # plugin_settings.json below is keyed by <name>, and DMS matches enabled-state
+  # by manifest id — a mismatch installs the plugin but never enables it.
+  # Bar-widget plugins also need a layout entry in dms/settings.json
+  # (barConfigs); launcher plugins are reached by their trigger string.
+  dmsPlugins = {
+    # Launchers (spotlight triggers): ":e" emoji, "=" calc, "nix" pkgs.
+    emojiLauncher.src = pkgs.fetchFromGitHub {
+      owner = "devnullvoid";
+      repo = "dms-emoji-launcher";
+      rev = "8ff394e3ddfcb2fd755ed2e7b4c6f01f3e26e596";
+      hash = "sha256-fmIddCvACwO8wbAtLBMtDnEXXQJjb7+o2s4jW3f8VIU=";
+    };
+    calculator.src = pkgs.fetchFromGitHub {
+      owner = "rochacbruno";
+      repo = "DankCalculator";
+      rev = "1db5865419a40a33171a475855a59e0b8bf7187f";
+      hash = "sha256-j8C62+sevr6b+akzVSAqUVysIhb6Vbr8jnWcTXeOtE8=";
+    };
+    nixPackageRunner.src = pkgs.fetchFromGitHub {
+      owner = "iahccc";
+      repo = "NixPackageRunner";
+      rev = "829ad93c15b7c0ec82a6d7483728029037442601";
+      hash = "sha256-ur+1oN+QmTu7p5ZMpL3rCd4JGYbkerko4twa+tH6uvg=";
+    };
+
+    # Bar widgets (placed in dms/settings.json barConfigs).
+    amdGpuMonitorRevive.src = pkgs.fetchFromGitHub {
+      owner = "JDKamalakar";
+      repo = "DMS-AMD_GPU_Monitor_Revive";
+      rev = "d99d4f0673635a7e71bc457fbbd3319f84c18b52";
+      hash = "sha256-/NceDiewqhi55w8psJvOhEhscME/s4bxqykcobCdgtI=";
+    };
+    ambientSound.src = pkgs.fetchFromGitHub {
+      owner = "hthienloc";
+      repo = "dms-ambient-sound";
+      rev = "d1db2c49ec410a601f2611d805cbfb97aaa7c0cb";
+      hash = "sha256-PwmKzTVgEsL8NYuaPXav3gMZtQzSiEdyp1LvuEQX8AU=";
+    };
+    hyprlandSubmapIndicator.src = "${nderscoreDmsPlugins}/HyprlandSubmapIndicator";
+    dankKDEConnect.src = "${avengeDmsPlugins}/DankKDEConnect";
+    dankPomodoroTimer.src = "${avengeDmsPlugins}/DankPomodoroTimer";
+  };
+
+  # ~/.config/DankMaterialShell/plugin_settings.json: one { enabled = true; }
+  # entry per plugin (what the DMS flake's home module generated).
+  dmsPluginSettings = lib.mapAttrs (_: _: { enabled = true; }) dmsPlugins;
+
+  dmsSession = {
+    # DMS only applies monitorWallpapers when perMonitorWallpaper is
+    # true; otherwise it uses the (empty) global wallpaperPath.
+    perMonitorWallpaper = true;
+    wallpaperPath = "/home/agindin/Pictures/wallpapers/nixos.png";
+    monitorWallpapers = {
+      "eDP-1" = "/home/agindin/Pictures/wallpapers/nixos.png";
+      "DP-7" = "/home/agindin/Pictures/wallpapers/stormlight-ultrawide.png";
+    };
+
+    # Night mode: 2500K (DMS minimum), auto on a 19:00–05:00 schedule.
+    # nightModeEnabled is the master switch — with it off, DMS never
+    # evaluates the schedule (DisplayService.evaluateNightMode returns
+    # early). With master + auto both on, the gamma daemon holds 6500K
+    # (neutral) during the day, so this doesn't tint daytime hours.
+    nightModeEnabled = true;
+    nightModeTemperature = 2500;
+    nightModeAutoEnabled = true;
+    nightModeAutoMode = "time";
+    nightModeStartHour = 19;
+    nightModeStartMinute = 0;
+    nightModeEndHour = 5;
+    nightModeEndMinute = 0;
+  };
 in
 {
+  # The stable (26.05) nixpkgs DMS modules target dms-shell 1.4.x, where the
+  # greeter was still bundled in the dms-shell package. The unstable package we
+  # run (1.6.x) split the greeter into its own `dms-greeter` package, so use
+  # unstable's modules (and packages) instead of stable's.
+  disabledModules = [
+    "programs/wayland/dms-shell.nix"
+    "services/display-managers/dms-greeter.nix"
+  ];
+  imports = [
+    "${unstablePkgs.path}/nixos/modules/programs/wayland/dms-shell.nix"
+    "${unstablePkgs.path}/nixos/modules/services/display-managers/dms-greeter.nix"
+  ];
+
   options.agindin.hyprland = {
     enable = mkEnableOption "Enable hyprland tiling WM";
   };
@@ -51,6 +140,10 @@ in
       # by the ambientSound plugin, is already installed via common/mpv.nix.)
       amdgpu_top
 
+      # DMS calendar-events backend. The old DMS home module installed this
+      # (enableCalendarEvents); the nixpkgs module expects it installed separately.
+      khal
+
       glib
       gsettings-desktop-schemas
 
@@ -64,17 +157,24 @@ in
       withUWSM = true;
     };
 
-    # greetd is enabled and its session command is set by the DMS greeter module
-    # (dank-greeter.nixosModules.default). We only declare the greeter user it runs as.
-    users.groups.greeter = { };
-    users.users.greeter = {
-      isSystemUser = true;
-      group = "greeter";
-    };
-    services.greetd.settings.default_session.user = "greeter";
-
-    programs.dms-greeter = {
+    # The nixpkgs DMS shell module installs the dms package + quickshell
+    # system-wide, runs dms as a systemd user unit (shipped by the package), and
+    # installs plugins to /etc/xdg/quickshell/dms-plugins. It has no equivalent of
+    # the old home-manager module's `settings`/`session`/plugin_settings.json; those
+    # are written below via home-manager files.
+    programs.dms-shell = {
       enable = true;
+      package = unstablePkgs.dms-shell;
+      quickshell.package = unstablePkgs.quickshell;
+      plugins = dmsPlugins;
+    };
+
+    # greetd is enabled and its session command is set by the nixpkgs DMS greeter
+    # module, which also creates the dms-greeter user/group (and the
+    # /var/lib/dms-greeter home) greetd runs the greeter as.
+    services.displayManager.dms-greeter = {
+      enable = true;
+      package = unstablePkgs.dms-greeter;
       compositor.name = "hyprland";
       quickshell.package = unstablePkgs.quickshell;
       configHome = "/home/agindin";
@@ -87,8 +187,13 @@ in
     # handles fingerprint via its own fprintd path, not this PAM service, so
     # force the greeter (and the DMS lock screen, which falls back to
     # /etc/pam.d/login on NixOS) to a clean password-only pam_unix stack.
+    # The nixpkgs DMS greeter module also creates /etc/pam.d/dms-greeter, which
+    # gets the same `auth sufficient pam_fprintd.so` ahead of pam_unix — the same
+    # setup that previously made the greeter reject correct passwords — so force
+    # it to password-only as well.
     security.pam.services = {
       greetd.fprintAuth = false;
+      dms-greeter.fprintAuth = false;
       dankshell.fprintAuth = false;
       # Unlock the login keyring at greetd login using the entered password, so
       # gnome-keyring's Secret Service is already unlocked for the session. Without
@@ -124,8 +229,8 @@ in
     services.dbus.enable = true;
 
     # DMS reads the battery via the UPower DBus daemon (Quickshell.Services.UPower).
-    # The DMS *NixOS* module would enable this, but we use the home module, so
-    # enable it here or the bar shows no battery.
+    # The nixpkgs DMS module does not enable this, so enable it here or the bar
+    # shows no battery.
     services.upower.enable = true;
 
     # KDE Connect: opens TCP/UDP 1714-1764 for phone pairing. Consumed by the
@@ -140,92 +245,6 @@ in
       backupFileExtension = "hm-backup";
 
       users.agindin = {
-        imports = [ dmsFlake.homeModules.dank-material-shell ];
-
-        programs.dank-material-shell = {
-          enable = true;
-          systemd.enable = true;
-          quickshell.package = unstablePkgs.quickshell;
-
-          # Declarative / read-only: settings.json is snapshotted into the repo
-          # and managed by Nix (GUI edits won't persist). Re-snapshot with
-          # `cp -L ~/.config/DankMaterialShell/settings.json linux/dms/settings.json`
-          # after intentional GUI tuning, then rebuild.
-          settings = lib.importJSON ./dms/settings.json;
-
-          # Third-party DMS plugins. Each attr name MUST equal the plugin's
-          # manifest `id` (from its plugin.json): the module installs the source
-          # to ~/.config/DankMaterialShell/plugins/<name> AND keys the generated
-          # plugin_settings.json by <name>, and DMS matches enabled-state by
-          # manifest id — a mismatch installs the plugin but never enables it.
-          # Bar-widget plugins also need a layout entry in dms/settings.json
-          # (barConfigs); launcher plugins are reached by their trigger string.
-          managePluginSettings = true;
-          plugins = {
-            # Launchers (spotlight triggers): ":e" emoji, "=" calc, "nix" pkgs.
-            emojiLauncher.src = pkgs.fetchFromGitHub {
-              owner = "devnullvoid";
-              repo = "dms-emoji-launcher";
-              rev = "8ff394e3ddfcb2fd755ed2e7b4c6f01f3e26e596";
-              hash = "sha256-fmIddCvACwO8wbAtLBMtDnEXXQJjb7+o2s4jW3f8VIU=";
-            };
-            calculator.src = pkgs.fetchFromGitHub {
-              owner = "rochacbruno";
-              repo = "DankCalculator";
-              rev = "1db5865419a40a33171a475855a59e0b8bf7187f";
-              hash = "sha256-j8C62+sevr6b+akzVSAqUVysIhb6Vbr8jnWcTXeOtE8=";
-            };
-            nixPackageRunner.src = pkgs.fetchFromGitHub {
-              owner = "iahccc";
-              repo = "NixPackageRunner";
-              rev = "829ad93c15b7c0ec82a6d7483728029037442601";
-              hash = "sha256-ur+1oN+QmTu7p5ZMpL3rCd4JGYbkerko4twa+tH6uvg=";
-            };
-
-            # Bar widgets (placed in dms/settings.json barConfigs).
-            amdGpuMonitorRevive.src = pkgs.fetchFromGitHub {
-              owner = "JDKamalakar";
-              repo = "DMS-AMD_GPU_Monitor_Revive";
-              rev = "d99d4f0673635a7e71bc457fbbd3319f84c18b52";
-              hash = "sha256-/NceDiewqhi55w8psJvOhEhscME/s4bxqykcobCdgtI=";
-            };
-            ambientSound.src = pkgs.fetchFromGitHub {
-              owner = "hthienloc";
-              repo = "dms-ambient-sound";
-              rev = "d1db2c49ec410a601f2611d805cbfb97aaa7c0cb";
-              hash = "sha256-PwmKzTVgEsL8NYuaPXav3gMZtQzSiEdyp1LvuEQX8AU=";
-            };
-            hyprlandSubmapIndicator.src = "${nderscoreDmsPlugins}/HyprlandSubmapIndicator";
-            dankKDEConnect.src = "${avengeDmsPlugins}/DankKDEConnect";
-            dankPomodoroTimer.src = "${avengeDmsPlugins}/DankPomodoroTimer";
-          };
-
-          session = {
-            # DMS only applies monitorWallpapers when perMonitorWallpaper is
-            # true; otherwise it uses the (empty) global wallpaperPath.
-            perMonitorWallpaper = true;
-            wallpaperPath = "/home/agindin/Pictures/wallpapers/nixos.png";
-            monitorWallpapers = {
-              "eDP-1" = "/home/agindin/Pictures/wallpapers/nixos.png";
-              "DP-7" = "/home/agindin/Pictures/wallpapers/stormlight-ultrawide.png";
-            };
-
-            # Night mode: 2500K (DMS minimum), auto on a 19:00–05:00 schedule.
-            # nightModeEnabled is the master switch — with it off, DMS never
-            # evaluates the schedule (DisplayService.evaluateNightMode returns
-            # early). With master + auto both on, the gamma daemon holds 6500K
-            # (neutral) during the day, so this doesn't tint daytime hours.
-            nightModeEnabled = true;
-            nightModeTemperature = 2500;
-            nightModeAutoEnabled = true;
-            nightModeAutoMode = "time";
-            nightModeStartHour = 19;
-            nightModeStartMinute = 0;
-            nightModeEndHour = 5;
-            nightModeEndMinute = 0;
-          };
-        };
-
         # Signal dark mode preference to all apps via xdg-desktop-portal-gtk.
         # Required for Chromium (and others) to report prefers-color-scheme: dark.
         dconf.settings."org/gnome/desktop/interface" = {
@@ -245,7 +264,20 @@ in
           x11.enable = true;
         };
 
+        # Declarative / read-only (store symlinks, same as the old DMS home
+        # module): GUI edits won't persist. Re-snapshot settings with
+        # `cp -L ~/.config/DankMaterialShell/settings.json linux/dms/settings.json`
+        # after intentional GUI tuning, then rebuild.
+        xdg.stateFile."DankMaterialShell/session.json".source =
+          jsonFormat.generate "session.json" dmsSession;
+
         xdg.configFile = {
+          "DankMaterialShell/settings.json".source = jsonFormat.generate "settings.json" (
+            lib.importJSON ./dms/settings.json
+          );
+          "DankMaterialShell/plugin_settings.json".source =
+            jsonFormat.generate "plugin_settings.json" dmsPluginSettings;
+
           "hypr/hyprland.lua".source = ./hypr/hyprland.lua;
 
           # volume.sh / brightness.sh removed: volume & display brightness keys

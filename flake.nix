@@ -36,17 +36,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    dms = {
-      url = "github:AvengeMedia/DankMaterialShell/stable";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
-    # The DMS greeter moved out of the DankMaterialShell repo into its own.
-    dank-greeter = {
-      url = "github:AvengeMedia/dank-greeter";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
     liftosaur-sync = {
       url = "github:aidengindin/liftosaur-sync";
       inputs.nixpkgs.follows = "unstable";
@@ -91,8 +80,6 @@
       hermes-agent,
       anduin,
       job-scraper,
-      dms,
-      dank-greeter,
       nixvim,
     }:
     let
@@ -123,7 +110,6 @@
         impermanence.nixosModules.impermanence
         disko.nixosModules.disko
         liftosaur-sync.nixosModules.default
-        dank-greeter.nixosModules.default
       ];
 
       # special args for all NixOS systems
@@ -134,7 +120,6 @@
           unstablePkgs
           nixvim
           ;
-        dmsFlake = dms;
         hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
         customPkgs = import ./packages {
