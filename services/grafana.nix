@@ -38,6 +38,11 @@ in
               type = types.str;
               default = "/metrics";
             };
+            scrape_timeout = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Per-target scrape timeout; null keeps Prometheus' global default (10s)";
+            };
           };
         }
       );
@@ -871,6 +876,199 @@ in
               );
             }
           ]
+          # Only when a host wires up the unpoller scrape target. The UniFi
+          # Network app on the Dream Router hangs when the console runs out of
+          # memory (2 GB, shared with DPI/IPS), so warn on memory pressure
+          # first and on the controller going dark second.
+          ++ lib.optionals (lib.any (t: t.name == "unpoller") cfg.prometheusScrapeTargets) [
+            {
+              orgId = 1;
+              name = "UniFi";
+              folder = "Infrastructure";
+              interval = "1m";
+              rules = [
+                {
+                  uid = "unifi-console-high-memory";
+                  title = "UniFi console high memory";
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 300;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = ''100 * max(unpoller_device_memory_utilization_ratio{type="udm"})'';
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ ];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "B" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ 85 ];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "C" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  # OK on NoData: a dark controller is the next rule's job.
+                  noDataState = "OK";
+                  execErrState = "Error";
+                  for = "15m";
+                  annotations = {
+                    summary = "UniFi console memory is at {{ $values.B.Value | printf \"%.0f\" }}%. The Network app hung at 80-93% on 2026-10-22; consider restarting it before it does again.";
+                  };
+                  labels = {
+                    severity = "warning";
+                  };
+                }
+                {
+                  uid = "unifi-controller-no-data";
+                  title = "UniFi controller not reporting";
+                  # Not up{job="unpoller"}: while the Network app returns 502s,
+                  # unpoller still answers scrapes, just with no UniFi series in
+                  # them. Missing console metrics cover both that and scrapes
+                  # timing out on a slow controller.
+                  condition = "C";
+                  data = [
+                    {
+                      refId = "A";
+                      relativeTimeRange = {
+                        from = 300;
+                        to = 0;
+                      };
+                      datasourceUid = "local-prometheus";
+                      model = {
+                        expr = ''count(unpoller_device_uptime_seconds{type="udm"}) or vector(0)'';
+                        refId = "A";
+                      };
+                    }
+                    {
+                      refId = "B";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ ];
+                              type = "gt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "B" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "A";
+                        reducer = "last";
+                        refId = "B";
+                        type = "reduce";
+                      };
+                    }
+                    {
+                      refId = "C";
+                      relativeTimeRange = {
+                        from = 0;
+                        to = 0;
+                      };
+                      datasourceUid = "__expr__";
+                      model = {
+                        conditions = [
+                          {
+                            evaluator = {
+                              params = [ 1 ];
+                              type = "lt";
+                            };
+                            operator.type = "and";
+                            query.params = [ "C" ];
+                            reducer.type = "last";
+                            type = "query";
+                          }
+                        ];
+                        datasource = {
+                          type = "__expr__";
+                          uid = "__expr__";
+                        };
+                        expression = "B";
+                        refId = "C";
+                        type = "threshold";
+                      };
+                    }
+                  ];
+                  noDataState = "Alerting";
+                  execErrState = "Alerting";
+                  for = "10m";
+                  annotations = {
+                    summary = "No UniFi console metrics for 10m: the Network app on the Dream Router is likely hung or the console is down. Restart the Network app (or the console) from UniFi OS.";
+                  };
+                  labels = {
+                    severity = "warning";
+                  };
+                }
+              ];
+            }
+          ]
           # Only when a host wires up the anduin web UI scrape target. Alerts on
           # daily-cadence ingest going stale (>26h). Withings/Liftosaur freshness
           # just reflects when you last weighed in or lifted, so they are excluded
@@ -1095,6 +1293,7 @@ in
       scrapeConfigs = map (c: {
         job_name = c.name;
         metrics_path = c.metrics_path;
+        inherit (c) scrape_timeout;
         static_configs = [
           {
             targets = [ "${c.host}:${toString c.port}" ];
