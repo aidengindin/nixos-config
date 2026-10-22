@@ -139,6 +139,26 @@ class DiffTests(unittest.TestCase):
         _, _, _, again = cve_scan.diff(state, current, failed=set(), today=TODAY)
         self.assertEqual(again, [])
 
+    def test_unknown_kev_keeps_previous_flag_and_never_escalates(self):
+        kev = cve_scan.merge([self.row()], kev={"CVE-1"})
+        state, _, _, _ = cve_scan.diff({"findings": {}}, kev, failed=set(), today=TODAY)
+        self.assertTrue(state["findings"]["CVE-1|p"]["kev"])
+        unknown = cve_scan.merge([self.row()], kev=None)
+        self.assertIsNone(unknown["CVE-1|p"]["kev"])
+        state, _, _, escalated = cve_scan.diff(state, unknown, failed=set(), today=TODAY)
+        self.assertEqual(escalated, [])
+        self.assertIs(state["findings"]["CVE-1|p"]["kev"], True)
+        state, _, _, escalated = cve_scan.diff(state, kev, failed=set(), today=TODAY)
+        self.assertEqual(escalated, [])
+
+    def test_new_finding_with_unknown_kev_is_stored_false(self):
+        unknown = cve_scan.merge([self.row()], kev=None)
+        state, _, _, _ = cve_scan.diff({"findings": {}}, unknown, failed=set(), today=TODAY)
+        self.assertIs(state["findings"]["CVE-1|p"]["kev"], False)
+        kev = cve_scan.merge([self.row()], kev={"CVE-1"})
+        _, _, _, escalated = cve_scan.diff(state, kev, failed=set(), today=TODAY)
+        self.assertEqual(escalated, ["CVE-1|p"])
+
     def test_scanned_target_resolves_and_is_remembered(self):
         previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
             "targets": ["lorien"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}

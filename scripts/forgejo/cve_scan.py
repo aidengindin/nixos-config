@@ -87,10 +87,13 @@ def ignored(row, rules):
 
 
 def merge(rows, kev):
+    """kev is the set of known-exploited CVE ids, or None when the feed was
+    unavailable (the flag is then unknown, resolved in diff)."""
     merged = {}
     for row in rows:
         key = f"{row['cve']}|{row['package']}"
-        item = merged.setdefault(key, {"targets": [], "cvss": row["cvss"], "kev": row["cve"] in kev,
+        item = merged.setdefault(key, {"targets": [], "cvss": row["cvss"],
+            "kev": None if kev is None else row["cve"] in kev,
             "version": row["version"], "fix": row["fix"]})
         if row["target"] not in item["targets"]:
             item["targets"].append(row["target"])
@@ -114,6 +117,8 @@ def diff(previous, current, failed, today):
     for key, item in current.items():
         was = old.get(key)
         targets = item["targets"]
+        if item["kev"] is None:  # feed unavailable: keep what we knew, never escalate
+            item = {**item, "kev": bool(was and was["kev"])}
         if not was:
             gone = resolved_at.pop(key, None)
             if not gone or (today - datetime.date.fromisoformat(gone)).days > FLAP_DAYS:
