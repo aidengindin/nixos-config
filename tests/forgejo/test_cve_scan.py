@@ -31,6 +31,23 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(cve_scan.degraded_scanners(log), ["vulnix"])
         self.assertEqual(cve_scan.degraded_scanners("INFO fine\n"), [])
 
+    GRYPE = {"matches": [
+        {"vulnerability": {"id": "CVE-2026-1", "cvss": [{"metrics": {"baseScore": 9.8}}, {"metrics": {"baseScore": 7.0}}],
+                           "fix": {"versions": ["1.2.4"]}},
+         "artifact": {"name": "openssl", "version": "1.2.3"}, "relatedVulnerabilities": []},
+        {"vulnerability": {"id": "GHSA-xxxx", "cvss": [], "fix": {"versions": []}},
+         "artifact": {"name": "lodash", "version": "4.0.0"},
+         "relatedVulnerabilities": [{"id": "CVE-2026-2", "cvss": [{"metrics": {"baseScore": 5.0}}]}]},
+        {"vulnerability": {"id": "GHSA-only", "cvss": [], "fix": {"versions": []}},
+         "artifact": {"name": "x", "version": "1"}, "relatedVulnerabilities": []},
+    ]}
+
+    def test_grype_takes_max_cvss_and_maps_ghsa_to_cve(self):
+        rows = cve_scan.parse_grype(self.GRYPE, "ghcr.io/a/b:1")
+        self.assertEqual([(r["cve"], r["cvss"], r["fix"]) for r in rows],
+            [("CVE-2026-1", 9.8, "1.2.4"), ("CVE-2026-2", 5.0, None), ("GHSA-only", None, None)])
+        self.assertEqual(rows[0]["target"], "ghcr.io/a/b:1")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -33,3 +33,24 @@ def parse_triage(text, target):
 def degraded_scanners(log):
     """vulnxscan exits 0 when a sub-scanner fails; its log is the only signal."""
     return sorted(set(SCANNER_WARNING.findall(log)))
+
+
+def _max_cvss(entries):
+    scores = [e.get("metrics", {}).get("baseScore") for e in entries or []]
+    scores = [s for s in scores if isinstance(s, (int, float))]
+    return max(scores) if scores else None
+
+
+def parse_grype(report, target):
+    rows = []
+    for match in report.get("matches", []):
+        vuln, artifact = match["vulnerability"], match["artifact"]
+        cve, cvss = vuln["id"], _max_cvss(vuln.get("cvss"))
+        if not cve.startswith("CVE-"):
+            related = next((r for r in match.get("relatedVulnerabilities") or [] if r["id"].startswith("CVE-")), None)
+            if related:
+                cve, cvss = related["id"], cvss if cvss is not None else _max_cvss(related.get("cvss"))
+        fixes = (vuln.get("fix") or {}).get("versions") or []
+        rows.append({"cve": cve, "package": artifact["name"], "version": artifact["version"], "cvss": cvss,
+            "target": target, "fix": fixes[0] if fixes else None, "classify": "grype"})
+    return rows
