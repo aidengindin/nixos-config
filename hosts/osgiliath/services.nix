@@ -336,6 +336,10 @@
           name = "unpoller";
           host = "127.0.0.1";
           port = globalVars.ports.unpoller;
+          # unpoller polls the controller on each scrape; a struggling Network
+          # app answers in 15-60s, and the default 10s drops those samples
+          # exactly when they matter. Must stay under the 1m scrape interval.
+          scrape_timeout = "50s";
         }
       ];
       dashboards = [
