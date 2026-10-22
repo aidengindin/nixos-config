@@ -1,7 +1,11 @@
+import contextlib
 import datetime
+import io
 from pathlib import Path
 import sys
+import tempfile
 import unittest
+from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
 import cve_scan
 
@@ -229,6 +233,53 @@ class RenderTests(unittest.TestCase):
         self.assertIn("CVE-1", comment)
         self.assertIn("Resolved", comment)
         self.assertIn(cve_scan.PING_MARKER, cve_scan.render_comment(self.STATE, ["CVE-1|openssl"], [], ping=["CVE-1|openssl"]))
+
+
+ROW = {"cve": "CVE-1", "package": "openssl", "version": "3", "cvss": 5.0, "target": "lorien", "fix": None, "classify": "x"}
+
+
+class ScanTests(unittest.TestCase):
+    """scan() orchestration with every side effect patched out."""
+
+    def run_scan(self, closure, kev=frozenset(), build=lambda host: "/nix/store/x"):
+        patches = [mock.patch.object(cve_scan, "build_host", side_effect=build),
+            mock.patch.object(cve_scan, "scan_closure", side_effect=closure),
+            mock.patch.object(cve_scan, "pinned_images", return_value=[]),
+            mock.patch.object(cve_scan, "scan_image"),
+            mock.patch.object(cve_scan, "fetch_kev", side_effect=kev if isinstance(kev, Exception) else None,
+                return_value=kev),
+            mock.patch.object(cve_scan, "merge", wraps=cve_scan.merge)]
+        with tempfile.TemporaryDirectory() as report, contextlib.ExitStack() as stack, \
+                contextlib.redirect_stderr(io.StringIO()):
+            mocks = [stack.enter_context(p) for p in patches]
+            result = cve_scan.scan(datetime.date(2026, 10, 22), report)
+        return result, mocks[-1]
+
+    def test_degraded_host_is_failed_but_keeps_rows(self):
+        def closure(path, target, work):
+            return [{**ROW, "target": target}], (["scan_vulnix()"] if target == "lorien" else [])
+        (current, failed, unscanned, notes), _ = self.run_scan(closure)
+        self.assertIn("lorien", failed)
+        self.assertNotIn("osgiliath", failed)
+        self.assertEqual(unscanned, {})
+        self.assertIn("lorien", current["CVE-1|openssl"]["targets"])
+        self.assertTrue(any("scan_vulnix()" in n for n in notes))
+
+    def test_build_failure_is_failed_and_unscanned(self):
+        def build(host):
+            if host == "lorien":
+                raise RuntimeError("build broke")
+            return "/nix/store/x"
+        (current, failed, unscanned, _), _ = self.run_scan(
+            lambda path, target, work: ([{**ROW, "target": target}], []), build=build)
+        self.assertIn("lorien", failed)
+        self.assertIn("lorien", unscanned)
+        self.assertNotIn("lorien", current["CVE-1|openssl"]["targets"])
+
+    def test_kev_failure_merges_with_none_and_notes_it(self):
+        (_, _, _, notes), merge = self.run_scan(lambda path, target, work: ([ROW], []), kev=OSError("down"))
+        self.assertIsNone(merge.call_args.args[1] if len(merge.call_args.args) > 1 else merge.call_args.kwargs["kev"])
+        self.assertTrue(any("KEV" in n for n in notes))
 
 
 if __name__ == "__main__":

@@ -2,12 +2,24 @@
 """Daily CVE scan of host closures and pinned images; see
 docs/plans/2026-10-22-cve-scanning-design.md. Pure helpers come first so the
 tests need no scanners, network or Forgejo."""
+import argparse
 import csv
 import datetime
+import hashlib
+import hmac
 import io
 import json
+import os
+from pathlib import Path
 import re
+import subprocess
+import sys
+import tempfile
 import tomllib
+import urllib.parse
+import urllib.request
+from common import API, HOSTS, REPOSITORY
+import images
 
 # Repology says the local version is outside the CVE's range. Everything else,
 # including err_invalid_version, stays visible: an unknown answer is not "safe".
@@ -20,6 +32,9 @@ IGNORE_KEYS = {"cve", "package", "reason", "expires"}
 ISSUE_TITLE = "CVE report"
 STATE_START, STATE_END = "<!-- cve-state", "cve-state -->"
 PING_MARKER = "<!-- cve-ping -->"
+ROOT = Path(__file__).resolve().parents[2]
+KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+STALE_DAYS = 3
 
 
 def _score(text):
@@ -209,3 +224,132 @@ def render_comment(state, new, resolved, ping=(), escalated=()):
     if resolved:
         lines += ["", "### Resolved", ", ".join(k.replace("|", " in ") for k in resolved)]
     return "\n".join(lines)
+
+
+def build_host(host):
+    attr = f"{ROOT}#nixosConfigurations.{host}.config.system.build.toplevel"
+    return subprocess.check_output(["nix", "build", "--no-link", "--print-out-paths", attr],
+        text=True, timeout=6 * 3600).strip()
+
+
+def scan_closure(path, target, work):
+    out = Path(work, target)
+    out.mkdir(parents=True, exist_ok=True)
+    run = subprocess.run(["vulnxscan", "--triage", "--verbose", "1", "--out", str(out / "vulns.csv"), path],
+        cwd=out, capture_output=True, text=True, timeout=3 * 3600)
+    if run.returncode != 0:
+        raise RuntimeError(f"vulnxscan failed: {run.stderr[-2000:]}")
+    return parse_triage((out / "vulns.triage.csv").read_text(), target), degraded_scanners(run.stderr + run.stdout)
+
+
+def pinned_images():
+    found = set()
+    for path in sorted((ROOT / "services").glob("*.nix")):
+        for repo, tag, digest in images.PINNED.findall(path.read_text()):
+            found.add((f"{repo}:{tag}", f"{repo}@sha256:{digest}"))
+    return sorted(found)
+
+
+def scan_image(name, ref):
+    report = subprocess.check_output(["grype", f"registry:{ref}", "-o", "json", "--quiet"], text=True, timeout=3600)
+    return parse_grype(json.loads(report), name)
+
+
+def fetch_kev():
+    with urllib.request.urlopen(KEV_URL, timeout=60) as response:
+        return {v["cveID"] for v in json.load(response)["vulnerabilities"]}
+
+
+def find_issue(api):
+    me = api.request("user")["login"]
+    for issue in api.repo("issues?state=open&type=issues&limit=50&q=" + urllib.parse.quote(ISSUE_TITLE)):
+        if issue["title"] == ISSUE_TITLE and issue["user"]["login"] == me:
+            return issue
+    return api.repo("issues", data={"title": ISSUE_TITLE, "body": render_issue({"findings": {}})})
+
+
+def send_webhook(payload):
+    body = json.dumps({"repository": REPOSITORY, **payload}).encode()
+    signature = hmac.new(os.environ["CI_WEBHOOK_SECRET"].encode(), body, hashlib.sha256).hexdigest()
+    request = urllib.request.Request(os.environ["FORGEJO_URL"].rstrip("/") + "/_automation/events", data=body,
+        headers={"Content-Type": "application/json", "X-Forgejo-Signature": signature})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        response.read()
+
+
+def run_url():
+    server, repo, run = (os.environ.get(k, "") for k in ("GITHUB_SERVER_URL", "GITHUB_REPOSITORY", "GITHUB_RUN_ID"))
+    return f"{server}/{repo}/actions/runs/{run}" if run else "(local run)"
+
+
+def scan(today, report_dir):
+    rows, unscanned, notes, failed = [], {}, [], set()
+    ignores = load_ignores((ROOT / "security/cve-ignore.toml").read_text(), today)
+    with tempfile.TemporaryDirectory() as work:
+        for host in HOSTS:
+            try:
+                found, degraded = scan_closure(build_host(host), host, work)
+                rows += found
+                if degraded:
+                    # Keep its rows, but a partial scan must not resolve anything.
+                    notes.append(f"`{host}`: {', '.join(degraded)} failed; results are partial")
+                    failed.add(host)
+            except Exception as exc:  # one bad host must not hide the others
+                print(f"{host}: {exc}", file=sys.stderr)
+                unscanned[host] = run_url()
+        for name, ref in pinned_images():
+            try:
+                rows += scan_image(name, ref)
+            except Exception as exc:
+                print(f"{name}: {exc}", file=sys.stderr)
+                unscanned[name] = run_url()
+    try:
+        kev = fetch_kev()
+    except Exception as exc:
+        print(f"KEV: {exc}", file=sys.stderr)
+        kev = None  # unknown: diff keeps each finding's previous flag
+        notes.append("CISA KEV feed unavailable; pings used CVSS only")
+    rows = [r for r in rows if not ignored(r, ignores)]
+    Path(report_dir).mkdir(parents=True, exist_ok=True)
+    Path(report_dir, "findings.json").write_text(json.dumps(rows, indent=1))
+    return merge(rows, kev), failed | set(unscanned), unscanned, notes
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--record-failure", action="store_true", help="called by the workflow's failure() step")
+    parser.add_argument("--report-dir", default="cve-report")
+    args = parser.parse_args(argv)
+    today = datetime.date.today()
+    api = None if args.dry_run else API()
+    issue = find_issue(api) if api else {"number": 0, "body": ""}
+    previous = state_from_body(issue["body"] or "")
+
+    if args.record_failure:
+        state = {**previous, "last_failure": f"{today} ([log]({run_url()}))"}
+        api.repo(f"issues/{issue['number']}", data={"body": render_issue(state)}, method="PATCH")
+        last = previous.get("last_success")
+        if not last or (today - datetime.date.fromisoformat(last)).days >= STALE_DAYS:
+            send_webhook({"kind": "cve-stale", "issue": issue["number"]})
+        return 0
+
+    current, failed, unscanned, notes = scan(today, args.report_dir)
+    state, new, resolved, escalated = diff(previous, current, failed, today)
+    state.update(last_success=today.isoformat(), unscanned=unscanned, notes=notes,
+        databases={"scan": today.isoformat()})
+    ping = to_ping(state, new, escalated)
+    body, comment = render_issue(state), render_comment(state, new, resolved, ping=ping, escalated=escalated)
+    if args.dry_run:
+        print(body, "\n\n--- comment ---\n", comment or "(none)", "\n\n--- ping ---\n", ping or "(none)")
+        return 0
+    api.repo(f"issues/{issue['number']}", data={"body": body}, method="PATCH")
+    if comment:
+        posted = api.comment(issue["number"], comment)
+        if ping:
+            send_webhook({"kind": "cve", "issue": issue["number"], "comment": posted["id"]})
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
