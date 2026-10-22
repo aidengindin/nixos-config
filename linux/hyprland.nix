@@ -146,6 +146,16 @@ in
       configHome = "/home/agindin";
     };
 
+    # /var/lib/dms-greeter is persisted, and the flake greeter this replaced ran
+    # as a different user (`greeter`). The module's pre-start only chowns
+    # non-hidden files (`chown … *`), so its leftover `.cache` stayed owned by
+    # the old user and the new greeter died on `mkdir .cache/dms-greeter-shell:
+    # permission denied`, leaving no login screen. Own the whole tree right
+    # before each launch, as root, whatever state a previous generation left.
+    systemd.services.greetd.preStart = lib.mkAfter ''
+      ${pkgs.coreutils}/bin/chown -R dms-greeter:dms-greeter /var/lib/dms-greeter
+    '';
+
     # fprintd (enabled on this host) makes NixOS inject `auth sufficient
     # pam_fprintd.so` ahead of pam_unix into /etc/pam.d/greetd. greetd runs that
     # stack for the DankGreeter, whose greetd-protocol auth doesn't drive the
