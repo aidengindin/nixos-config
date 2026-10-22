@@ -16,6 +16,7 @@ SCANNER_WARNING = re.compile(r"scan_(vulnix|grype|osv)\(\)")
 CRITICAL = 9.0
 HIGH = 7.0
 FLAP_DAYS = 14
+IGNORE_KEYS = {"cve", "package", "reason", "expires"}
 ISSUE_TITLE = "CVE report"
 STATE_START, STATE_END = "<!-- cve-state", "cve-state -->"
 PING_MARKER = "<!-- cve-ping -->"
@@ -70,6 +71,11 @@ def load_ignores(text, today):
     for rule in tomllib.loads(text).get("ignore", []):
         if not rule.get("cve") or not str(rule.get("reason", "")).strip():
             raise ValueError(f"cve-ignore entry needs cve and reason: {rule}")
+        if set(rule) - IGNORE_KEYS:
+            raise ValueError(f"cve-ignore entry has unknown keys {sorted(set(rule) - IGNORE_KEYS)}: {rule}")
+        # A datetime is a date subclass and would not compare with today.
+        if "expires" in rule and type(rule["expires"]) is not datetime.date:
+            raise ValueError(f"cve-ignore entry {rule['cve']}: expires must be a TOML date: {rule}")
         if rule.get("expires") and rule["expires"] < today:
             continue
         rules.append(rule)
@@ -95,36 +101,46 @@ def merge(rows, kev):
     return merged
 
 
-def diff(previous, current, scanned, today):
-    """Return (state, new keys, resolved keys). A finding is resolved only when
-    every target it was seen on was scanned this run and none reported it."""
+def diff(previous, current, failed, today):
+    """Return (state, new keys, resolved keys, KEV-escalated keys). `failed` is
+    the set of known targets not cleanly scanned this run. A finding is carried
+    over while any of its targets failed, and a failed target is never dropped
+    from it; a target that no longer exists is not failed, so its findings
+    resolve."""
     iso = today.isoformat()
     old = previous.get("findings", {})
     resolved_at = dict(previous.get("resolved", {}))
-    findings, new, resolved = {}, [], []
+    findings, new, resolved, escalated = {}, [], [], []
     for key, item in current.items():
         was = old.get(key)
+        targets = item["targets"]
         if not was:
             gone = resolved_at.pop(key, None)
             if not gone or (today - datetime.date.fromisoformat(gone)).days > FLAP_DAYS:
                 new.append(key)
-        findings[key] = {**item, "first_seen": was["first_seen"] if was else iso, "last_seen": iso}
+        else:
+            targets = sorted(set(targets) | (set(was["targets"]) & failed))
+            if item["kev"] and not was["kev"]:
+                escalated.append(key)
+        findings[key] = {**item, "targets": targets,
+            "first_seen": was["first_seen"] if was else iso, "last_seen": iso}
     for key, was in old.items():
         if key in findings:
             continue
-        if set(was["targets"]) - scanned:
-            findings[key] = was  # some target was not scanned: carry over unchanged
+        if set(was["targets"]) & failed:
+            findings[key] = was  # a target was not cleanly scanned: carry over unchanged
         else:
             resolved.append(key)
             resolved_at[key] = iso
     cutoff = today - datetime.timedelta(days=FLAP_DAYS)
     resolved_at = {k: d for k, d in resolved_at.items() if datetime.date.fromisoformat(d) >= cutoff}
     state = {**previous, "version": 1, "findings": findings, "resolved": resolved_at}
-    return state, sorted(new), sorted(resolved)
+    return state, sorted(new), sorted(resolved), sorted(escalated)
 
 
-def to_ping(state, new):
-    return [k for k in new if state["findings"][k]["kev"] or (state["findings"][k]["cvss"] or 0) >= CRITICAL]
+def to_ping(state, new, escalated=()):
+    critical = [k for k in new if state["findings"][k]["kev"] or (state["findings"][k]["cvss"] or 0) >= CRITICAL]
+    return sorted(set(critical) | set(escalated))
 
 
 def state_from_body(body):
@@ -145,8 +161,9 @@ def _line(key, item):
     cve, package = key.split("|", 1)
     kev = " **KEV**" if item["kev"] else ""
     fix = item["fix"] or "–"
-    return (f"| [{cve}](https://nvd.nist.gov/vuln/detail/{cve}){kev} | {item['cvss'] or '?'} | {package} "
-            f"{item['version']} | {fix} | {', '.join(item['targets'])} | {item['first_seen']} |")
+    cell = lambda text: str(text).replace("|", "\\|")
+    return (f"| [{cve}](https://nvd.nist.gov/vuln/detail/{cve}){kev} | {item['cvss'] or '?'} | {cell(package)} "
+            f"{cell(item['version'])} | {cell(fix)} | {', '.join(item['targets'])} | {item['first_seen']} |")
 
 
 def render_issue(state):
@@ -169,15 +186,21 @@ def render_issue(state):
     lines += [_line(k, findings[k]) for k in shown] or ["| none | | | | | |"]
     lines += ["", "Not listed: " + (", ".join(f"{k}: {v}" for k, v in sorted(counts.items())) or "nothing"),
               "", "Suppress a finding with a reasoned entry in `security/cve-ignore.toml`.", "",
-              STATE_START + json.dumps(state, sort_keys=True) + STATE_END]
+              # Escape < and > so no value can contain a comment terminator.
+              STATE_START + json.dumps(state, sort_keys=True).replace("<", "\\u003c").replace(">", "\\u003e")
+              + STATE_END]
     return "\n".join(lines)
 
 
-def render_comment(state, new, resolved, ping=()):
+def render_comment(state, new, resolved, ping=(), escalated=()):
     lines = [PING_MARKER] if ping else []
+    header = ["| CVE | CVSS | Package | Fixed in | Targets | First seen |", "|---|---|---|---|---|---|"]
     if new:
-        lines += ["### New", "| CVE | CVSS | Package | Fixed in | Targets | First seen |", "|---|---|---|---|---|---|"]
+        lines += ["### New", *header]
         lines += [_line(k, state["findings"][k]) for k in new]
+    if escalated:
+        lines += ["", "### Now known-exploited", *header]
+        lines += [_line(k, state["findings"][k]) for k in escalated]
     if resolved:
         lines += ["", "### Resolved", ", ".join(k.replace("|", " in ") for k in resolved)]
     return "\n".join(lines)

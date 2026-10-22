@@ -74,6 +74,16 @@ class IgnoreTests(unittest.TestCase):
     def test_empty_file(self):
         self.assertEqual(self.rules(""), [])
 
+    def test_unknown_key_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "pakage"):
+            self.rules('[[ignore]]\ncve="CVE-1"\npakage="a"\nreason="r"\n')
+
+    def test_expires_must_be_a_date(self):
+        with self.assertRaisesRegex(ValueError, "CVE-1"):
+            self.rules('[[ignore]]\ncve="CVE-1"\nreason="r"\nexpires="2026-10-21"\n')
+        with self.assertRaisesRegex(ValueError, "CVE-1"):
+            self.rules('[[ignore]]\ncve="CVE-1"\nreason="r"\nexpires=2026-10-21T00:00:00Z\n')
+
 
 class DiffTests(unittest.TestCase):
     def row(self, cve="CVE-1", package="p", target="lorien", cvss=9.5):
@@ -85,39 +95,67 @@ class DiffTests(unittest.TestCase):
 
     def test_new_finding_pings_if_critical(self):
         current = cve_scan.merge([self.row()], kev=set())
-        state, new, resolved = cve_scan.diff({"findings": {}}, current, scanned={"lorien"}, today=TODAY)
+        state, new, resolved, _ = cve_scan.diff({"findings": {}}, current, failed=set(), today=TODAY)
         self.assertEqual(new, ["CVE-1|p"])
         self.assertEqual(cve_scan.to_ping(state, new), ["CVE-1|p"])
 
     def test_low_score_kev_pings_and_low_score_alone_does_not(self):
         current = cve_scan.merge([self.row(cvss=5.0), self.row(cve="CVE-2", cvss=5.0)], kev={"CVE-2"})
-        state, new, _ = cve_scan.diff({"findings": {}}, current, scanned={"lorien"}, today=TODAY)
+        state, new, _, _ = cve_scan.diff({"findings": {}}, current, failed=set(), today=TODAY)
         self.assertEqual(cve_scan.to_ping(state, new), ["CVE-2|p"])
 
     def test_unscanned_target_keeps_findings(self):
         previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
             "targets": ["khazad-dum"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
-        state, new, resolved = cve_scan.diff(previous, {}, scanned={"lorien"}, today=TODAY)
+        state, new, resolved, _ = cve_scan.diff(previous, {}, failed={"khazad-dum"}, today=TODAY)
         self.assertEqual(resolved, [])
         self.assertIn("CVE-1|p", state["findings"])
+
+    def test_failed_target_is_not_dropped_across_days(self):
+        previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-20",
+            "targets": ["khazad-dum", "lorien"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
+        day1 = cve_scan.merge([self.row(target="lorien")], kev=set())
+        state, _, resolved, _ = cve_scan.diff(previous, day1, failed={"khazad-dum"}, today=TODAY)
+        self.assertEqual(state["findings"]["CVE-1|p"]["targets"], ["khazad-dum", "lorien"])
+        self.assertEqual(resolved, [])
+        state, _, resolved, _ = cve_scan.diff(state, {}, failed={"khazad-dum"},
+            today=TODAY + datetime.timedelta(days=1))
+        self.assertEqual(resolved, [])
+        self.assertIn("CVE-1|p", state["findings"])
+
+    def test_removed_target_resolves(self):
+        previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
+            "targets": ["ghcr.io/x:1"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
+        _, _, resolved, _ = cve_scan.diff(previous, {}, failed=set(), today=TODAY)
+        self.assertEqual(resolved, ["CVE-1|p"])
+
+    def test_kev_escalation_is_reported_and_pinged(self):
+        previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
+            "targets": ["lorien"], "cvss": 5.0, "kev": False, "version": "1", "fix": None}}}
+        current = cve_scan.merge([self.row(cvss=5.0)], kev={"CVE-1"})
+        state, new, _, escalated = cve_scan.diff(previous, current, failed=set(), today=TODAY)
+        self.assertEqual((new, escalated), ([], ["CVE-1|p"]))
+        self.assertEqual(cve_scan.to_ping(state, new, escalated), ["CVE-1|p"])
+        _, _, _, again = cve_scan.diff(state, current, failed=set(), today=TODAY)
+        self.assertEqual(again, [])
 
     def test_scanned_target_resolves_and_is_remembered(self):
         previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
             "targets": ["lorien"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
-        state, _, resolved = cve_scan.diff(previous, {}, scanned={"lorien"}, today=TODAY)
+        state, _, resolved, _ = cve_scan.diff(previous, {}, failed=set(), today=TODAY)
         self.assertEqual(resolved, ["CVE-1|p"])
         self.assertEqual(state["resolved"]["CVE-1|p"], "2026-10-22")
 
     def test_flap_within_14_days_is_not_new(self):
         previous = {"findings": {}, "resolved": {"CVE-1|p": "2026-10-15"}}
         current = cve_scan.merge([self.row()], kev=set())
-        _, new, _ = cve_scan.diff(previous, current, scanned={"lorien"}, today=TODAY)
+        _, new, _, _ = cve_scan.diff(previous, current, failed=set(), today=TODAY)
         self.assertEqual(new, [])
 
     def test_reappearing_after_14_days_is_new(self):
         previous = {"findings": {}, "resolved": {"CVE-1|p": "2026-10-01"}}
         current = cve_scan.merge([self.row()], kev=set())
-        _, new, _ = cve_scan.diff(previous, current, scanned={"lorien"}, today=TODAY)
+        _, new, _, _ = cve_scan.diff(previous, current, failed=set(), today=TODAY)
         self.assertEqual(new, ["CVE-1|p"])
 
 
@@ -143,6 +181,24 @@ class RenderTests(unittest.TestCase):
         self.assertIn("Medium: 1", body)
         self.assertIn("khazad-dum", body)
         self.assertIn("KEV feed unavailable", body)
+
+    def test_state_with_comment_terminators_round_trips(self):
+        state = {**self.STATE, "notes": ["cve-state -->"], "findings": {"CVE-1|p": {
+            **self.STATE["findings"]["CVE-1|openssl"], "version": "1-->2"}}}
+        body = cve_scan.render_issue(state)
+        self.assertEqual(body[body.index(cve_scan.STATE_START):].count("-->"), 1)
+        self.assertEqual(cve_scan.state_from_body(body), state)
+
+    def test_pipes_are_escaped_in_rows(self):
+        state = {"findings": {"CVE-1|a|b": {**self.STATE["findings"]["CVE-1|openssl"],
+            "version": "1|2", "fix": "3|4"}}}
+        row = cve_scan.render_issue(state).split("\n| [CVE-1")[1].split("\n")[0]
+        self.assertIn(r"a\|b 1\|2 | 3\|4", row)
+
+    def test_escalated_listed_in_comment(self):
+        comment = cve_scan.render_comment(self.STATE, [], [], escalated=["CVE-1|openssl"])
+        self.assertIn("### Now known-exploited", comment)
+        self.assertIn("CVE-1", comment)
 
     def test_missing_state_is_empty(self):
         self.assertEqual(cve_scan.state_from_body("hand-written issue"), {"findings": {}})
