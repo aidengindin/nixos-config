@@ -2,23 +2,74 @@
 """Preserve partial updater edits, then open/update the single automation PR."""
 import datetime
 import fcntl
+import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 from common import API, REPOSITORY, UPDATE_BRANCH
 
+SCRIPTS = Path(__file__).resolve().parent
+# `{reports}` is replaced with a scratch directory outside the checkout, where
+# the pinning steps leave JSON notes for the PR body.
+# Order matters: lock update, then the 7-day cooldown re-pin, then tag-pinned
+# inputs, then package updaters, then container images.
+# nix-update is taken from the flake's own locked nixpkgs (`--inputs-from .`),
+# never from the mutable global registry.
+NIX_UPDATE = ["nix", "run", "--inputs-from", ".", "nixpkgs#nix-update", "--"]
 COMMANDS = [
     ["nix", "flake", "update"],
-    ["nix", "run", "nixpkgs#nix-update", "--", "--flake", "catppuccin-userstyles", "--version=unstable"],
-    ["nix", "run", "nixpkgs#nix-update", "--", "--flake", "intervals-mcp-server", "--version=branch"],
+    [sys.executable, str(SCRIPTS / "cooldown.py"), "--report", "{reports}/cooldown.json"],
+    [sys.executable, str(SCRIPTS / "tags.py"), "--report", "{reports}/tags.json"],
+    # A tag bump can pull in new transitive inputs at their newest commits.
+    [sys.executable, str(SCRIPTS / "cooldown.py"), "--report", "{reports}/cooldown-tags.json"],
+    [*NIX_UPDATE, "--flake", "catppuccin-userstyles", "--version=unstable"],
+    [*NIX_UPDATE, "--flake", "intervals-mcp-server", "--version=branch"],
     *[["bash", "scripts/" + name] for name in ["update-caddy-hash.sh", "update-ublock-hash.sh",
         "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
+    [sys.executable, str(SCRIPTS / "images.py"), "--report", "{reports}/images.json"],
 ]
 
 
 def git(*args, capture=False):
     return subprocess.check_output(["git", *args], text=True).strip() if capture else subprocess.run(["git", *args], check=True)
+
+
+def read_reports(directory):
+    reports = {}
+    for name in ("cooldown", "cooldown-tags", "tags", "images"):
+        try:
+            reports[name] = json.loads(Path(directory, name + ".json").read_text())
+        except (OSError, ValueError):
+            reports[name] = {}
+    # The second cooldown pass only adds inputs the first did not see.
+    second = reports.pop("cooldown-tags")
+    seen = {h["name"] for h in reports["cooldown"].get("held", [])}
+    for key in ("held", "unhandled"):
+        reports["cooldown"][key] = reports["cooldown"].get(key, []) + [
+            h for h in second.get(key, []) if not isinstance(h, dict) or h["name"] not in seen]
+    return reports
+
+
+def cooldown_section(reports):
+    """Markdown describing everything the 7-day cooldown held back."""
+    lines = []
+    held = reports["cooldown"].get("held", [])
+    if held:
+        lines += ["Flake inputs held back by the 7-day cooldown (pinned to the newest older commit):", "",
+            "| input | repository | upstream head age | pinned rev age | pinned rev |", "|---|---|---|---|---|"]
+        lines += [f"| `{h['name']}` | {h['repo']} | {h['upstream_head_age_days']}d | {h['pinned_age_days']}d | `{h['pinned_rev'][:12]}` |" for h in held]
+        lines.append("")
+    if reports["cooldown"].get("unhandled"):
+        lines += ["Young inputs the cooldown cannot handle (non-GitHub), left as updated:", ""]
+        lines += ["- " + u for u in reports["cooldown"]["unhandled"]] + [""]
+    notes = reports["tags"].get("held", []) + reports["images"].get("held", [])
+    if notes:
+        lines += ["Tags and container images held back by the cooldown:", ""] + ["- " + n for n in notes] + [""]
+    if reports["images"].get("problems"):
+        lines += ["Image pinning problems:", ""] + ["- " + p for p in reports["images"]["problems"]] + [""]
+    return "\n".join(lines)
 
 
 def main():
@@ -41,7 +92,9 @@ def main():
         else:
             git("checkout", "-B", UPDATE_BRANCH, "origin/main")
         failures = []
+        reports_dir = tempfile.mkdtemp(prefix="update-reports-")
         for command in COMMANDS:
+            command = [part.replace("{reports}", reports_dir) for part in command]
             print("Running:", " ".join(command), flush=True)
             try:
                 rc = subprocess.run(command, timeout=7200).returncode
@@ -63,6 +116,7 @@ def main():
         sha = git("rev-parse", "HEAD", capture=True)
         body = f"Automated flake and custom package updates.\n\nUpdate-Cycle: {cycle}\n\n"
         body += "Updater failures:\n" + "\n".join("- `" + f + "`" for f in failures) if failures else "All updater steps completed."
+        body += "\n\n" + cooldown_section(read_reports(reports_dir))
         body += "\n\nCI builds lorien, osgiliath, and khazad-dum. Merge manually; use `/deploy @server` or individual hosts to deploy this PR."
         if pulls:
             pr = pulls[0]
