@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import importlib.util
@@ -398,38 +399,77 @@ class ControllerTests(unittest.TestCase):
     def test_issue_not_by_bot_is_rejected(self):
         self.cve_api(issue={**self.cve_issue(), "user": {"id": 99}})
         with self.assertRaises(ValueError):
-            self.c.queue_cve_notification({"kind": "cve-stale", "issue": 77})
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
 
     def test_issue_with_other_title_is_rejected(self):
         self.cve_api(issue={**self.cve_issue(), "title": "Something else"})
         with self.assertRaises(ValueError):
-            self.c.queue_cve_notification({"kind": "cve-stale", "issue": 77})
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
 
     def test_malformed_cve_payloads_are_rejected(self):
         self.cve_api()
         for payload in ({"kind": "cve"}, {"kind": "cve", "issue": "x", "comment": 9},
                         {"kind": "cve", "issue": 77}, {"kind": "cve", "issue": 77, "comment": None},
-                        {"kind": "cve-stale", "issue": [1]}):
+                        {"kind": "cve", "issue": [1], "comment": 9}):
             with self.assertRaises(ValueError, msg=payload):
                 self.c.queue_cve_notification(payload)
 
-    def test_stale_alert_queued_once_per_last_success(self):
-        self.cve_api()
-        stale = {"kind": "cve-stale", "issue": 77}
-        self.c.queue_cve_notification(stale)
-        self.c.queue_cve_notification(stale)
-        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:2026-10-22"])
-        self.cve_api(issue=self.cve_issue("Last successful scan: **2026-11-02** · last failure: 2026-11-03"))
-        self.c.queue_cve_notification(stale)
-        self.assertEqual(len(self.notifications()), 2)
-        self.cve_api(issue=self.cve_issue("Last successful scan: **never** · last failure: 2026-11-03"))
-        self.c.queue_cve_notification(stale)
-        self.assertIn("cve-stale:never", [r[0] for r in self.notifications()])
+    NOW = datetime(2026, 10, 25, 12, tzinfo=timezone.utc)
 
-    def test_stale_alert_with_unparseable_body_is_rejected(self):
-        self.cve_api(issue=self.cve_issue("garbage"))
-        with self.assertRaises(ValueError):
-            self.c.queue_cve_notification({"kind": "cve-stale", "issue": 77})
+    def stale_issue(self, body, created="2026-10-01T00:00:00Z", **kw):
+        return {**self.cve_issue(body), "created_at": created, **kw}
+
+    def stale_api(self, *pages):
+        self.api.repo.side_effect = lambda path, **kw: pages[int(path.rsplit("page=", 1)[1]) - 1]
+
+    def test_fresh_scan_is_not_stale(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-24** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_three_day_old_scan_is_stale_and_pings_once(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-22** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.c.check_cve_staleness(self.NOW)
+        rows = self.notifications()
+        self.assertEqual([r[0] for r in rows], ["cve-stale:2026-10-22"])
+        self.assertIn("has not succeeded since 2026-10-22", rows[0][1])
+        self.assertIn("https://example.test/issues/77", rows[0][1])
+
+    def test_new_outage_pings_again(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-22** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.stale_api([self.stale_issue("Last successful scan: **2026-11-01** · x")])
+        self.c.check_cve_staleness(self.NOW + timedelta(days=10))
+        self.assertEqual(len(self.notifications()), 2)
+
+    def test_never_scanned_uses_created_date(self):
+        self.stale_api([self.stale_issue("Last successful scan: **never** · x", created="2026-10-21T08:00:00Z")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:never"])
+
+    def test_recent_never_scanned_is_not_stale(self):
+        self.stale_api([self.stale_issue("Last successful scan: **never** · x", created="2026-10-24T08:00:00Z")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_other_users_issue_is_ignored(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-01-01** · x", user={"id": 99})])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_staleness_check_pages_through_issues(self):
+        filler = [{"number": n, "title": "other", "user": {"id": 2}} for n in range(50)]
+        self.stale_api(filler, [self.stale_issue("Last successful scan: **2026-10-01** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:2026-10-01"])
+
+    def test_unparseable_header_is_reported(self):
+        self.stale_api([self.stale_issue("garbage")])
+        self.c.check_cve_staleness(self.NOW)
+        rows = self.notifications()
+        self.assertEqual([r[0] for r in rows], ["cve-stale:unparseable:77"])
+        self.assertIn("unreadable", rows[0][1])
 
     def test_stale_sha_is_not_deployed(self):
         self.api.repo.return_value = {**self.pr, "head": {**self.pr["head"], "sha": "c" * 40}}
