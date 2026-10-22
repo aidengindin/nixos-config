@@ -12,9 +12,11 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 import tomllib
 import urllib.parse
 import urllib.request
@@ -34,7 +36,12 @@ STATE_START, STATE_END = "<!-- cve-state", "cve-state -->"
 PING_MARKER = "<!-- cve-ping -->"
 ROOT = Path(__file__).resolve().parents[2]
 KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
-STALE_DAYS = 3
+SECRET_ENV = ("FORGEJO_TOKEN", "CI_WEBHOOK_SECRET")
+RUN_TIMEOUT = 540 * 60
+BUILD_TIMEOUT = 120 * 60
+VULNXSCAN_TIMEOUT = 60 * 60
+GRYPE_TIMEOUT = 15 * 60
+MIN_KEV = 1000
 
 
 def _score(text):
@@ -164,7 +171,7 @@ def to_ping(state, new, escalated=()):
 
 
 def state_from_body(body):
-    start = body.find(STATE_START)
+    start = body.rfind(STATE_START)  # the block is last; earlier text may quote the marker
     end = body.find(STATE_END, start)
     if start < 0 or end < 0:
         return {"findings": {}}
@@ -181,7 +188,7 @@ def _line(key, item):
     cve, package = key.split("|", 1)
     kev = " **KEV**" if item["kev"] else ""
     fix = item["fix"] or "–"
-    cell = lambda text: str(text).replace("|", "\\|")
+    cell = lambda text: str(text).replace("|", "\\|").replace("<", "&lt;").replace(">", "&gt;")
     return (f"| [{cve}](https://nvd.nist.gov/vuln/detail/{cve}){kev} | {item['cvss'] or '?'} | {cell(package)} "
             f"{cell(item['version'])} | {cell(fix)} | {', '.join(item['targets'])} | {item['first_seen']} |")
 
@@ -226,20 +233,43 @@ def render_comment(state, new, resolved, ping=(), escalated=()):
     return "\n".join(lines)
 
 
-def build_host(host):
+def _run(cmd, timeout, **kwargs):
+    """Run cmd in its own process group with the automation secrets removed from
+    its environment. On timeout the whole group is killed. Returns
+    (returncode, stdout, stderr)."""
+    if timeout <= 0:
+        raise subprocess.TimeoutExpired(cmd, timeout)
+    env = {k: v for k, v in os.environ.items() if k not in SECRET_ENV}
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env,
+        start_new_session=True, **kwargs)
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        proc.communicate()
+        raise
+    return proc.returncode, out, err
+
+
+def build_host(host, timeout=BUILD_TIMEOUT):
     attr = f"{ROOT}#nixosConfigurations.{host}.config.system.build.toplevel"
-    return subprocess.check_output(["nix", "build", "--no-link", "--print-out-paths", attr],
-        text=True, timeout=6 * 3600).strip()
+    code, out, err = _run(["nix", "build", "--no-link", "--print-out-paths", attr], timeout)
+    if code != 0:
+        raise RuntimeError(f"nix build failed: {err[-2000:]}")
+    return out.strip()
 
 
-def scan_closure(path, target, work):
+def scan_closure(path, target, work, timeout=VULNXSCAN_TIMEOUT):
     out = Path(work, target)
     out.mkdir(parents=True, exist_ok=True)
-    run = subprocess.run(["vulnxscan", "--triage", "--verbose", "1", "--out", str(out / "vulns.csv"), path],
-        cwd=out, capture_output=True, text=True, timeout=3 * 3600)
-    if run.returncode != 0:
-        raise RuntimeError(f"vulnxscan failed: {run.stderr[-2000:]}")
-    return parse_triage((out / "vulns.triage.csv").read_text(), target), degraded_scanners(run.stderr + run.stdout)
+    code, stdout, stderr = _run(["vulnxscan", "--triage", "--verbose", "1", "--out", str(out / "vulns.csv"), path],
+        timeout, cwd=out)
+    if code != 0:
+        raise RuntimeError(f"vulnxscan failed: {stderr[-2000:]}")
+    degraded = degraded_scanners(stderr + stdout)
+    if degraded:
+        print(stderr, file=sys.stderr)
+    return parse_triage((out / "vulns.triage.csv").read_text(), target), degraded
 
 
 def pinned_images():
@@ -250,21 +280,37 @@ def pinned_images():
     return sorted(found)
 
 
-def scan_image(name, ref):
-    report = subprocess.check_output(["grype", f"registry:{ref}", "-o", "json", "--quiet"], text=True, timeout=3600)
-    return parse_grype(json.loads(report), name)
+def scan_image(name, ref, timeout=GRYPE_TIMEOUT):
+    code, out, err = _run(["grype", f"registry:{ref}", "-o", "json", "--quiet"], timeout)
+    if code != 0:
+        raise RuntimeError(f"grype failed: {err[-2000:]}")
+    return parse_grype(json.loads(out), name)
 
 
 def fetch_kev():
     with urllib.request.urlopen(KEV_URL, timeout=60) as response:
-        return {v["cveID"] for v in json.load(response)["vulnerabilities"]}
+        found = {v["cveID"] for v in json.load(response)["vulnerabilities"]}
+    if len(found) < MIN_KEV:  # a truncated or empty feed must not read as "nothing is exploited"
+        raise ValueError(f"KEV feed has only {len(found)} entries")
+    return found
 
 
 def find_issue(api):
     me = api.request("user")["login"]
-    for issue in api.repo("issues?state=open&type=issues&limit=50&q=" + urllib.parse.quote(ISSUE_TITLE)):
-        if issue["title"] == ISSUE_TITLE and issue["user"]["login"] == me:
-            return issue
+    mine, page = [], 1
+    while True:
+        items = api.repo(f"issues?state=all&type=issues&created_by={urllib.parse.quote(me)}&limit=50&page={page}")
+        mine += [i for i in items if i["title"] == ISSUE_TITLE]
+        if len(items) < 50:
+            break
+        page += 1
+    if len(mine) > 1:
+        raise RuntimeError(f"{len(mine)} issues titled {ISSUE_TITLE!r} by {me}; close the duplicates")
+    if mine:
+        found = mine[0]
+        if found["state"] == "closed":
+            return api.repo(f"issues/{found['number']}", data={"state": "open"}, method="PATCH")
+        return found
     return api.repo("issues", data={"title": ISSUE_TITLE, "body": render_issue({"findings": {}})})
 
 
@@ -285,10 +331,16 @@ def run_url():
 def scan(today, report_dir):
     rows, unscanned, notes, failed = [], {}, [], set()
     ignores = load_ignores((ROOT / "security/cve-ignore.toml").read_text(), today)
+    deadline = time.monotonic() + RUN_TIMEOUT
+    left = lambda: deadline - time.monotonic()
     with tempfile.TemporaryDirectory() as work:
         for host in HOSTS:
+            if left() <= 0:
+                unscanned[host] = run_url()
+                continue
             try:
-                found, degraded = scan_closure(build_host(host), host, work)
+                path = build_host(host, timeout=min(BUILD_TIMEOUT, left()))
+                found, degraded = scan_closure(path, host, work, timeout=min(VULNXSCAN_TIMEOUT, left()))
                 rows += found
                 if degraded:
                     # Keep its rows, but a partial scan must not resolve anything.
@@ -298,8 +350,11 @@ def scan(today, report_dir):
                 print(f"{host}: {exc}", file=sys.stderr)
                 unscanned[host] = run_url()
         for name, ref in pinned_images():
+            if left() <= 0:
+                unscanned[name] = run_url()
+                continue
             try:
-                rows += scan_image(name, ref)
+                rows += scan_image(name, ref, timeout=min(GRYPE_TIMEOUT, left()))
             except Exception as exc:
                 print(f"{name}: {exc}", file=sys.stderr)
                 unscanned[name] = run_url()
@@ -329,26 +384,29 @@ def main(argv=None):
     if args.record_failure:
         state = {**previous, "last_failure": f"{today} ([log]({run_url()}))"}
         api.repo(f"issues/{issue['number']}", data={"body": render_issue(state)}, method="PATCH")
-        last = previous.get("last_success")
-        if not last or (today - datetime.date.fromisoformat(last)).days >= STALE_DAYS:
-            send_webhook({"kind": "cve-stale", "issue": issue["number"]})
         return 0
 
     current, failed, unscanned, notes = scan(today, args.report_dir)
     state, new, resolved, escalated = diff(previous, current, failed, today)
-    state.update(last_success=today.isoformat(), unscanned=unscanned, notes=notes,
-        databases={"scan": today.isoformat()})
+    # Success needs at least one host: images alone say nothing about the closures.
+    scanned_host = any(host not in failed for host in HOSTS)
+    if scanned_host:
+        state["last_success"] = today.isoformat()
+    state.update(unscanned=unscanned, notes=notes)
     ping = to_ping(state, new, escalated)
     body, comment = render_issue(state), render_comment(state, new, resolved, ping=ping, escalated=escalated)
+    code = 0 if scanned_host else 1
     if args.dry_run:
         print(body, "\n\n--- comment ---\n", comment or "(none)", "\n\n--- ping ---\n", ping or "(none)")
-        return 0
-    api.repo(f"issues/{issue['number']}", data={"body": body}, method="PATCH")
+        return code
+    # At-least-once: announce before saving state. If either step raises, the
+    # state is not saved and the next run sees the findings as new again.
     if comment:
         posted = api.comment(issue["number"], comment)
         if ping:
             send_webhook({"kind": "cve", "issue": issue["number"], "comment": posted["id"]})
-    return 0
+    api.repo(f"issues/{issue['number']}", data={"body": body}, method="PATCH")
+    return code
 
 
 if __name__ == "__main__":

@@ -1,7 +1,10 @@
 import contextlib
 import datetime
 import io
+import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -241,7 +244,7 @@ ROW = {"cve": "CVE-1", "package": "openssl", "version": "3", "cvss": 5.0, "targe
 class ScanTests(unittest.TestCase):
     """scan() orchestration with every side effect patched out."""
 
-    def run_scan(self, closure, kev=frozenset(), build=lambda host: "/nix/store/x"):
+    def run_scan(self, closure, kev=frozenset(), build=lambda host, timeout: "/nix/store/x", clock=None):
         patches = [mock.patch.object(cve_scan, "build_host", side_effect=build),
             mock.patch.object(cve_scan, "scan_closure", side_effect=closure),
             mock.patch.object(cve_scan, "pinned_images", return_value=[]),
@@ -249,37 +252,196 @@ class ScanTests(unittest.TestCase):
             mock.patch.object(cve_scan, "fetch_kev", side_effect=kev if isinstance(kev, Exception) else None,
                 return_value=kev),
             mock.patch.object(cve_scan, "merge", wraps=cve_scan.merge)]
+        if clock:
+            patches.append(mock.patch.object(cve_scan.time, "monotonic", side_effect=clock))
         with tempfile.TemporaryDirectory() as report, contextlib.ExitStack() as stack, \
                 contextlib.redirect_stderr(io.StringIO()):
             mocks = [stack.enter_context(p) for p in patches]
             result = cve_scan.scan(datetime.date(2026, 10, 22), report)
-        return result, mocks[-1]
+        return result, mocks
 
     def test_degraded_host_is_failed_but_keeps_rows(self):
-        def closure(path, target, work):
-            return [{**ROW, "target": target}], (["scan_vulnix()"] if target == "lorien" else [])
+        def closure(path, target, work, timeout):
+            return [{**ROW, "target": target}], (["vulnix"] if target == "lorien" else [])
         (current, failed, unscanned, notes), _ = self.run_scan(closure)
         self.assertIn("lorien", failed)
         self.assertNotIn("osgiliath", failed)
         self.assertEqual(unscanned, {})
         self.assertIn("lorien", current["CVE-1|openssl"]["targets"])
-        self.assertTrue(any("scan_vulnix()" in n for n in notes))
+        self.assertTrue(any("vulnix" in n for n in notes))
 
     def test_build_failure_is_failed_and_unscanned(self):
-        def build(host):
+        def build(host, timeout):
             if host == "lorien":
                 raise RuntimeError("build broke")
             return "/nix/store/x"
         (current, failed, unscanned, _), _ = self.run_scan(
-            lambda path, target, work: ([{**ROW, "target": target}], []), build=build)
+            lambda path, target, work, timeout: ([{**ROW, "target": target}], []), build=build)
         self.assertIn("lorien", failed)
         self.assertIn("lorien", unscanned)
         self.assertNotIn("lorien", current["CVE-1|openssl"]["targets"])
 
     def test_kev_failure_merges_with_none_and_notes_it(self):
-        (_, _, _, notes), merge = self.run_scan(lambda path, target, work: ([ROW], []), kev=OSError("down"))
+        (_, _, _, notes), mocks = self.run_scan(lambda path, target, work, timeout: ([ROW], []), kev=OSError("down"))
+        merge = mocks[5]
         self.assertIsNone(merge.call_args.args[1] if len(merge.call_args.args) > 1 else merge.call_args.kwargs["kev"])
         self.assertTrue(any("KEV" in n for n in notes))
+
+    def test_target_after_deadline_is_not_started(self):
+        ticks = iter([0, 0, 0, 0])  # deadline and the first host in time, then the clock jumps past it
+        clock = lambda: next(ticks, 10 ** 9)
+        (_, failed, unscanned, _), mocks = self.run_scan(
+            lambda path, target, work, timeout: ([{**ROW, "target": target}], []), clock=clock)
+        self.assertEqual(mocks[0].call_count, 1)
+        self.assertEqual(set(unscanned), {"osgiliath", "khazad-dum"})
+        self.assertTrue(set(unscanned) <= failed)
+
+    def test_timeouts_are_capped_by_remaining_time(self):
+        seen = []
+        def build(host, timeout):
+            seen.append(timeout)
+            return "/nix/store/x"
+        self.run_scan(lambda path, target, work, timeout: ([], []), build=build, clock=lambda: 0)
+        self.assertEqual(seen[0], 120 * 60)
+
+
+class RunTests(unittest.TestCase):
+    def test_timeout_kills_and_raises(self):
+        with self.assertRaises(subprocess.TimeoutExpired):
+            cve_scan._run(["sleep", "30"], timeout=0.2)
+
+    def test_secrets_are_not_passed_to_children(self):
+        with mock.patch.dict(os.environ, {"FORGEJO_TOKEN": "t", "CI_WEBHOOK_SECRET": "s", "KEEP": "1"}):
+            code, out, _ = cve_scan._run(["sh", "-c", "echo ${FORGEJO_TOKEN-u}${CI_WEBHOOK_SECRET-u}${KEEP-u}"], timeout=10)
+        self.assertEqual((code, out.strip()), (0, "uu1"))
+
+
+class KevTests(unittest.TestCase):
+    def feed(self, count):
+        data = json.dumps({"vulnerabilities": [{"cveID": f"CVE-{i}"} for i in range(count)]}).encode()
+        return mock.MagicMock(**{"__enter__.return_value": io.BytesIO(data)})
+
+    def test_short_feed_is_unavailable(self):
+        with mock.patch.object(cve_scan.urllib.request, "urlopen", return_value=self.feed(5)):
+            with self.assertRaises(ValueError):
+                cve_scan.fetch_kev()
+
+    def test_full_feed_is_returned(self):
+        with mock.patch.object(cve_scan.urllib.request, "urlopen", return_value=self.feed(1000)):
+            self.assertEqual(len(cve_scan.fetch_kev()), 1000)
+
+
+def issue(number, state="open", title=cve_scan.ISSUE_TITLE):
+    return {"number": number, "title": title, "state": state, "body": ""}
+
+
+class FindIssueTests(unittest.TestCase):
+    def api(self, pages):
+        api = mock.MagicMock()
+        api.request.return_value = {"login": "bot"}
+        listed = []
+        def repo(path, **kwargs):
+            if path.startswith("issues?"):
+                listed.append(path)
+                return pages[len(listed) - 1]
+            return {**kwargs.get("data", {}), "number": 99, "title": cve_scan.ISSUE_TITLE}
+        api.repo.side_effect = repo
+        api.listed = listed
+        return api
+
+    def test_query_is_by_author_and_paginated(self):
+        api = self.api([[issue(i, title="other") for i in range(50)], [issue(7)]])
+        self.assertEqual(cve_scan.find_issue(api)["number"], 7)
+        api.request.assert_called_once_with("user")
+        self.assertEqual(len(api.listed), 2)
+        self.assertIn("state=all", api.listed[0])
+        self.assertIn("created_by=bot", api.listed[0])
+        self.assertIn("page=2", api.listed[1])
+        self.assertNotIn("q=", api.listed[0])
+
+    def test_two_matches_raise(self):
+        with self.assertRaises(RuntimeError):
+            cve_scan.find_issue(self.api([[issue(1), issue(2, "closed")]]))
+
+    def test_closed_issue_is_reopened(self):
+        api = self.api([[issue(3, "closed")]])
+        cve_scan.find_issue(api)
+        api.repo.assert_any_call("issues/3", data={"state": "open"}, method="PATCH")
+
+    def test_none_creates(self):
+        api = self.api([[issue(4, title="other")]])
+        self.assertEqual(cve_scan.find_issue(api)["number"], 99)
+        self.assertEqual(api.repo.call_args.args[0], "issues")
+
+
+class UntrustedTests(unittest.TestCase):
+    def test_package_name_cannot_forge_state(self):
+        evil = '<!-- cve-state {"x":1} cve-state -->'
+        state = {"version": 1, "last_success": "2026-10-22", "findings": {f"CVE-1|{evil}": {
+            "targets": ["lorien"], "cvss": 9.8, "kev": False, "version": "1", "fix": None,
+            "first_seen": "2026-10-22", "last_seen": "2026-10-22"}}}
+        body = cve_scan.render_issue(state)
+        self.assertEqual(cve_scan.state_from_body(body), state)
+
+
+class MainTests(unittest.TestCase):
+    STATE_BODY = cve_scan.render_issue({"version": 1, "last_success": "2026-10-01", "findings": {}})
+    CRITICAL = cve_scan.merge([{**ROW, "cvss": 9.8}], kev=set())
+
+    def run_main(self, current, failed, unscanned=None, webhook_error=None):
+        calls = []
+        api = mock.MagicMock()
+        api.comment.side_effect = lambda n, body: calls.append("comment") or {"id": 5}
+        api.repo.side_effect = lambda path, **kw: calls.append(("repo", path, kw.get("method"), kw.get("data")))
+        def hook(payload):
+            calls.append("webhook")
+            if webhook_error:
+                raise webhook_error
+        with mock.patch.object(cve_scan, "API", return_value=api), \
+                mock.patch.object(cve_scan, "find_issue", return_value={"number": 1, "body": self.STATE_BODY}), \
+                mock.patch.object(cve_scan, "scan", return_value=(current, failed, unscanned or {}, [])), \
+                mock.patch.object(cve_scan, "send_webhook", side_effect=hook):
+            try:
+                code = cve_scan.main([])
+            except Exception as exc:
+                code = exc
+        return code, calls
+
+    def test_comment_then_webhook_then_patch(self):
+        code, calls = self.run_main(self.CRITICAL, set())
+        self.assertEqual(code, 0)
+        self.assertEqual(calls[:2], ["comment", "webhook"])
+        self.assertEqual(calls[2][:3], ("repo", "issues/1", "PATCH"))
+
+    def test_webhook_failure_does_not_save_state(self):
+        code, calls = self.run_main(self.CRITICAL, set(), webhook_error=OSError("relay down"))
+        self.assertIsInstance(code, OSError)
+        self.assertNotIn("PATCH", [c[2] for c in calls if isinstance(c, tuple)])
+
+    def test_nothing_scanned_keeps_last_success_and_fails(self):
+        everything = set(cve_scan.HOSTS)
+        code, calls = self.run_main({}, everything, {h: "u" for h in everything})
+        self.assertEqual(code, 1)
+        patch = [c for c in calls if isinstance(c, tuple)][-1]
+        self.assertEqual(patch[2], "PATCH")
+        self.assertEqual(cve_scan.state_from_body(patch[3]["body"])["last_success"], "2026-10-01")
+
+    def test_one_clean_host_counts_as_success(self):
+        code, calls = self.run_main({}, {"lorien", "osgiliath"})
+        self.assertEqual(code, 0)
+        state = cve_scan.state_from_body([c for c in calls if isinstance(c, tuple)][-1][3]["body"])
+        self.assertEqual(state["last_success"], datetime.date.today().isoformat())
+
+    def test_record_failure_only_writes_last_failure(self):
+        api = mock.MagicMock()
+        with mock.patch.object(cve_scan, "API", return_value=api), \
+                mock.patch.object(cve_scan, "find_issue", return_value={"number": 1, "body": self.STATE_BODY}), \
+                mock.patch.object(cve_scan, "send_webhook") as hook:
+            self.assertEqual(cve_scan.main(["--record-failure"]), 0)
+        hook.assert_not_called()
+        state = cve_scan.state_from_body(api.repo.call_args.kwargs["data"]["body"])
+        self.assertIn(datetime.date.today().isoformat(), state["last_failure"])
+
 
 
 if __name__ == "__main__":
