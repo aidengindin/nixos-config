@@ -359,6 +359,11 @@ in
       # there can be pruned away by the agent itself. This one is capped at
       # ~20k and installed by the activation script on every deploy, so an
       # agent edit heals on the next one.
+      # Upstream refuses `documents` unless workingDirectory is set explicitly,
+      # since its default differs between the NixOS and Home Manager modules.
+      # This is the NixOS module's default, so nothing moves on disk.
+      workingDirectory = "${config.services.hermes-agent.stateDir}/workspace";
+
       documents = optionalAttrs cfg.wiki.enable {
         # The literal path is baked in on purpose: both skills warn that the
         # file tools do not expand shell variables, so $WIKI_PATH would be

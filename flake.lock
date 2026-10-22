@@ -256,6 +256,7 @@
     "hermes-agent": {
       "inputs": {
         "flake-parts": "flake-parts",
+        "home-manager": "home-manager",
         "nixpkgs": "nixpkgs_2",
         "npm-lockfile-fix": "npm-lockfile-fix",
         "pyproject-build-systems": "pyproject-build-systems",
@@ -263,16 +264,16 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1785776243,
-        "narHash": "sha256-S6TSGgpf37N8YgbTv70dT+LaPiiaQ4/lJV+js2hnCPk=",
+        "lastModified": 1790244527,
+        "narHash": "sha256-y6NaoG+HCeMPhxRsBXrRFef4hp3FF1svSPNKpI6Xz/E=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "3c27eb6234bf91b8ceee9e9071591b31e9b148cb",
+        "rev": "f97608f178d1ffeca59860195ab7da295f7c8e5f",
         "type": "github"
       },
       "original": {
         "owner": "NousResearch",
-        "ref": "v2026.8.3",
+        "ref": "v2026.9.24",
         "repo": "hermes-agent",
         "type": "github"
       }
@@ -300,6 +301,27 @@
     "home-manager": {
       "inputs": {
         "nixpkgs": [
+          "hermes-agent",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786487128,
+        "narHash": "sha256-ad60hrRVhH/bo3Jl1YLzO+QcS3mUNZr9LNJdzhMO2P4=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "f404edbfa4117810c96b97048299242fc50e5362",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "home-manager_2": {
+      "inputs": {
+        "nixpkgs": [
           "nixpkgs"
         ]
       },
@@ -318,7 +340,7 @@
         "type": "github"
       }
     },
-    "home-manager_2": {
+    "home-manager_3": {
       "inputs": {
         "nixpkgs": [
           "impermanence",
@@ -341,7 +363,7 @@
     },
     "impermanence": {
       "inputs": {
-        "home-manager": "home-manager_2",
+        "home-manager": "home-manager_3",
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
@@ -655,7 +677,7 @@
         "dms": "dms",
         "hermes-agent": "hermes-agent",
         "hm-unstable": "hm-unstable",
-        "home-manager": "home-manager",
+        "home-manager": "home-manager_2",
         "impermanence": "impermanence",
         "job-scraper": "job-scraper",
         "liftosaur-sync": "liftosaur-sync",
