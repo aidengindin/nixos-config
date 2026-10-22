@@ -123,6 +123,14 @@ class WorkflowTests(unittest.TestCase):
         # update.py dispatches this workflow itself. Keep the inputs it sends.
         self.assertIn("workflow_dispatch:", workflow)
 
+    def test_cve_scan_records_failure_on_cancellation_too(self):
+        workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/cve-scan.yml").read_text()
+        # A timed-out job is cancelled, not failed; it must still be recorded.
+        self.assertIn("if: failure() || cancelled()\n        run: python3 scripts/forgejo/cve_scan.py --record-failure",
+            workflow)
+        # Scanner secrets stay out of the checkout's git config.
+        self.assertIn("persist-credentials: false", workflow)
+
 
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):
