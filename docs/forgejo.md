@@ -149,8 +149,6 @@ flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.
 
 PR events build lorien, osgiliath, and khazad-dum at the exact PR head.
-Weathertop remains in the NixOS inventory but is excluded from CI and PR
-deployment.
 Each host has a `colmena/<hostname>` status and a JSON manifest under
 `/var/lib/forgejo-ci/results/<sha>/<host>.json`. Colmena's own hive supplies the
 closure path. Successful results are GC-rooted and reused on duplicate events.
@@ -220,7 +218,7 @@ enforcement.
 
 Ensure every remote target has received the updated deployment wrapper supporting
 read-only generation queries. All target host keys must be pinned before first
-use; weathertop may need enrollment when it is online. Do not use an unattended
+use. Do not use an unattended
 `ssh-keyscan` result as the trust source.
 
 The SQLite journal in `/var/lib/forgejo-automation/controller` serializes requests

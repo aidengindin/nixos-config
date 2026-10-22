@@ -44,8 +44,8 @@ let
     }
   );
 
-  # Copied from services/headache-sync.nix; extractors reach the network + a
-  # local-forwarded TCP socket, and refresh OAuth tokens under STATE_DIRECTORY.
+  # Extractors reach the network + a local-forwarded
+  # TCP socket, and refresh OAuth tokens under STATE_DIRECTORY.
   hardening = {
     NoNewPrivileges = true;
     PrivateTmp = true;

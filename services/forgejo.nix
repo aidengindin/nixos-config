@@ -141,7 +141,7 @@ in
         };
         actions.ENABLED = true;
         actions.DEFAULT_ACTIONS_URL = "https://data.forgejo.org";
-        # Weathertop compiles a custom kernel and can legitimately exceed the
+        # A slow host build can legitimately exceed the
         # three-hour Forgejo default while continuously reporting progress.
         actions.ENDLESS_TASK_TIMEOUT = "12h";
         repository.DEFAULT_BRANCH = "main";

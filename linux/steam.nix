@@ -9,9 +9,6 @@ let
   cfg = config.agindin.steam;
   inherit (lib) mkIf mkEnableOption;
 
-  # Hosts that boot the Jovian Steam session rather than a desktop compositor.
-  jovianSession = cfg.deck.enable || cfg.machine.enable;
-
   gamescopeSteam = pkgs.writeShellApplication {
     name = "gamescope-steam";
     runtimeInputs = [
@@ -60,8 +57,6 @@ in
 {
   options.agindin.steam = {
     enable = mkEnableOption "Whether to enable Steam";
-    deck.enable = mkEnableOption "Whether to enable options to run on Steam Deck (strict superset of machine.enable)";
-    machine.enable = mkEnableOption "Whether to boot into Gamescope interface for a Steam Machine-like experience";
   };
 
   config = mkIf cfg.enable {
@@ -71,42 +66,19 @@ in
 
     programs.gamemode.enable = true;
 
-    # Jovian's steam module ships its own Deck-patched gamescope and defines
-    # security.wrappers.gamescope itself, so leave it alone on those hosts.
-    programs.gamescope = mkIf (!jovianSession) {
+    programs.gamescope = {
       enable = true;
       package = unstablePkgs.gamescope;
       capSysNice = true;
     };
 
-    # gamescope-steam asks hyprctl for the active monitor's geometry, so it only
-    # works on desktop hosts; Jovian hosts get Steam from the session itself.
-    environment.systemPackages = lib.optionals (!jovianSession) [
+    # gamescope-steam asks hyprctl for the active monitor's geometry.
+    environment.systemPackages = [
       gamescopeSteam
       gamescopeSteamDesktop
     ];
 
     hardware.steam-hardware.enable = true;
-
-    jovian = mkIf jovianSession {
-      devices.steamdeck = mkIf cfg.deck.enable {
-        enable = true;
-        autoUpdate = true;
-        enableGyroDsuService = true;
-      };
-      steam = {
-        enable = true;
-        user = "agindin";
-        autoStart = true;
-        desktopSession = "gnome";
-        updater.splash = "jovian";
-      };
-    };
-
-    agindin.gnome = mkIf jovianSession {
-      enable = true;
-      gdm.enable = false;
-    };
 
     agindin.impermanence.userDirectories = mkIf config.agindin.impermanence.enable [
       ".config/unity3d"

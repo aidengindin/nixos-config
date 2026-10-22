@@ -45,11 +45,7 @@ let
         prometheus = 8321;
       };
 
-      linkwarden = 8340;
-
       tandoor = 8330;
-
-      calibre-web = 8350;
 
       bookorbit = 8351;
 

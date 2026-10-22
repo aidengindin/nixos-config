@@ -40,26 +40,6 @@
         "type": "github"
       }
     },
-    "auto-headache-tracker": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1778796605,
-        "narHash": "sha256-3zAoDIyq0w4iNyLmjZItD7B0/ieDshk5SdEgI8QZNec=",
-        "owner": "aidengindin",
-        "repo": "auto-headache-tracker",
-        "rev": "86e0ffd0e9bd213a895b47cc08c8bde22c3421cd",
-        "type": "github"
-      },
-      "original": {
-        "owner": "aidengindin",
-        "repo": "auto-headache-tracker",
-        "type": "github"
-      }
-    },
     "colmena": {
       "inputs": {
         "nix-github-actions": "nix-github-actions",
@@ -399,27 +379,6 @@
         "url": "https://git.gindin.xyz/aidengindin/job-scraper.git"
       }
     },
-    "jovian": {
-      "inputs": {
-        "nix-github-actions": "nix-github-actions_2",
-        "nixpkgs": [
-          "unstable"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792246474,
-        "narHash": "sha256-shhbyLk37rKblAiXkHhoFG902+mHrGw2hb4fucYdxTc=",
-        "owner": "jovian-experiments",
-        "repo": "jovian-nixos",
-        "rev": "946ac7bdd1e0cc9d94c09dd4fc474d73ede882cb",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jovian-experiments",
-        "repo": "jovian-nixos",
-        "type": "github"
-      }
-    },
     "liftosaur-sync": {
       "inputs": {
         "flake-utils": "flake-utils_2",
@@ -476,28 +435,6 @@
       },
       "original": {
         "owner": "nix-community",
-        "repo": "nix-github-actions",
-        "type": "github"
-      }
-    },
-    "nix-github-actions_2": {
-      "inputs": {
-        "nixpkgs": [
-          "jovian",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1729697500,
-        "narHash": "sha256-VFTWrbzDlZyFHHb1AlKRiD/qqCJIripXKiCSFS8fAOY=",
-        "owner": "zhaofengli",
-        "repo": "nix-github-actions",
-        "rev": "e418aeb728b6aa5ca8c5c71974e7159c2df1d8cf",
-        "type": "github"
-      },
-      "original": {
-        "owner": "zhaofengli",
-        "ref": "matrix-name",
         "repo": "nix-github-actions",
         "type": "github"
       }
@@ -712,7 +649,6 @@
       "inputs": {
         "agenix": "agenix",
         "anduin": "anduin",
-        "auto-headache-tracker": "auto-headache-tracker",
         "colmena": "colmena",
         "dank-greeter": "dank-greeter",
         "disko": "disko",
@@ -722,14 +658,12 @@
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "job-scraper": "job-scraper",
-        "jovian": "jovian",
         "liftosaur-sync": "liftosaur-sync",
         "mcp-servers-nix": "mcp-servers-nix",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_6",
         "nixvim": "nixvim",
-        "unstable": "unstable",
-        "zwift": "zwift"
+        "unstable": "unstable"
       }
     },
     "stable": {
@@ -846,26 +780,6 @@
       "original": {
         "owner": "pyproject-nix",
         "repo": "uv2nix",
-        "type": "github"
-      }
-    },
-    "zwift": {
-      "inputs": {
-        "nixpkgs": [
-          "unstable"
-        ]
-      },
-      "locked": {
-        "lastModified": 1791829110,
-        "narHash": "sha256-oeSJsLSBNHuBFUDw1+RKBB4JbjoCZL9zbvJIlv6D3sg=",
-        "owner": "netbrain",
-        "repo": "zwift",
-        "rev": "6194fdc542879523f89fb9155d68177a6490c84b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "netbrain",
-        "repo": "zwift",
         "type": "github"
       }
     }

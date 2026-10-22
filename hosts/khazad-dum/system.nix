@@ -77,8 +77,6 @@
   users.users.agindin.extraGroups = [ "i2c" ];
   environment.systemPackages = [ pkgs.ddcutil ];
 
-  agindin.zwift.enable = true;
-
   agindin.steam.enable = true;
 
   agindin.print3d.enable = true;

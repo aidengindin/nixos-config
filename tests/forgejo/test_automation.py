@@ -15,7 +15,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
 from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
-from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
+from common import CI_HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 import provision
 from retention import RETENTION_SECONDS, prune_retention, superseded_heads
@@ -26,7 +26,7 @@ CLOSURE = "/nix/store/" + "b" * 32 + "-nixos-system-lorien-26.05"
 class ValidationTests(unittest.TestCase):
     def test_selectors(self):
         self.assertEqual(selectors("/deploy osgiliath,lorien"), ["lorien", "osgiliath"])
-        self.assertEqual(selectors("/deploy @mobile"), ["khazad-dum", "weathertop"])
+        self.assertEqual(selectors("/deploy @mobile"), ["khazad-dum"])
         self.assertEqual(selectors("/deploy @server,osgiliath"), ["lorien", "osgiliath"])
 
     def test_reject_shell_and_unknown_targets(self):
@@ -197,11 +197,6 @@ class StatusCleanupTests(unittest.TestCase):
 
 
 class RetentionTests(unittest.TestCase):
-    def test_weathertop_is_excluded_from_ci(self):
-        self.assertEqual(BUILD_ORDER, CI_HOSTS)
-        self.assertNotIn("weathertop", CI_HOSTS)
-        self.assertIn("weathertop", HOSTS)
-
     @staticmethod
     def _seed(state, sha, now, age=0, prs=None):
         for name in ("roots", "results"):
@@ -474,7 +469,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.c.deploy.call_count, 2)
 
     def test_unrelated_host_failure_does_not_block(self):
-        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}, "colmena/weathertop": {"state": "failure"}})
+        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}, "colmena/khazad-dum": {"state": "failure"}})
         self.c.pull_closure = Mock(return_value=CLOSURE)
         self.c.target = Mock(return_value="/nix/store/previous")
         with patch("controller.subprocess.run") as run:
@@ -706,15 +701,6 @@ class ControllerTests(unittest.TestCase):
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()
-
-    def test_ci_excluded_host_cannot_be_deployed_from_pr(self):
-        comment = {"id": 9, "user": {"id": 1}, "body": "/deploy weathertop"}
-        self.api.repo.side_effect = [comment, self.pr]
-        payload = {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": comment, "issue": {"number": 5}}
-        with self.assertRaisesRegex(ValueError, "excluded from CI"):
-            self.c.accept("issue_comment", payload)
-        with self.c.db() as db:
-            self.assertEqual(db.execute("SELECT count(*) FROM jobs").fetchone()[0], 0)
 
     def test_duplicate_comment_is_queued_once(self):
         comment = {"id": 10, "user": {"id": 1}, "body": "/deploy lorien"}

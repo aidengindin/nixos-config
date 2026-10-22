@@ -15,8 +15,6 @@ COMMANDS = [
     *[["bash", "scripts/" + name] for name in ["update-caddy-hash.sh", "update-ublock-hash.sh",
         "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
 ]
-# calibre-plugins bundles multiple sources; withings-sync inherits its version
-# from nixpkgs. Neither is safe to hand to nix-update automatically.
 
 
 def git(*args, capture=False):
