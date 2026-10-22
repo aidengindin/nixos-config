@@ -107,6 +107,36 @@ class Controller:
                 f"Run and logs: {run_url}")
             self.queue_notification(f"build:{pull['number']}:{sha}", message)
 
+    def queue_cve_notification(self, payload):
+        """Ping Matrix for a CVE scan. Content comes from the API, not the webhook."""
+        def number(name):
+            try:
+                return int(payload[name])
+            except (KeyError, TypeError, ValueError):
+                raise ValueError(f"Missing or invalid {name}") from None
+        issue_number = number("issue")
+        issue = self.api.repo(f"issues/{issue_number}")
+        if issue.get("title") != "CVE report" or issue["user"]["id"] != self.bot_id:
+            raise ValueError("Not the bot's CVE report issue")
+        if payload.get("kind") == "cve-stale":
+            first = (issue.get("body") or "").split("\n", 1)[0]
+            match = re.match(r"Last successful scan: \*\*(\d{4}-\d{2}-\d{2}|never)\*\*", first)
+            if not match:
+                raise ValueError("Unrecognised CVE report header")
+            # Keyed on the last success so one outage pings once, and a later outage pings again.
+            self.queue_notification(f"cve-stale:{match[1]}",
+                f"CVE scan has not succeeded recently (last success: {match[1]}).\n{issue['html_url']}")
+            return
+        comment_id = number("comment")
+        comment = self.api.repo(f"issues/comments/{comment_id}")
+        if (not comment.get("issue_url", "").endswith(f"/issues/{issue_number}")
+                or comment["user"]["id"] != self.bot_id or "<!-- cve-ping -->" not in comment["body"]):
+            raise ValueError("Comment is not a CVE ping on the CVE report")
+        cves = re.findall(r"\[(CVE-\d+-\d+|GHSA-[\w-]+)\]", comment["body"])
+        listed = ", ".join(cves[:5]) + (f" and {len(cves) - 5} more" if len(cves) > 5 else "")
+        self.queue_notification(f"cve:{comment_id}",
+            f"New critical or known-exploited CVEs: {listed}.\n{comment['html_url']}")
+
     def accept(self, event, payload):
         if payload.get("repository", {}).get("full_name") != REPOSITORY:
             return
@@ -459,8 +489,10 @@ def main():
                 if self.path == "/ci":
                     if payload.get("repository") != REPOSITORY:
                         raise ValueError("Wrong repository")
-                    sha = payload.get("sha", "")
-                    controller.queue_build_notification(sha)
+                    if payload.get("kind") in ("cve", "cve-stale"):
+                        controller.queue_cve_notification(payload)
+                    else:
+                        controller.queue_build_notification(payload.get("sha", ""))
                 else:
                     controller.accept(self.headers.get("X-Forgejo-Event", self.headers.get("X-Gitea-Event", "")), payload)
             except ValueError as exc:

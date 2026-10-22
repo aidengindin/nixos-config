@@ -356,6 +356,81 @@ class ControllerTests(unittest.TestCase):
         import time
         return {"sha": SHA, "pr": 5, "targets": ["lorien"], "created": time.time(), "hosts": {}}
 
+    def cve_issue(self, body="Last successful scan: **2026-10-22** · last failure: 2026-10-23"):
+        return {"number": 77, "title": "CVE report", "state": "open", "user": {"id": 2}, "body": body,
+                "html_url": "https://example.test/issues/77"}
+
+    def cve_comment(self, **kw):
+        return {"id": 9, "issue_url": "https://example.test/api/v1/repos/x/issues/77", "user": {"id": 2},
+                "body": "<!-- cve-ping -->\n| [CVE-2026-1](u) | 9.8 |", "html_url": "https://example.test/c/9", **kw}
+
+    def cve_api(self, issue=None, comment=None):
+        pages = {"issues/77": issue or self.cve_issue(), "issues/comments/9": comment or self.cve_comment()}
+        self.api.repo.side_effect = lambda path, **kw: pages[path]
+
+    def notifications(self):
+        with self.c.db() as db:
+            return db.execute("SELECT id, payload FROM notifications").fetchall()
+
+    def test_cve_ping_reads_comment_from_api(self):
+        self.cve_api()
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        rows = self.notifications()
+        self.assertEqual(rows[0][0], "cve:9")
+        self.assertIn("https://example.test/c/9", rows[0][1])
+        self.assertIn("CVE-2026-1", rows[0][1])
+
+    def test_cve_comment_on_other_issue_is_rejected(self):
+        self.cve_api(comment=self.cve_comment(issue_url="https://example.test/api/v1/repos/x/issues/5"))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_cve_comment_without_ping_marker_is_rejected(self):
+        self.cve_api(comment=self.cve_comment(body="routine"))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_cve_comment_not_by_bot_is_rejected(self):
+        self.cve_api(comment=self.cve_comment(user={"id": 99}))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_issue_not_by_bot_is_rejected(self):
+        self.cve_api(issue={**self.cve_issue(), "user": {"id": 99}})
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve-stale", "issue": 77})
+
+    def test_issue_with_other_title_is_rejected(self):
+        self.cve_api(issue={**self.cve_issue(), "title": "Something else"})
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve-stale", "issue": 77})
+
+    def test_malformed_cve_payloads_are_rejected(self):
+        self.cve_api()
+        for payload in ({"kind": "cve"}, {"kind": "cve", "issue": "x", "comment": 9},
+                        {"kind": "cve", "issue": 77}, {"kind": "cve", "issue": 77, "comment": None},
+                        {"kind": "cve-stale", "issue": [1]}):
+            with self.assertRaises(ValueError, msg=payload):
+                self.c.queue_cve_notification(payload)
+
+    def test_stale_alert_queued_once_per_last_success(self):
+        self.cve_api()
+        stale = {"kind": "cve-stale", "issue": 77}
+        self.c.queue_cve_notification(stale)
+        self.c.queue_cve_notification(stale)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:2026-10-22"])
+        self.cve_api(issue=self.cve_issue("Last successful scan: **2026-11-02** · last failure: 2026-11-03"))
+        self.c.queue_cve_notification(stale)
+        self.assertEqual(len(self.notifications()), 2)
+        self.cve_api(issue=self.cve_issue("Last successful scan: **never** · last failure: 2026-11-03"))
+        self.c.queue_cve_notification(stale)
+        self.assertIn("cve-stale:never", [r[0] for r in self.notifications()])
+
+    def test_stale_alert_with_unparseable_body_is_rejected(self):
+        self.cve_api(issue=self.cve_issue("garbage"))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve-stale", "issue": 77})
+
     def test_stale_sha_is_not_deployed(self):
         self.api.repo.return_value = {**self.pr, "head": {**self.pr["head"], "sha": "c" * 40}}
         with self.assertRaisesRegex(ValueError, "PR changed"):
