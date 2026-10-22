@@ -3,8 +3,10 @@
 docs/plans/2026-10-22-cve-scanning-design.md. Pure helpers come first so the
 tests need no scanners, network or Forgejo."""
 import argparse
+import base64
 import csv
 import datetime
+import gzip
 import hashlib
 import hmac
 import io
@@ -33,6 +35,7 @@ FLAP_DAYS = 14
 IGNORE_KEYS = {"cve", "package", "reason", "expires"}
 ISSUE_TITLE = "CVE report"
 STATE_START, STATE_END = "<!-- cve-state", "cve-state -->"
+STATE_GZ = ":gz "
 PING_PREFIX = "<!-- cve-ping:"
 MAX_RESOLVED = 50
 ROOT = Path(__file__).resolve().parents[2]
@@ -167,8 +170,13 @@ def diff(previous, current, failed, today):
 
 
 def to_ping(state, new, escalated=()):
-    critical = [k for k in new if state["findings"][k]["kev"] or (state["findings"][k]["cvss"] or 0) >= CRITICAL]
-    return sorted(set(critical) | set(escalated))
+    def pings(key):
+        item = state["findings"][key]
+        # Images are noisy: only known-exploited ones alert unless a host also has it.
+        if not set(item["targets"]) & set(HOSTS):
+            return item["kev"]
+        return item["kev"] or (item["cvss"] or 0) >= CRITICAL
+    return sorted({k for k in new if pings(k)} | {k for k in escalated if pings(k)})
 
 
 def state_from_body(body):
@@ -176,7 +184,10 @@ def state_from_body(body):
     end = body.find(STATE_END, start)
     if start < 0 or end < 0:
         return {"findings": {}}
-    return json.loads(body[start + len(STATE_START):end])
+    text = body[start + len(STATE_START):end]
+    if text.startswith(STATE_GZ):  # otherwise the legacy plain-JSON block
+        text = gzip.decompress(base64.b64decode(text[len(STATE_GZ):].strip())).decode()
+    return json.loads(text)
 
 
 def _bucket(cvss):
@@ -214,9 +225,10 @@ def render_issue(state):
     lines += [_line(k, findings[k]) for k in shown] or ["| none | | | | | |"]
     lines += ["", "Not listed: " + (", ".join(f"{k}: {v}" for k, v in sorted(counts.items())) or "nothing"),
               "", "Suppress a finding with a reasoned entry in `security/cve-ignore.toml`.", "",
-              # Escape < and > so no value can contain a comment terminator.
-              STATE_START + json.dumps(state, sort_keys=True).replace("<", "\\u003c").replace(">", "\\u003e")
-              + STATE_END]
+              # Base64 contains no < or >, so no value can end the comment early.
+              STATE_START + STATE_GZ + base64.b64encode(
+                  gzip.compress(json.dumps(state, sort_keys=True).encode(), mtime=0)).decode()
+              + " " + STATE_END]
     return "\n".join(lines)
 
 
@@ -294,7 +306,7 @@ def pinned_images():
 
 
 def scan_image(name, ref, timeout=GRYPE_TIMEOUT):
-    code, out, err = _run(["grype", f"registry:{ref}", "-o", "json", "--quiet"], timeout)
+    code, out, err = _run(["grype", f"registry:{ref}", "-o", "json", "--quiet", "--only-fixed"], timeout)
     if code != 0:
         raise RuntimeError(f"grype failed: {err[-2000:]}")
     return parse_grype(json.loads(out), name)
@@ -405,9 +417,13 @@ def main(argv=None):
     scanned_host = any(host not in failed for host in HOSTS)
     if scanned_host:
         state["last_success"] = today.isoformat()
+    baseline = not previous.get("last_success")
+    if baseline:
+        notes = [*notes, "Baseline run: existing findings recorded without alerts."]
     state.update(unscanned=unscanned, notes=notes)
-    ping = to_ping(state, new, escalated)
-    body, comment = render_issue(state), render_comment(state, new, resolved, ping=ping, escalated=escalated)
+    ping = [] if baseline else to_ping(state, new, escalated)
+    body = render_issue(state)
+    comment = "" if baseline else render_comment(state, new, resolved, ping=ping, escalated=escalated)
     code = 0 if scanned_host else 1
     if args.dry_run:
         print(body, "\n\n--- comment ---\n", comment or "(none)", "\n\n--- ping ---\n", ping or "(none)")

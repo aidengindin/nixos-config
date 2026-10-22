@@ -111,6 +111,20 @@ class DiffTests(unittest.TestCase):
         state, new, _, _ = cve_scan.diff({"findings": {}}, current, failed=set(), today=TODAY)
         self.assertEqual(cve_scan.to_ping(state, new), ["CVE-2|p"])
 
+    def ping_for(self, targets, kev):
+        item = {"targets": targets, "cvss": 9.8, "kev": kev, "version": "1", "fix": None}
+        state = {"findings": {"CVE-1|p": item}}
+        return cve_scan.to_ping(state, ["CVE-1|p"])
+
+    def test_image_only_critical_does_not_ping(self):
+        self.assertEqual(self.ping_for(["ghcr.io/x:1"], kev=False), [])
+
+    def test_image_only_kev_pings(self):
+        self.assertEqual(self.ping_for(["ghcr.io/x:1"], kev=True), ["CVE-1|p"])
+
+    def test_host_plus_image_critical_pings(self):
+        self.assertEqual(self.ping_for(["ghcr.io/x:1", "lorien"], kev=False), ["CVE-1|p"])
+
     def test_unscanned_target_keeps_findings(self):
         previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
             "targets": ["khazad-dum"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
@@ -215,6 +229,15 @@ class RenderTests(unittest.TestCase):
         body = cve_scan.render_issue(state)
         self.assertEqual(body[body.index(cve_scan.STATE_START):].count("-->"), 1)
         self.assertEqual(cve_scan.state_from_body(body), state)
+
+    def test_state_block_is_compressed_and_deterministic(self):
+        body = cve_scan.render_issue(self.STATE)
+        self.assertIn(cve_scan.STATE_START + ":gz ", body)
+        self.assertEqual(body, cve_scan.render_issue(self.STATE))
+
+    def test_legacy_plain_json_state_is_still_read(self):
+        body = "text\n" + cve_scan.STATE_START + json.dumps(self.STATE) + cve_scan.STATE_END
+        self.assertEqual(cve_scan.state_from_body(body), self.STATE)
 
     def test_pipes_are_escaped_in_rows(self):
         state = {"findings": {"CVE-1|a|b": {**self.STATE["findings"]["CVE-1|openssl"],
@@ -425,7 +448,7 @@ class MainTests(unittest.TestCase):
     STATE_BODY = cve_scan.render_issue({"version": 1, "last_success": "2026-10-01", "findings": {}})
     CRITICAL = cve_scan.merge([{**ROW, "cvss": 9.8}], kev=set())
 
-    def run_main(self, current, failed, unscanned=None, webhook_error=None):
+    def run_main(self, current, failed, unscanned=None, webhook_error=None, body=None):
         calls = []
         api = mock.MagicMock()
         api.comment.side_effect = lambda n, body: calls.append("comment") or {"id": 5}
@@ -435,7 +458,7 @@ class MainTests(unittest.TestCase):
             if webhook_error:
                 raise webhook_error
         with mock.patch.object(cve_scan, "API", return_value=api), \
-                mock.patch.object(cve_scan, "find_issue", return_value={"number": 1, "body": self.STATE_BODY}), \
+                mock.patch.object(cve_scan, "find_issue", return_value={"number": 1, "body": self.STATE_BODY if body is None else body}), \
                 mock.patch.object(cve_scan, "scan", return_value=(current, failed, unscanned or {}, [])), \
                 mock.patch.object(cve_scan, "send_webhook", side_effect=hook):
             try:
@@ -462,6 +485,15 @@ class MainTests(unittest.TestCase):
         patch = [c for c in calls if isinstance(c, tuple)][-1]
         self.assertEqual(patch[2], "PATCH")
         self.assertEqual(cve_scan.state_from_body(patch[3]["body"])["last_success"], "2026-10-01")
+
+    def test_first_run_is_a_silent_baseline(self):
+        code, calls = self.run_main(self.CRITICAL, set(), body="")
+        self.assertEqual(code, 0)
+        self.assertNotIn("comment", calls)
+        self.assertNotIn("webhook", calls)
+        state = cve_scan.state_from_body([c for c in calls if isinstance(c, tuple)][-1][3]["body"])
+        self.assertIn("CVE-1|openssl", state["findings"])
+        self.assertIn("Baseline run: existing findings recorded without alerts.", state["notes"])
 
     def test_one_clean_host_counts_as_success(self):
         code, calls = self.run_main({}, {"lorien", "osgiliath"})
