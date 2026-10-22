@@ -75,5 +75,51 @@ class IgnoreTests(unittest.TestCase):
         self.assertEqual(self.rules(""), [])
 
 
+class DiffTests(unittest.TestCase):
+    def row(self, cve="CVE-1", package="p", target="lorien", cvss=9.5):
+        return {"cve": cve, "package": package, "version": "1", "cvss": cvss, "target": target, "fix": None, "classify": "x"}
+
+    def test_merge_groups_targets(self):
+        merged = cve_scan.merge([self.row(target="lorien"), self.row(target="osgiliath")], kev=set())
+        self.assertEqual(merged["CVE-1|p"]["targets"], ["lorien", "osgiliath"])
+
+    def test_new_finding_pings_if_critical(self):
+        current = cve_scan.merge([self.row()], kev=set())
+        state, new, resolved = cve_scan.diff({"findings": {}}, current, scanned={"lorien"}, today=TODAY)
+        self.assertEqual(new, ["CVE-1|p"])
+        self.assertEqual(cve_scan.to_ping(state, new), ["CVE-1|p"])
+
+    def test_low_score_kev_pings_and_low_score_alone_does_not(self):
+        current = cve_scan.merge([self.row(cvss=5.0), self.row(cve="CVE-2", cvss=5.0)], kev={"CVE-2"})
+        state, new, _ = cve_scan.diff({"findings": {}}, current, scanned={"lorien"}, today=TODAY)
+        self.assertEqual(cve_scan.to_ping(state, new), ["CVE-2|p"])
+
+    def test_unscanned_target_keeps_findings(self):
+        previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
+            "targets": ["khazad-dum"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
+        state, new, resolved = cve_scan.diff(previous, {}, scanned={"lorien"}, today=TODAY)
+        self.assertEqual(resolved, [])
+        self.assertIn("CVE-1|p", state["findings"])
+
+    def test_scanned_target_resolves_and_is_remembered(self):
+        previous = {"findings": {"CVE-1|p": {"first_seen": "2026-10-01", "last_seen": "2026-10-21",
+            "targets": ["lorien"], "cvss": 9.5, "kev": False, "version": "1", "fix": None}}}
+        state, _, resolved = cve_scan.diff(previous, {}, scanned={"lorien"}, today=TODAY)
+        self.assertEqual(resolved, ["CVE-1|p"])
+        self.assertEqual(state["resolved"]["CVE-1|p"], "2026-10-22")
+
+    def test_flap_within_14_days_is_not_new(self):
+        previous = {"findings": {}, "resolved": {"CVE-1|p": "2026-10-15"}}
+        current = cve_scan.merge([self.row()], kev=set())
+        _, new, _ = cve_scan.diff(previous, current, scanned={"lorien"}, today=TODAY)
+        self.assertEqual(new, [])
+
+    def test_reappearing_after_14_days_is_new(self):
+        previous = {"findings": {}, "resolved": {"CVE-1|p": "2026-10-01"}}
+        current = cve_scan.merge([self.row()], kev=set())
+        _, new, _ = cve_scan.diff(previous, current, scanned={"lorien"}, today=TODAY)
+        self.assertEqual(new, ["CVE-1|p"])
+
+
 if __name__ == "__main__":
     unittest.main()
