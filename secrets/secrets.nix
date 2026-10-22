@@ -173,6 +173,7 @@ in
   # A second recipient is what stops a lost laptop from orphaning the secret.
   "github-token.age".publicKeys = [
     khazad-dumUser
+    khazad-dumHost
     osgiliathHost
   ];
 
@@ -189,6 +190,7 @@ in
 
   "homeassistant-token.age".publicKeys = [
     osgiliathHost
+    khazad-dumHost
     khazad-dumUser
   ];
 
