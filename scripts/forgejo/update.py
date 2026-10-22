@@ -15,19 +15,16 @@ SCRIPTS = Path(__file__).resolve().parent
 # the pinning steps leave JSON notes for the PR body.
 # Order matters: lock update, then the 7-day cooldown re-pin, then tag-pinned
 # inputs, then package updaters, then container images.
-# nix-update is taken from the flake's own locked nixpkgs (`--inputs-from .`),
-# never from the mutable global registry.
-NIX_UPDATE = ["nix", "run", "--inputs-from", ".", "nixpkgs#nix-update", "--"]
+# Third-party sources for packages/ are `flake = false` inputs, so the lock
+# update and cooldown move them; nothing here bumps a source outside it.
 COMMANDS = [
     ["nix", "flake", "update"],
     [sys.executable, str(SCRIPTS / "cooldown.py"), "--report", "{reports}/cooldown.json"],
     [sys.executable, str(SCRIPTS / "tags.py"), "--report", "{reports}/tags.json"],
     # A tag bump can pull in new transitive inputs at their newest commits.
     [sys.executable, str(SCRIPTS / "cooldown.py"), "--report", "{reports}/cooldown-tags.json"],
-    [*NIX_UPDATE, "--flake", "catppuccin-userstyles", "--version=unstable"],
-    [*NIX_UPDATE, "--flake", "intervals-mcp-server", "--version=branch"],
-    *[["bash", "scripts/" + name] for name in ["update-caddy-hash.sh", "update-ublock-hash.sh",
-        "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
+    *[["bash", "scripts/" + name] for name in ["update-caddy-hash.sh", "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
+    [sys.executable, str(SCRIPTS / "assets.py"), "--report", "{reports}/assets.json"],
     [sys.executable, str(SCRIPTS / "images.py"), "--report", "{reports}/images.json"],
 ]
 # Daily runs move only the NixOS channel branches and the Home Manager releases
@@ -39,6 +36,68 @@ DAILY_COMMANDS = [["nix", "flake", "update", *CHANNEL_INPUTS]]
 # The full run's notes live between these markers, so a daily run can carry
 # them over instead of erasing what the last weekly run held back.
 FULL_START, FULL_END = "<!-- full-update -->", "<!-- /full-update -->"
+
+
+# Inputs left out of the review list: the Hydra-gated channel repositories,
+# whose compare views are enormous, and the owner's own repositories.
+UNREVIEWED_REPOS = {("nixos", "nixpkgs"), ("nix-community", "home-manager")}
+OWN = "aidengindin"
+
+
+def moved_inputs(old_lock, new_lock):
+    """Lock nodes whose source moved between main and this branch.
+
+    Nodes are matched by key, falling back to an identical `original` because
+    keys such as `nixpkgs_2` can renumber when inputs are added or removed."""
+    old_nodes = old_lock.get("nodes", {})
+    by_original = {json.dumps(n.get("original"), sort_keys=True): n
+                   for k, n in old_nodes.items() if k != "root"}
+    moved = []
+    for key, node in sorted(new_lock.get("nodes", {}).items()):
+        locked, original = node.get("locked") or {}, node.get("original") or {}
+        if key == "root" or not locked.get("rev"):
+            continue
+        owner, repo = (locked.get("owner") or "").lower(), locked.get("repo") or ""
+        url = locked.get("url") or ""
+        if (owner, repo.lower()) in UNREVIEWED_REPOS or owner == OWN.lower() or "git.gindin.xyz" in url:
+            continue
+        old = old_nodes.get(key)
+        if not old or old.get("original") != original:
+            old = by_original.get(json.dumps(original, sort_keys=True))
+        old_rev = ((old or {}).get("locked") or {}).get("rev")
+        if old_rev == locked["rev"]:
+            continue
+        if locked.get("type") == "github":
+            base = f"https://github.com/{locked['owner']}/{locked['repo']}"
+            link = f"{base}/compare/{old_rev}...{locked['rev']}" if old_rev else f"{base}/tree/{locked['rev']}"
+        else:
+            link = None
+        moved.append({"name": key, "old": old_rev, "new": locked["rev"], "link": link})
+    return moved
+
+
+def review_section(moved):
+    """Markdown listing every third-party input this PR moves, with diffs."""
+    if not moved:
+        return "No third-party flake inputs move in this PR."
+    lines = ["Third-party flake inputs this PR moves. Skim each upstream diff before deploying:", "",
+        "| input | from | to | upstream diff |", "|---|---|---|---|"]
+    for m in moved:
+        old = f"`{m['old'][:12]}`" if m["old"] else "new input"
+        label = "compare" if m["old"] else "tree"
+        diff = f"[{label}]({m['link']})" if m["link"] else "not on GitHub"
+        lines.append(f"| `{m['name']}` | {old} | `{m['new'][:12]}` | {diff} |")
+    return "\n".join(lines)
+
+
+def review_against_main():
+    """Review section for this branch's lock relative to origin/main."""
+    try:
+        old = json.loads(git("show", "origin/main:flake.lock", capture=True))
+        new = json.loads(Path("flake.lock").read_text())
+    except (OSError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
+        return f"Could not compute moved inputs: {exc}"
+    return review_section(moved_inputs(old, new))
 
 
 def resolve_mode(environ=os.environ, today=None):
@@ -70,7 +129,7 @@ def git(*args, capture=False):
 
 def read_reports(directory):
     reports = {}
-    for name in ("cooldown", "cooldown-tags", "tags", "images"):
+    for name in ("cooldown", "cooldown-tags", "tags", "assets", "images"):
         try:
             reports[name] = json.loads(Path(directory, name + ".json").read_text())
         except (OSError, ValueError):
@@ -96,11 +155,13 @@ def cooldown_section(reports):
     if reports["cooldown"].get("unhandled"):
         lines += ["Young inputs the cooldown cannot handle (non-GitHub), left as updated:", ""]
         lines += ["- " + u for u in reports["cooldown"]["unhandled"]] + [""]
-    notes = reports["tags"].get("held", []) + reports["images"].get("held", [])
+    notes = reports["tags"].get("held", []) + reports.get("assets", {}).get("held", []) + reports["images"].get("held", [])
     if notes:
-        lines += ["Tags and container images held back by the cooldown:", ""] + ["- " + n for n in notes] + [""]
+        lines += ["Tags, release assets and container images held back by the cooldown:", ""] + ["- " + n for n in notes] + [""]
     if reports["images"].get("problems"):
         lines += ["Image pinning problems:", ""] + ["- " + p for p in reports["images"]["problems"]] + [""]
+    if reports.get("assets", {}).get("problems"):
+        lines += ["Release asset pinning problems:", ""] + ["- " + p for p in reports["assets"]["problems"]] + [""]
     return "\n".join(lines)
 
 
@@ -160,7 +221,7 @@ def main():
             latest = f"Latest run: channel update ({', '.join(CHANNEL_INPUTS)}), {cycle}.\n\n{result}"
         body = (f"Automated flake and custom package updates. NixOS channels update daily; "
             f"every other input, tag and image updates weekly on Sunday.\n\nUpdate-Cycle: {cycle}\n\n"
-            f"{latest}\n\n{full}\n\n"
+            f"{latest}\n\n{review_against_main()}\n\n{full}\n\n"
             "CI builds lorien, osgiliath, and khazad-dum. Merge manually; use `/deploy @server` or individual hosts to deploy this PR.")
         if pulls:
             pr = pulls[0]

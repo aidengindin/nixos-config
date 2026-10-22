@@ -1,7 +1,8 @@
+# `src` is the catppuccin-userstyles flake input (flake = false), locked in
+# flake.lock and bumped under the updater's 7-day cooldown.
 {
   pkgs,
-  rev ? "714b153c7022c362a37ab8530286a87e4484a828",
-  hash ? "sha256-lftRs+pfcOrqHDtDWX/Vd/CQvDJguCRxlhI/aIkIB/k=",
+  src,
   userstyleSites ? [ ],
   lightFlavor ? "latte",
   darkFlavor ? "mocha",
@@ -10,13 +11,9 @@
 }:
 pkgs.stdenv.mkDerivation {
   name = "catppuccin-userstyles";
-  version = "unstable-${builtins.substring 0 8 rev}";
+  version = "unstable-${builtins.substring 0 8 src.rev}";
 
-  src = pkgs.fetchFromGitHub {
-    owner = "catppuccin";
-    repo = "userstyles";
-    inherit rev hash;
-  };
+  inherit src;
 
   nativeBuildInputs = [ pkgs.lessc ];
 
