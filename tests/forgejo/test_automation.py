@@ -371,7 +371,8 @@ class ControllerTests(unittest.TestCase):
 
     def cve_comment(self, **kw):
         return {"id": 9, "issue_url": "https://example.test/api/v1/repos/x/issues/77", "user": {"id": 2},
-                "body": "<!-- cve-ping -->\n| [CVE-2026-1](u) | 9.8 |", "html_url": "https://example.test/c/9", **kw}
+                "body": "<!-- cve-ping: CVE-2026-1,GHSA-abcd-efgh-ijkl -->\n| [CVE-2026-1](u) | 9.8 |",
+                "html_url": "https://example.test/c/9", **kw}
 
     def cve_api(self, issue=None, comment=None):
         pages = {"issues/77": issue or self.cve_issue(), "issues/comments/9": comment or self.cve_comment()}
@@ -387,7 +388,24 @@ class ControllerTests(unittest.TestCase):
         rows = self.notifications()
         self.assertEqual(rows[0][0], "cve:9")
         self.assertIn("https://example.test/c/9", rows[0][1])
-        self.assertIn("CVE-2026-1", rows[0][1])
+        self.assertIn("CVE-2026-1, GHSA-abcd-efgh-ijkl", rows[0][1])
+        self.assertIn("(2)", rows[0][1])
+
+    def test_ping_names_only_ids_from_the_ping_line(self):
+        ids = [f"CVE-2026-{n}" for n in range(1, 8)]
+        table = "\n".join(f"| [CVE-2025-{n}](u) | 9.8 |" for n in range(50))
+        self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {','.join(ids)} -->\n{table}"))
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        message = json.loads(self.notifications()[0][1])["message"]
+        self.assertIn("(7): CVE-2026-1, CVE-2026-2, CVE-2026-3, CVE-2026-4, CVE-2026-5 and 2 more.", message)
+        self.assertNotIn("CVE-2025", message)
+        self.assertNotIn("CVE-2026-6", message)
+
+    def test_malformed_id_in_ping_line_is_rejected(self):
+        for line in ("CVE-2026-1,not-an-id", "CVE-26-1", "CVE-2026-1,", ""):
+            self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {line} -->"))
+            with self.assertRaises(ValueError, msg=line):
+                self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
 
     def test_cve_comment_on_other_issue_is_rejected(self):
         self.cve_api(comment=self.cve_comment(issue_url="https://example.test/api/v1/repos/x/issues/5"))
@@ -458,6 +476,22 @@ class ControllerTests(unittest.TestCase):
 
     def test_recent_never_scanned_is_not_stale(self):
         self.stale_api([self.stale_issue("Last successful scan: **never** · x", created="2026-10-24T08:00:00Z")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_closed_issue_still_triggers_staleness(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-01** · x", state="closed")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:2026-10-01"])
+        self.assertIn("state=all", self.api.repo.call_args[0][0])
+
+    def test_newest_of_duplicate_reports_is_checked(self):
+        old = self.stale_issue("Last successful scan: **2026-01-01** · x", created="2026-01-01T00:00:00Z", number=5)
+        new = self.stale_issue("Last successful scan: **2026-10-24** · x", created="2026-10-02T00:00:00Z", number=77)
+        self.stale_api([old, new])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+        self.stale_api([new, old])
         self.c.check_cve_staleness(self.NOW)
         self.assertEqual(self.notifications(), [])
 

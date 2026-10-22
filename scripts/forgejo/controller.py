@@ -125,26 +125,30 @@ class Controller:
         comment_id = number("comment")
         comment = self.api.repo(f"issues/comments/{comment_id}")
         if (not comment.get("issue_url", "").endswith(f"/issues/{issue_number}")
-                or comment["user"]["id"] != self.bot_id or "<!-- cve-ping -->" not in comment["body"]):
+                or comment["user"]["id"] != self.bot_id):
             raise ValueError("Comment is not a CVE ping on the CVE report")
-        cves = re.findall(r"\[(CVE-\d+-\d+|GHSA-[\w-]+)\]", comment["body"])
+        ping = re.search(r"^<!-- cve-ping: ([^ ]+) -->$", comment["body"], re.MULTILINE)
+        cves = ping[1].split(",") if ping else []
+        if not cves or not all(re.fullmatch(r"CVE-\d{4}-\d+|GHSA-[\w-]+", cve) for cve in cves):
+            raise ValueError("Comment has no valid CVE ping line")
         listed = ", ".join(cves[:5]) + (f" and {len(cves) - 5} more" if len(cves) > 5 else "")
         self.queue_notification(f"cve:{comment_id}",
-            f"New critical or known-exploited CVEs: {listed}.\n{comment['html_url']}")
+            f"New critical or known-exploited CVEs ({len(cves)}): {listed}.\n{comment['html_url']}")
 
     def check_cve_staleness(self, now=None):
         """Dead-man switch: ping when the bot's CVE report shows no recent successful scan."""
         today = (now or datetime.now(timezone.utc)).date()
         issues, page = [], 1
         while True:
-            items = self.api.repo(f"issues?state=open&type=issues&limit=50&page={page}")
+            items = self.api.repo(f"issues?state=all&type=issues&limit=50&page={page}")
             issues.extend(items)
             if len(items) < 50:
                 break
             page += 1
-        for issue in issues:
-            if issue.get("title") != "CVE report" or issue["user"]["id"] != self.bot_id:
-                continue
+        reports = [issue for issue in issues
+                   if issue.get("title") == "CVE report" and issue["user"]["id"] == self.bot_id]
+        # Closed reports still count, so closing the issue cannot silence the alarm.
+        for issue in sorted(reports, key=lambda issue: issue["created_at"])[-1:]:
             match = CVE_HEADER.match((issue.get("body") or "").split("\n", 1)[0])
             if not match:
                 self.queue_notification(f"cve-stale:unparseable:{issue['number']}",
