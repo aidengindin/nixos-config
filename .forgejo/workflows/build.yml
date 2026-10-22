@@ -32,7 +32,7 @@ jobs:
       - name: Report unexpected build failure
         if: failure()
         run: python3 scripts/forgejo/build-failure.py
-      - name: Notify the repair controller
+      - name: Notify the deployment controller
         if: always()
         run: python3 scripts/forgejo/notify.py
       - name: Remove job checkout
