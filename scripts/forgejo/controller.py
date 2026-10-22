@@ -14,7 +14,7 @@ import subprocess
 import threading
 import time
 import urllib.request
-from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
+from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
 ACTIVATION_GRACE_SECONDS = 300
@@ -49,7 +49,6 @@ class Controller:
         self.db_path = self.state / "queue.sqlite"
         with self.db() as db:
             db.execute("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL, state TEXT NOT NULL)")
-            db.execute("CREATE TABLE IF NOT EXISTS repairs (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, pr INTEGER NOT NULL, body TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
         self.owner_id = int(os.environ["FORGEJO_OWNER_ID"])
@@ -138,7 +137,6 @@ class Controller:
         elif event == "status":
             sha = payload.get("sha", "")
             self.queue_build_notification(sha)
-            self.queue_repair(sha)
 
     def trusted_statuses(self, sha, rejected=None):
         """Return verified statuses by context; record why others were dropped.
@@ -194,37 +192,6 @@ class Controller:
         for host in unresolved:
             self.api.status(sha, f"colmena/{host}", state, description, run_url)
         return True
-
-    def queue_repair(self, sha):
-        if not SHA.fullmatch(sha):
-            return
-        statuses = self.trusted_statuses(sha)
-        if any(statuses.get(f"colmena/{host}", {}).get("state") not in ("success", "failure", "error") for host in CI_HOSTS):
-            return
-        ci_contexts = {f"colmena/{host}" for host in CI_HOSTS}
-        failures = [s for s in statuses.values()
-                    if s["state"] in ("failure", "error") and (s["context"] in ci_contexts or s["context"] == "updates")]
-        for pull in self.api.pulls():
-            if pull["head"]["sha"] != sha or pull["head"]["ref"] != UPDATE_BRANCH or not failures:
-                continue
-            payload = {"event_type": "forgejo_repair", "repository": REPOSITORY,
-                "pr": pull["number"], "sha": sha, "failures": failures}
-            with self.db() as db:
-                db.execute("INSERT OR IGNORE INTO repairs(id,payload) VALUES (?,?)", (sha, json.dumps(payload)))
-
-    def send_repairs(self):
-        with self.db() as db:
-            rows = db.execute("SELECT id,payload FROM repairs WHERE sent=0").fetchall()
-        for key, payload in rows:
-            body = payload.encode()
-            signature = hmac.new(os.environ["HERMES_WEBHOOK_SECRET"].encode(), body, hashlib.sha256).hexdigest()
-            request = urllib.request.Request(os.environ["HERMES_URL"], data=body, headers={
-                "Content-Type": "application/json", "X-Hub-Signature-256": "sha256=" + signature,
-                "X-GitHub-Event": "forgejo_repair", "X-GitHub-Delivery": key})
-            with urllib.request.urlopen(request, timeout=30) as response:
-                response.read()
-            with self.db() as db:
-                db.execute("UPDATE repairs SET sent=1 WHERE id=?", (key,))
 
     def send_notifications(self):
         with self.db() as db:
@@ -468,9 +435,6 @@ class Controller:
                 for pull in self.api.pulls():
                     self.reconcile_terminal_build(pull["head"]["sha"])
                     self.queue_build_notification(pull["head"]["sha"])
-                    if pull["head"]["ref"] == UPDATE_BRANCH:
-                        self.queue_repair(pull["head"]["sha"])
-                self.send_repairs()
                 self.send_comments()
                 self.send_notifications()
             except Exception:
@@ -497,7 +461,6 @@ def main():
                         raise ValueError("Wrong repository")
                     sha = payload.get("sha", "")
                     controller.queue_build_notification(sha)
-                    controller.queue_repair(sha)
                 else:
                     controller.accept(self.headers.get("X-Forgejo-Event", self.headers.get("X-Gitea-Event", "")), payload)
             except ValueError as exc:

@@ -58,6 +58,17 @@
     vesktop.enable = true;
   };
 
+  # Deploys from this laptop authenticate with a YubiKey-backed key, so a
+  # stolen key file is useless without a physical touch. Multiplex so one
+  # colmena run costs one touch per host rather than one per SSH session.
+  home-manager.users.agindin.programs.ssh.settings."Match user nixos-deploy" = {
+    IdentityFile = "~/.ssh/id_ed25519_sk_deploy";
+    IdentitiesOnly = "yes";
+    ControlMaster = "auto";
+    ControlPath = "~/.ssh/cm-%C";
+    ControlPersist = "10m";
+  };
+
   home-manager.users.agindin.home.sessionVariablesExtra = ''
     export GH_TOKEN=$(cat ${config.age.secrets.khazad-dum-gh-token.path})
   '';
