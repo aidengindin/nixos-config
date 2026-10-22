@@ -214,9 +214,12 @@ print decisions without writing.
   a version tag are skipped.
 - **Tag-pinned inputs** (`tags.py`): any `name.url = "github:owner/repo/<vtag>"`
   in `flake.nix` (today `hermes-agent`) moves to the newest non-prerelease GitHub
-  release published at least seven days ago, then `nix flake update <name>` and a
-  second cooldown pass for newly pulled transitive inputs. "Newest" is by
-  publication time because projects change tag schemes.
+  release published at least seven days ago in the same version scheme as the
+  current tag (calver when the first component is 1000 or more), never lower than
+  the current pin, then `nix flake update <name>` and a second cooldown pass for
+  newly pulled transitive inputs. A newer release in another scheme (hermes-agent
+  went from calver to v0.x) is not applied; it is reported in the PR body for a
+  manual migration.
 - **Container images** (`images.py`): every OCI image in `services/*.nix` must be
   written `repo:tag@sha256:digest`; the updater finds them by that pattern and
   reports unpinned ones. Within the same track (same major, or major.minor while

@@ -2,11 +2,11 @@
 """Bump flake inputs pinned to a GitHub release tag, with the same cooldown.
 
 Discovery: every `<name>.url = "github:owner/repo/<tag>";` in flake.nix whose tag
-starts with a version number. The newest non-draft, non-prerelease GitHub release
-published at least COOLDOWN_DAYS ago wins. "Newest" is by publication time, not
-by version, because projects change tag schemes (calver to semver); a release
-is never chosen over the current tag unless it was published after it. The URL
-is rewritten and the input relocked with `nix flake update <name>`.
+starts with a version number. Candidates must share the current tag's version
+scheme (calver = first component >= 1000, otherwise semver-ish); the highest
+non-draft, non-prerelease release published at least COOLDOWN_DAYS ago wins and
+never a version below the current pin. A scheme change upstream is reported, not
+applied. The URL is rewritten and the input relocked with `nix flake update <name>`.
 """
 import argparse
 import datetime
@@ -25,19 +25,46 @@ def parse_time(text):
     return datetime.datetime.fromisoformat(text.replace("Z", "+00:00"))
 
 
+def version(tag):
+    """Numeric version tuple of a release tag, or None."""
+    match = re.match(r"^v?(\d+(?:\.\d+)*)$", tag)
+    return tuple(int(p) for p in match[1].split(".")) if match else None
+
+
+def scheme(parsed):
+    return "calver" if parsed[0] >= 1000 else "semver"
+
+
 def choose(releases, current, now):
-    """Return (tag, note): the newest eligible release tag, or `current`."""
+    """Return (tag, held note, scheme note).
+
+    Only releases in the same version scheme as `current` (calver when the first
+    component is >= 1000) are candidates: the highest version that is stable and
+    at least COOLDOWN_DAYS old, never lower than `current`. Eligible releases in
+    the other scheme published after the current tag are never applied, only
+    reported through the scheme note.
+    """
     cutoff = now - datetime.timedelta(days=COOLDOWN_DAYS)
-    stable = sorted((r for r in releases if not r.get("draft") and not r.get("prerelease") and r.get("published_at")),
-        key=lambda r: parse_time(r["published_at"]), reverse=True)
-    held = []
-    for release in stable:
-        if release["tag_name"] == current:
-            return current, (f"held back newer {', '.join(held)}" if held else "")
-        if parse_time(release["published_at"]) <= cutoff:
-            return release["tag_name"], (f"held back newer {', '.join(held)}" if held else "")
-        held.append(f"{release['tag_name']} ({(now - parse_time(release['published_at'])).days}d old)")
-    return current, (f"held back newer {', '.join(held)}" if held else "")
+    here = version(current)
+    stable = [(version(r["tag_name"]), r) for r in releases
+        if not r.get("draft") and not r.get("prerelease") and r.get("published_at") and version(r["tag_name"])]
+    same = sorted(((v, r) for v, r in stable if scheme(v) == scheme(here)), key=lambda item: item[0], reverse=True)
+    best = current
+    for v, r in same:
+        if v >= here and parse_time(r["published_at"]) <= cutoff:
+            best = r["tag_name"]
+            break
+    held = [f"{r['tag_name']} ({(now - parse_time(r['published_at'])).days}d old)"
+        for v, r in same if v > version(best) and parse_time(r["published_at"]) > cutoff]
+    current_published = next((parse_time(r["published_at"]) for v, r in same if v == here), None)
+    other = [(v, r) for v, r in stable if scheme(v) != scheme(here) and parse_time(r["published_at"]) <= cutoff
+        and (current_published is None or parse_time(r["published_at"]) > current_published)]
+    note = ""
+    if other:
+        newest = max(other, key=lambda item: parse_time(item[1]["published_at"]))[0]
+        latest = "v" + ".".join([str(p) for p in newest[:-1]] + ["x"]) if len(newest) > 1 else f"v{newest[0]}"
+        note = f"upstream changed version scheme (latest {latest}); migrate manually"
+    return best, (f"held back newer {', '.join(held)}" if held else ""), note
 
 
 def update_text(text, github, now, log):
@@ -50,7 +77,7 @@ def update_text(text, github, now, log):
             log(f"{name}: exempt")
             return match.group(0)
         try:
-            new_tag, note = choose(github.get(f"repos/{owner}/{repo}/releases?per_page=30"), tag, now)
+            new_tag, note, scheme_note = choose(github.get(f"repos/{owner}/{repo}/releases?per_page=30"), tag, now)
         except (OSError, KeyError, ValueError) as error:
             log(f"{name}: release lookup failed, left unchanged ({error})")
             notes.append(f"`{name}`: release lookup failed")
@@ -58,6 +85,9 @@ def update_text(text, github, now, log):
         log(f"{name}: {tag} -> {new_tag}" + (f" [{note}]" if note else ""))
         if note:
             notes.append(f"`{name}` ({owner}/{repo}): {note}")
+        if scheme_note:
+            log(f"{name}: {scheme_note}")
+            notes.append(f"{name}: {scheme_note}")
         if new_tag != tag:
             changed.append((name, new_tag))
         return match.group(0).replace(f"/{tag}\"", f"/{new_tag}\"")

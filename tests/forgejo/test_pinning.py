@@ -226,10 +226,8 @@ class ImageUpdateTests(unittest.TestCase):
         self.assertEqual(images.unpinned("image = cfg.dbImage;"), [])
 
     def test_repository_images_are_pinned(self):
-        # calibre-web is being deleted separately and is the one known exception.
         for path in sorted(Path(images.ROOT, "services").glob("*.nix")):
-            if path.name != "calibre-web.nix":
-                self.assertEqual(images.unpinned(path.read_text()), [], path.name)
+            self.assertEqual(images.unpinned(path.read_text()), [], path.name)
 
 
 class TagBumpTests(unittest.TestCase):
@@ -242,18 +240,38 @@ class TagBumpTests(unittest.TestCase):
         releases = [self.release("v3", 1), self.release("v2", 9), self.release("v1", 30)]
         self.assertEqual(tags.choose(releases, "v1", NOW)[0], "v2")
 
+    def test_cooldown_is_respected(self):
+        new, held, _ = tags.choose([self.release("v2.1", 3), self.release("v2.0", 6.9), self.release("v1.0", 30)], "v1.0", NOW)
+        self.assertEqual(new, "v1.0")
+        self.assertIn("v2.1", held)
+
     def test_prereleases_and_drafts_are_ignored(self):
         releases = [self.release("v3", 20, prerelease=True), self.release("v4", 20, draft=True), self.release("v2", 30), self.release("v1", 40)]
         self.assertEqual(tags.choose(releases, "v1", NOW)[0], "v2")
 
-    def test_current_stays_when_newer_ones_are_young(self):
-        new, note = tags.choose([self.release("v2", 3), self.release("v1", 30)], "v1", NOW)
-        self.assertEqual(new, "v1")
-        self.assertIn("v2", note)
+    def test_older_line_backport_published_later_is_ignored(self):
+        releases = [self.release("v1.4.1", 10), self.release("v2.0.0", 20), self.release("v1.4.0", 40)]
+        self.assertEqual(tags.choose(releases, "v2.0.0", NOW)[0], "v2.0.0")
 
-    def test_scheme_change_follows_publication_order(self):
-        releases = [self.release("v0.22.2", 8), self.release("v2026.9.24", 28), self.release("v2026.8.3", 60)]
-        self.assertEqual(tags.choose(releases, "v2026.8.3", NOW)[0], "v0.22.2")
+    def test_never_downgrades(self):
+        self.assertEqual(tags.choose([self.release("v1.0.0", 30)], "v2.0.0", NOW)[0], "v2.0.0")
+        self.assertEqual(tags.choose([self.release("v2026.1.1", 30)], "v2026.8.3", NOW)[0], "v2026.8.3")
+
+    def test_scheme_change_is_reported_not_applied(self):
+        releases = [self.release("v0.22.2", 8), self.release("v0.22.4", 1), self.release("v2026.9.24", 28), self.release("v2026.8.3", 60)]
+        new, _, note = tags.choose(releases, "v2026.8.3", NOW)
+        self.assertEqual(new, "v2026.9.24")
+        self.assertEqual(note, "upstream changed version scheme (latest v0.22.x); migrate manually")
+        new, _, note = tags.choose(releases[:1] + releases[3:], "v2026.8.3", NOW)
+        self.assertEqual(new, "v2026.8.3")
+        self.assertIn("v0.22.x", note)
+
+    def test_scheme_change_note_reaches_the_report_and_pin_is_unchanged(self):
+        text = 'h.url = "github:o/r/v2026.8.3";'
+        github = FakeGitHub(releases={"o/r": [self.release("v0.22.2", 8), self.release("v2026.8.3", 60)]})
+        new, changed, notes = tags.update_text(text, github, NOW, lambda line: None)
+        self.assertEqual((new, changed), (text, []))
+        self.assertEqual(notes, ["h: upstream changed version scheme (latest v0.22.x); migrate manually"])
 
     def test_flake_url_is_rewritten(self):
         text = 'a.url = "github:o/r/v1";\n    b.url = "github:o/b";\n    c.url = "github:o/c/v1";'
