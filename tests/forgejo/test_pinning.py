@@ -306,13 +306,21 @@ class ReportTests(unittest.TestCase):
         self.assertEqual([h["name"] for h in reports["cooldown"]["held"]], ["a", "b"])
         self.assertEqual(reports["tags"], {})
 
+    def test_asset_notes_and_problems_reach_the_section(self):
+        reports = {"cooldown": {}, "tags": {}, "images": {}, "assets": {"held": ["`o/r` a.zip: held back newer 2 (3d old)"], "problems": ["`o/r`: no asset"]}}
+        section = update.cooldown_section(reports)
+        self.assertIn("held back newer 2", section)
+        self.assertIn("`o/r`: no asset", section)
+
     def test_empty_reports_produce_no_section(self):
         self.assertEqual(update.cooldown_section({"cooldown": {}, "tags": {}, "images": {}}), "")
 
     def test_commands_run_in_the_documented_order(self):
         names = [" ".join(c) for c in update.COMMANDS]
-        order = [next(i for i, n in enumerate(names) if k in n) for k in ("flake update", "cooldown.py", "tags.py", "update-caddy-hash.sh", "images.py")]
+        order = [next(i for i, n in enumerate(names) if k in n) for k in ("flake update", "cooldown.py", "tags.py", "update-caddy-hash.sh", "assets.py", "images.py")]
         self.assertEqual(order, sorted(order))
+        self.assertIn("{reports}/assets.json", " ".join(names))
+        self.assertFalse(any("update-ublock-hash" in n for n in names))
         # Package sources move through flake inputs and the cooldown, never
         # through nix-update, and no step runs code from the global registry.
         self.assertFalse(any("nix-update" in n for n in names))

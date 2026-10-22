@@ -206,8 +206,8 @@ durable record.
 
 The weekly updater adopts nothing younger than seven days (supply-chain
 cooldown). Steps in `scripts/forgejo/update.py`, in order: `nix flake update`;
-`cooldown.py`; `tags.py`; `scripts/update-*.sh`; `images.py`. Add `--dry-run`
-to `cooldown.py`, `tags.py` or `images.py` to print decisions without writing.
+`cooldown.py`; `tags.py`; `scripts/update-*.sh`; `assets.py`; `images.py`. Add
+`--dry-run` to `cooldown.py`, `tags.py`, `assets.py` or `images.py` to print decisions without writing.
 
 Third-party source code is never fetched with a hard-coded `fetchFromGitHub`
 commit: the DMS plugins and the sources for `packages/` are `flake = false`
@@ -237,6 +237,13 @@ a week; skim those diffs before deploying.
   newly pulled transitive inputs. A newer release in another scheme (hermes-agent
   went from calver to v0.x) is not applied; it is reported in the PR body for a
   manual migration.
+- **Release assets** (`assets.py`): any `fetchzip`/`fetchurl` in a `.nix` file
+  whose url is `github.com/<owner>/<repo>/releases/download/<tag>/<asset>`
+  (today uBlock Origin and the Chromium Web Store crx in `linux/chromium.nix`).
+  The tag is chosen by the same rules as `tags.py`; the asset name substitutes
+  the version in the old name and must exist in that release, otherwise the pin
+  stays and a problem is listed in the PR body. The hash is the unpacked-tree
+  hash for `fetchzip` and the file hash for `fetchurl`.
 - **Container images** (`images.py`): every OCI image in `services/*.nix` must be
   written `repo:tag@sha256:digest`; the updater finds them by that pattern and
   reports unpinned ones. Within the same track (same major, or major.minor while

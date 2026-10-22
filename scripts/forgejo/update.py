@@ -23,8 +23,8 @@ COMMANDS = [
     [sys.executable, str(SCRIPTS / "tags.py"), "--report", "{reports}/tags.json"],
     # A tag bump can pull in new transitive inputs at their newest commits.
     [sys.executable, str(SCRIPTS / "cooldown.py"), "--report", "{reports}/cooldown-tags.json"],
-    *[["bash", "scripts/" + name] for name in ["update-caddy-hash.sh", "update-ublock-hash.sh",
-        "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
+    *[["bash", "scripts/" + name] for name in ["update-caddy-hash.sh", "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
+    [sys.executable, str(SCRIPTS / "assets.py"), "--report", "{reports}/assets.json"],
     [sys.executable, str(SCRIPTS / "images.py"), "--report", "{reports}/images.json"],
 ]
 # Daily runs move only the NixOS channel branches and the Home Manager releases
@@ -129,7 +129,7 @@ def git(*args, capture=False):
 
 def read_reports(directory):
     reports = {}
-    for name in ("cooldown", "cooldown-tags", "tags", "images"):
+    for name in ("cooldown", "cooldown-tags", "tags", "assets", "images"):
         try:
             reports[name] = json.loads(Path(directory, name + ".json").read_text())
         except (OSError, ValueError):
@@ -155,11 +155,13 @@ def cooldown_section(reports):
     if reports["cooldown"].get("unhandled"):
         lines += ["Young inputs the cooldown cannot handle (non-GitHub), left as updated:", ""]
         lines += ["- " + u for u in reports["cooldown"]["unhandled"]] + [""]
-    notes = reports["tags"].get("held", []) + reports["images"].get("held", [])
+    notes = reports["tags"].get("held", []) + reports.get("assets", {}).get("held", []) + reports["images"].get("held", [])
     if notes:
-        lines += ["Tags and container images held back by the cooldown:", ""] + ["- " + n for n in notes] + [""]
+        lines += ["Tags, release assets and container images held back by the cooldown:", ""] + ["- " + n for n in notes] + [""]
     if reports["images"].get("problems"):
         lines += ["Image pinning problems:", ""] + ["- " + p for p in reports["images"]["problems"]] + [""]
+    if reports.get("assets", {}).get("problems"):
+        lines += ["Release asset pinning problems:", ""] + ["- " + p for p in reports["assets"]["problems"]] + [""]
     return "\n".join(lines)
 
 
