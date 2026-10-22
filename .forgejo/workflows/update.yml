@@ -1,8 +1,14 @@
 name: Automated flake update
 on:
+  # Daily: NixOS channels only. Sundays: the full update (update.py decides).
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: full (every input, tag and image) or channels (NixOS channels only)
+        required: true
+        default: full
 jobs:
   update:
     runs-on: nixos
@@ -12,6 +18,8 @@ jobs:
       FORGEJO_TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
       CI_WEBHOOK_SECRET: ${{ secrets.CI_WEBHOOK_SECRET }}
       GH_TOKEN: ${{ secrets.UPSTREAM_GITHUB_TOKEN }}
+      # Empty on scheduled runs, so update.py picks the mode from the weekday.
+      UPDATE_MODE: ${{ inputs.mode }}
     steps:
       - uses: https://data.forgejo.org/actions/checkout@v4
         with:

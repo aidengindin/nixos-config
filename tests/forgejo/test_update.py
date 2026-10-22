@@ -1,3 +1,4 @@
+import datetime
 import os
 from pathlib import Path
 import sys
@@ -67,3 +68,57 @@ class DispatchTests(unittest.TestCase):
 
     def test_unmoved_head_is_not_rebuilt(self):
         self.assertEqual(self.dispatches(moved=False, changed=False), [])
+
+
+class ModeTests(unittest.TestCase):
+    """Daily runs move only the NixOS channels; Sundays run everything."""
+
+    MONDAY = datetime.date(2026, 10, 26)
+    SUNDAY = datetime.date(2026, 10, 25)
+
+    def test_schedule_runs_channels_on_weekdays_and_full_on_sunday(self):
+        env = {"GITHUB_EVENT_NAME": "schedule"}
+        self.assertEqual(update.resolve_mode(env, self.MONDAY), "channels")
+        self.assertEqual(update.resolve_mode(env, self.SUNDAY), "full")
+
+    def test_explicit_mode_wins_and_unknown_mode_is_refused(self):
+        env = {"GITHUB_EVENT_NAME": "schedule", "UPDATE_MODE": "full"}
+        self.assertEqual(update.resolve_mode(env, self.MONDAY), "full")
+        self.assertEqual(update.resolve_mode({"UPDATE_MODE": "channels"}, self.SUNDAY), "channels")
+        with self.assertRaises(ValueError):
+            update.resolve_mode({"UPDATE_MODE": "everything"}, self.MONDAY)
+
+    def test_dispatch_and_manual_runs_default_to_full(self):
+        self.assertEqual(update.resolve_mode({"GITHUB_EVENT_NAME": "workflow_dispatch"}, self.MONDAY), "full")
+        self.assertEqual(update.resolve_mode({}, self.MONDAY), "full")
+
+    def test_daily_commands_touch_only_channel_inputs(self):
+        self.assertEqual(update.DAILY_COMMANDS,
+            [["nix", "flake", "update", "nixpkgs", "unstable", "home-manager", "hm-unstable"]])
+
+    def run_channels(self, existing_body):
+        api = Mock(); api.url = "https://forgejo.test"
+        api.pulls.return_value = [{"number": 93, "head": {"ref": "automation/update"}, "body": existing_body}]
+        ran = []
+        def git(*args, capture=False):
+            if args[0] == "status": return " M flake.lock"
+            if args[0] == "rev-parse": return "a" * 40
+        def run(command, **kwargs):
+            ran.append(command)
+            return Mock(returncode=0)
+        with patch.object(update, "API", return_value=api), patch.object(update, "git", side_effect=git), patch.object(update.subprocess, "run", side_effect=run), patch("builtins.open", mock_open()), patch.object(update.fcntl, "flock"), patch.dict(os.environ, {"GITHUB_RUN_ID": "1", "UPDATE_MODE": "channels"}):
+            self.assertEqual(update.main(), 0)
+        body = next(c.kwargs["data"]["body"] for c in api.repo.call_args_list if c.args[0] == "pulls/93")
+        return ran, body
+
+    def test_channel_run_keeps_the_last_full_runs_notes(self):
+        full = f"{update.FULL_START}\n### Last full update: 2026-10-25\n\n- held: `agenix`\n{update.FULL_END}"
+        ran, body = self.run_channels("intro\n\n" + full + "\n\nfooter")
+        self.assertIn(update.DAILY_COMMANDS[0], ran)
+        self.assertNotIn(["nix", "flake", "update"], ran)
+        self.assertIn(full, body)
+        self.assertIn("channel update", body)
+
+    def test_channel_run_without_a_previous_full_run_says_so(self):
+        _, body = self.run_channels("an old body without markers")
+        self.assertIn("none yet on this PR", body)

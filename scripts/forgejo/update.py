@@ -30,6 +30,38 @@ COMMANDS = [
         "update-claude-desktop.sh", "update-chatgpt-desktop.sh"]],
     [sys.executable, str(SCRIPTS / "images.py"), "--report", "{reports}/images.json"],
 ]
+# Daily runs move only the NixOS channel branches and the Home Manager releases
+# that follow them. These carry security fixes, advance only after upstream's
+# Hydra gates pass, and are exempt from the cooldown, so they need no pinning
+# pass. Everything else waits for the weekly full run.
+CHANNEL_INPUTS = ["nixpkgs", "unstable", "home-manager", "hm-unstable"]
+DAILY_COMMANDS = [["nix", "flake", "update", *CHANNEL_INPUTS]]
+# The full run's notes live between these markers, so a daily run can carry
+# them over instead of erasing what the last weekly run held back.
+FULL_START, FULL_END = "<!-- full-update -->", "<!-- /full-update -->"
+
+
+def resolve_mode(environ=os.environ, today=None):
+    """`full` or `channels`. An explicit UPDATE_MODE wins; otherwise the daily
+    schedule runs channels-only except on Sundays, and anything else is full."""
+    mode = environ.get("UPDATE_MODE", "").strip()
+    if mode in ("full", "channels"):
+        return mode
+    if mode:
+        raise ValueError(f"Unknown UPDATE_MODE {mode!r}")
+    today = today or datetime.datetime.now(datetime.timezone.utc).date()
+    if environ.get("GITHUB_EVENT_NAME") == "schedule" and today.isoweekday() != 7:
+        return "channels"
+    return "full"
+
+
+def carried_full_section(body):
+    """The previous full run's section from an existing PR body, if any."""
+    body = body or ""
+    start, end = body.find(FULL_START), body.find(FULL_END)
+    if start == -1 or end < start:
+        return None
+    return body[start:end + len(FULL_END)]
 
 
 def git(*args, capture=False):
@@ -73,6 +105,8 @@ def cooldown_section(reports):
 
 
 def main():
+    mode = resolve_mode()
+    print("Update mode:", mode, flush=True)
     api = API()
     with open("/var/lib/forgejo-ci/update.lock", "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -93,7 +127,7 @@ def main():
             git("checkout", "-B", UPDATE_BRANCH, "origin/main")
         failures = []
         reports_dir = tempfile.mkdtemp(prefix="update-reports-")
-        for command in COMMANDS:
+        for command in COMMANDS if mode == "full" else DAILY_COMMANDS:
             command = [part.replace("{reports}", reports_dir) for part in command]
             print("Running:", " ".join(command), flush=True)
             try:
@@ -110,14 +144,24 @@ def main():
         cycle = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
         if changed or failures:
             git("add", "-A")
-            git("commit", "--allow-empty", "-m", f"chore: automated update {cycle}")
+            kind = "update" if mode == "full" else "channel update"
+            git("commit", "--allow-empty", "-m", f"chore: automated {kind} {cycle}")
         # A normal push refuses a concurrently updated remote branch.
         git("push", "origin", f"HEAD:refs/heads/{UPDATE_BRANCH}")
         sha = git("rev-parse", "HEAD", capture=True)
-        body = f"Automated flake and custom package updates.\n\nUpdate-Cycle: {cycle}\n\n"
-        body += "Updater failures:\n" + "\n".join("- `" + f + "`" for f in failures) if failures else "All updater steps completed."
-        body += "\n\n" + cooldown_section(read_reports(reports_dir))
-        body += "\n\nCI builds lorien, osgiliath, and khazad-dum. Merge manually; use `/deploy @server` or individual hosts to deploy this PR."
+        result = ("Updater failures:\n" + "\n".join("- `" + f + "`" for f in failures)
+            if failures else "All updater steps completed.")
+        if mode == "full":
+            full = f"{FULL_START}\n### Last full update: {cycle}\n\n{result}\n\n{cooldown_section(read_reports(reports_dir))}\n{FULL_END}"
+            latest = f"Latest run: full update, {cycle}."
+        else:
+            full = carried_full_section(pulls[0].get("body") if pulls else None) or (
+                f"{FULL_START}\n### Last full update: none yet on this PR; the next runs Sunday.\n{FULL_END}")
+            latest = f"Latest run: channel update ({', '.join(CHANNEL_INPUTS)}), {cycle}.\n\n{result}"
+        body = (f"Automated flake and custom package updates. NixOS channels update daily; "
+            f"every other input, tag and image updates weekly on Sunday.\n\nUpdate-Cycle: {cycle}\n\n"
+            f"{latest}\n\n{full}\n\n"
+            "CI builds lorien, osgiliath, and khazad-dum. Merge manually; use `/deploy @server` or individual hosts to deploy this PR.")
         if pulls:
             pr = pulls[0]
             api.repo(f"pulls/{pr['number']}", data={"body": body}, method="PATCH")

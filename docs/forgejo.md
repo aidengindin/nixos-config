@@ -171,9 +171,16 @@ The controller also reconciles each open PR against Forgejo's terminal action
 runs. If a runner or guest dies before its cleanup step, any missing or pending
 per-host statuses become terminal failures instead of remaining yellow forever.
 
-The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
-`automation/update`, performs each existing updater, publishes partial edits when
-one fails, and records `Update-Cycle` in the PR body. Ordinary pushes refuse
+The updater runs daily at 00:00 UTC and can be dispatched manually, choosing
+`full` or `channels`. On Monday to Saturday it updates only the NixOS channel
+inputs (`nixpkgs`, `unstable`, `home-manager`, `hm-unstable`), which carry
+security fixes, are gated by upstream Hydra, and are exempt from the cooldown.
+Sundays and manual dispatches by default run the full update: every input, the
+cooldown, tag bumps, package updaters, and image digests. Both modes push to the
+single `automation/update` PR, so the CI disk holds one PR head's closures; a
+second daily PR would not fit the disk budget above. A channel run carries the
+last full run's notes (failures, held-back inputs) forward in the PR body.
+Partial edits are published when an updater fails, and ordinary pushes refuse
 concurrent branch changes.
 
 When a CI job completes, it sends a signed webhook through the tailnet-only
