@@ -37,7 +37,7 @@ in
 
   config = mkIf cfg.enable {
     # `services.postgresql` is a NixOS singleton; the host already runs the shared
-    # cluster (immich, linkwarden, grafana, ...). TimescaleDB installs planner
+    # cluster (immich, grafana, ...). TimescaleDB installs planner
     # hooks cluster-wide and has its own extension-upgrade cadence, so it lives in
     # an isolated declarative container instead of being bolted onto that cluster.
     containers.anduin-postgres = {

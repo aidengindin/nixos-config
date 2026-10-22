@@ -110,7 +110,7 @@ in
         StateDirectoryMode = "0700";
         ReadWritePaths = [ stateDir ];
 
-        # Hardening — mirrors services/headache-sync.nix
+        # Hardening
         NoNewPrivileges = true;
         PrivateTmp = true;
         PrivateDevices = true;

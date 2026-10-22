@@ -208,7 +208,7 @@ in
     # For traditional (non-systemd) initrd
     boot.initrd.postDeviceCommands = mkIf (!config.boot.initrd.systemd.enable) wipeScript;
 
-    # For systemd stage 1 initrd (e.g. when jovian-nixos enables it)
+    # For systemd stage 1 initrd
     boot.initrd.systemd.services.wipe-root = mkIf config.boot.initrd.systemd.enable {
       description = "Wipe BTRFS root subvolume";
       wantedBy = [ "initrd.target" ];

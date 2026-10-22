@@ -10,10 +10,9 @@ REPOSITORY = "aidengindin/nixos-config"
 # the bot token, so the bot needs read access and the token must be scoped to
 # them. Add new Forgejo-hosted inputs here.
 INPUT_REPOSITORIES = ("aidengindin/job-scraper",)
-HOSTS = ("lorien", "osgiliath", "khazad-dum", "weathertop")
-CI_HOSTS = tuple(host for host in HOSTS if host != "weathertop")
-TAGS = {"server": HOSTS[:2], "onprem": HOSTS[:2], "laptop": ("khazad-dum",),
-        "gaming": ("weathertop",), "mobile": HOSTS[2:]}
+HOSTS = ("lorien", "osgiliath", "khazad-dum")
+CI_HOSTS = HOSTS
+TAGS = {"server": HOSTS[:2], "onprem": HOSTS[:2], "laptop": ("khazad-dum",), "mobile": HOSTS[2:]}
 UPDATE_BRANCH = "automation/update"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 STORE_PATH = re.compile(r"^/nix/store/[0-9a-z]{32}-nixos-system-[A-Za-z0-9.+_-]+$")

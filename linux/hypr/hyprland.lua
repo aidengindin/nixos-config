@@ -140,21 +140,6 @@ hl.window_rule({
   match = { class = "^(mpv)$" },
   idle_inhibit = "fullscreen",
 })
-hl.window_rule({
-  name  = "zwift-idle-inhibit-class",
-  match = { class = "^(zwift)$" },
-  idle_inhibit = "fullscreen",
-})
-hl.window_rule({
-  name  = "zwift-idle-inhibit-title",
-  match = { title = "^(Zwift)$" },
-  idle_inhibit = "fullscreen",
-})
-hl.window_rule({
-  name  = "zwift-idle-inhibit-initial-title",
-  match = { initial_title = "^(Zwift)$" },
-  idle_inhibit = "fullscreen",
-})
 
 --------------------
 ---- PERMISSIONS ----

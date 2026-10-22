@@ -11,14 +11,11 @@
     ./blocky.nix
     ./bookorbit.nix
     ./caddy.nix
-    ./calibre-news.nix
-    ./calibre-web.nix
     ./chaptarr.nix
     ./dawarich.nix
     ./forgejo.nix
     ./frigate.nix
     ./grafana.nix
-    ./headache-sync.nix
     ./hermes.nix
     ./immich.nix
     ./intervals-dawarich-sync.nix
@@ -26,7 +23,6 @@
     ./job-scraper.nix
     ./keepalived.nix
     ./liftosaur-sync.nix
-    ./linkwarden.nix
     ./miniflux.nix
     ./mosquitto.nix
     ./ntp.nix

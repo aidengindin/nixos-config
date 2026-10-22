@@ -17,8 +17,7 @@ This is a personal NixOS configuration repository managing multiple machines usi
 ├── hosts/                    # Per-host configurations
 │   ├── lorien/              # Server (stable, onprem)
 │   ├── osgiliath/           # Server (stable, onprem)
-│   ├── khazad-dum/          # Laptop (stable, mobile)
-│   └── weathertop/          # Gaming PC (unstable, mobile)
+│   └── khazad-dum/          # Laptop (stable, mobile)
 ├── secrets/                  # Age-encrypted secrets
 │   └── secrets.nix          # Public key definitions
 └── lib/                      # Helper functions
@@ -85,9 +84,8 @@ colmena apply --reboot
 Available host tags:
 - `server`: lorien, osgiliath
 - `laptop`: khazad-dum
-- `gaming`: weathertop
 - `onprem`: lorien, osgiliath
-- `mobile`: khazad-dum, weathertop
+- `mobile`: khazad-dum
 
 ### Format Checking
 
@@ -104,8 +102,7 @@ nix flake check
 ### Dual Nixpkgs Channels
 
 The repository uses both a stable and an unstable nixpkgs:
-- Most hosts track stable (`isUnstable = false`)
-- weathertop tracks unstable (`isUnstable = true`)
+- All hosts track stable (`isUnstable = false`)
 - Both Home Manager versions are available (stable and unstable)
 - `unstablePkgs` is passed as a special arg to all configurations
 
@@ -155,7 +152,7 @@ Secret public keys are defined in `secrets/secrets.nix`. Age identity paths are 
 
 ### Impermanence
 
-Hosts khazad-dum, osgiliath, and weathertop use impermanent root filesystems (btrfs with subvolume wiping on boot). Configuration is in `linux/impermanence.nix`. Note: weathertop persists all of `/home`.
+Hosts khazad-dum and osgiliath use impermanent root filesystems (btrfs with subvolume wiping on boot). Configuration is in `linux/impermanence.nix`.
 
 Key concepts:
 - Root filesystem is wiped on every boot

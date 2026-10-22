@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 REPOSITORY = "aidengindin/nixos-config"
-HOSTS = "lorien|osgiliath|khazad-dum|weathertop"
+HOSTS = "lorien|osgiliath|khazad-dum"
 STORE_PATH = re.compile(r"/nix/store/[0-9a-df-np-sv-z]{32}-[^/]+")
 command = os.environ.get("SSH_ORIGINAL_COMMAND", "")
 match = re.fullmatch(rf"(result|export) ([0-9a-f]{{40}}) ({HOSTS})", command)
