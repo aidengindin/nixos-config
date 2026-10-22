@@ -74,9 +74,6 @@ let
       zigbee2mqtt = 8400;
 
       mosquitto = 1883;
-
-      netalertx = 20211;
-      netalertxMetrics = 20212;
     };
 
     ips = {

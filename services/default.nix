@@ -29,7 +29,6 @@
     ./linkwarden.nix
     ./miniflux.nix
     ./mosquitto.nix
-    ./netalertx.nix
     ./ntp.nix
     ./ollama.nix
     ./openwebui.nix
