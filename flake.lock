@@ -40,6 +40,22 @@
         "type": "github"
       }
     },
+    "catppuccin-userstyles": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1749817927,
+        "narHash": "sha256-lftRs+pfcOrqHDtDWX/Vd/CQvDJguCRxlhI/aIkIB/k=",
+        "owner": "catppuccin",
+        "repo": "userstyles",
+        "rev": "714b153c7022c362a37ab8530286a87e4484a828",
+        "type": "github"
+      },
+      "original": {
+        "owner": "catppuccin",
+        "repo": "userstyles",
+        "type": "github"
+      }
+    },
     "colmena": {
       "inputs": {
         "nix-github-actions": "nix-github-actions",
@@ -399,6 +415,22 @@
         "type": "github"
       }
     },
+    "intervals-mcp-server": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1785667881,
+        "narHash": "sha256-YSE1YdOAlz4+IsEbwIHpcR9N7ngFfHqYjxGbYkti8OA=",
+        "owner": "mvilanova",
+        "repo": "intervals-mcp-server",
+        "rev": "cb1fbcac81095cf3e094e995decf04b8b1f259f8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mvilanova",
+        "repo": "intervals-mcp-server",
+        "type": "github"
+      }
+    },
     "job-scraper": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -690,6 +722,7 @@
       "inputs": {
         "agenix": "agenix",
         "anduin": "anduin",
+        "catppuccin-userstyles": "catppuccin-userstyles",
         "colmena": "colmena",
         "disko": "disko",
         "dms-plugin-ambient-sound": "dms-plugin-ambient-sound",
@@ -703,6 +736,7 @@
         "hm-unstable": "hm-unstable",
         "home-manager": "home-manager_2",
         "impermanence": "impermanence",
+        "intervals-mcp-server": "intervals-mcp-server",
         "job-scraper": "job-scraper",
         "liftosaur-sync": "liftosaur-sync",
         "mcp-servers-nix": "mcp-servers-nix",

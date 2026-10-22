@@ -171,9 +171,16 @@ The controller also reconciles each open PR against Forgejo's terminal action
 runs. If a runner or guest dies before its cleanup step, any missing or pending
 per-host statuses become terminal failures instead of remaining yellow forever.
 
-The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
-`automation/update`, performs each existing updater, publishes partial edits when
-one fails, and records `Update-Cycle` in the PR body. Ordinary pushes refuse
+The updater runs daily at 00:00 UTC and can be dispatched manually, choosing
+`full` or `channels`. On Monday to Saturday it updates only the NixOS channel
+inputs (`nixpkgs`, `unstable`, `home-manager`, `hm-unstable`), which carry
+security fixes, are gated by upstream Hydra, and are exempt from the cooldown.
+Sundays and manual dispatches by default run the full update: every input, the
+cooldown, tag bumps, package updaters, and image digests. Both modes push to the
+single `automation/update` PR, so the CI disk holds one PR head's closures; a
+second daily PR would not fit the disk budget above. A channel run carries the
+last full run's notes (failures, held-back inputs) forward in the PR body.
+Partial edits are published when an updater fails, and ordinary pushes refuse
 concurrent branch changes.
 
 When a CI job completes, it sends a signed webhook through the tailnet-only
@@ -199,10 +206,16 @@ durable record.
 
 The weekly updater adopts nothing younger than seven days (supply-chain
 cooldown). Steps in `scripts/forgejo/update.py`, in order: `nix flake update`;
-`cooldown.py`; `tags.py`; `nix-update` and `scripts/update-*.sh`; `images.py`.
-`nix-update` runs from the flake's locked nixpkgs (`--inputs-from .`), not the
-mutable registry. Add `--dry-run` to `cooldown.py`, `tags.py` or `images.py` to
-print decisions without writing.
+`cooldown.py`; `tags.py`; `scripts/update-*.sh`; `assets.py`; `images.py`. Add
+`--dry-run` to `cooldown.py`, `tags.py`, `assets.py` or `images.py` to print decisions without writing.
+
+Third-party source code is never fetched with a hard-coded `fetchFromGitHub`
+commit: the DMS plugins and the sources for `packages/` are `flake = false`
+inputs, so the cooldown governs them like any other input. Every run also lists,
+in the PR body, each third-party input whose locked commit differs from `main`,
+with a GitHub compare link (NixOS nixpkgs, Home Manager and the owner's own
+repositories are left out). The cooldown only catches compromises found within
+a week; skim those diffs before deploying.
 
 - **Flake inputs** (`cooldown.py`): every lock node, including transitive ones,
   whose new `locked.lastModified` is under seven days old is re-pinned to the
@@ -224,6 +237,13 @@ print decisions without writing.
   newly pulled transitive inputs. A newer release in another scheme (hermes-agent
   went from calver to v0.x) is not applied; it is reported in the PR body for a
   manual migration.
+- **Release assets** (`assets.py`): any `fetchzip`/`fetchurl` in a `.nix` file
+  whose url is `github.com/<owner>/<repo>/releases/download/<tag>/<asset>`
+  (today uBlock Origin and the Chromium Web Store crx in `linux/chromium.nix`).
+  The tag is chosen by the same rules as `tags.py`; the asset name substitutes
+  the version in the old name and must exist in that release, otherwise the pin
+  stays and a problem is listed in the PR body. The hash is the unpacked-tree
+  hash for `fetchzip` and the file hash for `fetchurl`.
 - **Container images** (`images.py`): every OCI image in `services/*.nix` must be
   written `repo:tag@sha256:digest`; the updater finds them by that pattern and
   reports unpinned ones. Within the same track (same major, or major.minor while

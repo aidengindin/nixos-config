@@ -45,6 +45,18 @@
       url = "github:natsukium/mcp-servers-nix";
     };
 
+    # Third-party sources for packages/. Inputs rather than fetchFromGitHub so
+    # each is locked in flake.lock and moves only through the updater's 7-day
+    # cooldown. Reached as self.inputs.* (see packageSources below).
+    catppuccin-userstyles = {
+      url = "github:catppuccin/userstyles";
+      flake = false;
+    };
+    intervals-mcp-server = {
+      url = "github:mvilanova/intervals-mcp-server";
+      flake = false;
+    };
+
     # Pin Hermes to a tagged release: its upstream Nix support is Tier 2 and
     # main may break between releases.
     hermes-agent.url = "github:NousResearch/hermes-agent/v2026.9.24";
@@ -131,6 +143,12 @@
       stablePkgs = import nixpkgs pkgsConfig;
       unstablePkgs = import unstable pkgsConfig;
 
+      # `flake = false` sources consumed by packages/.
+      packageSources = {
+        catppuccin-userstyles = self.inputs.catppuccin-userstyles;
+        intervals-mcp-server = self.inputs.intervals-mcp-server;
+      };
+
       # Standard modules shared by all NixOS systems,
       # with some conditional logic based on whether it tracks stable or unstable.
       # Note that not all modules are used by all systems,
@@ -170,6 +188,7 @@
             unstablePkgs
             anduin
             job-scraper
+            packageSources
             ;
         };
       };
@@ -300,6 +319,7 @@
           unstablePkgs
           anduin
           job-scraper
+          packageSources
           ;
       });
 
