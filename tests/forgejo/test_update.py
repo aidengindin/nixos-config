@@ -140,8 +140,10 @@ class ModeTests(unittest.TestCase):
         self.assertEqual(update.resolve_mode({}, self.MONDAY), "full")
 
     def test_daily_commands_touch_only_channel_inputs(self):
+        # The caddy plugin source hash depends on nixpkgs' caddy, which channels move.
         self.assertEqual(update.DAILY_COMMANDS,
-            [["nix", "flake", "update", "nixpkgs", "unstable", "home-manager", "hm-unstable"]])
+            [["nix", "flake", "update", "nixpkgs", "unstable", "home-manager", "hm-unstable"],
+             ["bash", "scripts/update-caddy-hash.sh"]])
 
     def run_channels(self, existing_body):
         api = Mock(); api.url = "https://forgejo.test"
