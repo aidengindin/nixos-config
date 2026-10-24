@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import importlib.util
@@ -15,7 +16,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/forgejo"))
 from build import BUILD_ORDER, GIB, close_incomplete_statuses, gc_if_needed, require_build_headroom, supersede_pending
-from common import CI_HOSTS, HOSTS, REPOSITORY, event_sha, selectors
+from common import CI_HOSTS, REPOSITORY, event_sha, selectors
 from controller import Controller, signed
 import provision
 from retention import RETENTION_SECONDS, prune_retention, superseded_heads
@@ -26,7 +27,7 @@ CLOSURE = "/nix/store/" + "b" * 32 + "-nixos-system-lorien-26.05"
 class ValidationTests(unittest.TestCase):
     def test_selectors(self):
         self.assertEqual(selectors("/deploy osgiliath,lorien"), ["lorien", "osgiliath"])
-        self.assertEqual(selectors("/deploy @mobile"), ["khazad-dum", "weathertop"])
+        self.assertEqual(selectors("/deploy @mobile"), ["khazad-dum"])
         self.assertEqual(selectors("/deploy @server,osgiliath"), ["lorien", "osgiliath"])
 
     def test_reject_shell_and_unknown_targets(self):
@@ -122,6 +123,14 @@ class WorkflowTests(unittest.TestCase):
         # update.py dispatches this workflow itself. Keep the inputs it sends.
         self.assertIn("workflow_dispatch:", workflow)
 
+    def test_cve_scan_records_failure_on_cancellation_too(self):
+        workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/cve-scan.yml").read_text()
+        # A timed-out job is cancelled, not failed; it must still be recorded.
+        self.assertIn("if: failure() || cancelled()\n        run: python3 scripts/forgejo/cve_scan.py --record-failure",
+            workflow)
+        # Scanner secrets stay out of the checkout's git config.
+        self.assertIn("persist-credentials: false", workflow)
+
 
 class StatusCleanupTests(unittest.TestCase):
     def test_force_pushed_cancelled_run_is_closed(self):
@@ -197,11 +206,6 @@ class StatusCleanupTests(unittest.TestCase):
 
 
 class RetentionTests(unittest.TestCase):
-    def test_weathertop_is_excluded_from_ci(self):
-        self.assertEqual(BUILD_ORDER, CI_HOSTS)
-        self.assertNotIn("weathertop", CI_HOSTS)
-        self.assertIn("weathertop", HOSTS)
-
     @staticmethod
     def _seed(state, sha, now, age=0, prs=None):
         for name in ("roots", "results"):
@@ -361,6 +365,167 @@ class ControllerTests(unittest.TestCase):
         import time
         return {"sha": SHA, "pr": 5, "targets": ["lorien"], "created": time.time(), "hosts": {}}
 
+    def cve_issue(self, body="Last successful scan: **2026-10-22** · last failure: 2026-10-23"):
+        return {"number": 77, "title": "CVE report", "state": "open", "user": {"id": 2}, "body": body,
+                "html_url": "https://example.test/issues/77"}
+
+    def cve_comment(self, **kw):
+        return {"id": 9, "issue_url": "https://example.test/api/v1/repos/x/issues/77", "user": {"id": 2},
+                "body": "<!-- cve-ping: CVE-2026-1,GHSA-abcd-efgh-ijkl -->\n| [CVE-2026-1](u) | 9.8 |",
+                "html_url": "https://example.test/c/9", **kw}
+
+    def cve_api(self, issue=None, comment=None):
+        pages = {"issues/77": issue or self.cve_issue(), "issues/comments/9": comment or self.cve_comment()}
+        self.api.repo.side_effect = lambda path, **kw: pages[path]
+
+    def notifications(self):
+        with self.c.db() as db:
+            return db.execute("SELECT id, payload FROM notifications").fetchall()
+
+    def test_cve_ping_reads_comment_from_api(self):
+        self.cve_api()
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        rows = self.notifications()
+        self.assertEqual(rows[0][0], "cve:9")
+        self.assertIn("https://example.test/c/9", rows[0][1])
+        self.assertIn("CVE-2026-1, GHSA-abcd-efgh-ijkl", rows[0][1])
+        self.assertIn("(2)", rows[0][1])
+
+    def test_ping_names_only_ids_from_the_ping_line(self):
+        ids = [f"CVE-2026-{n}" for n in range(1, 8)]
+        table = "\n".join(f"| [CVE-2025-{n}](u) | 9.8 |" for n in range(50))
+        self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {','.join(ids)} -->\n{table}"))
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        message = json.loads(self.notifications()[0][1])["message"]
+        self.assertIn("(7): CVE-2026-1, CVE-2026-2, CVE-2026-3, CVE-2026-4, CVE-2026-5 and 2 more.", message)
+        self.assertNotIn("CVE-2025", message)
+        self.assertNotIn("CVE-2026-6", message)
+
+    def test_non_cve_advisory_ids_are_accepted(self):
+        ids = "GO-2026-1234,RUSTSEC-2026-0001,PYSEC-2026-5,ALSA-2026:1234,CVE-2026-9"
+        self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {ids} -->"))
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        self.assertIn("GO-2026-1234", self.notifications()[0][1])
+
+    def test_ping_of_exactly_200_ids_is_accepted(self):
+        ids = ",".join(f"CVE-2026-{n}" for n in range(200))
+        self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {ids} -->"))
+        self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+        self.assertIn("(200)", self.notifications()[0][1])
+
+    def test_malformed_id_in_ping_line_is_rejected(self):
+        for line in ("CVE-2026-1,not-an-id", "CVE-2026-1,", "", "CVE-2026-1,GO 2026", "CVE-2026-1,GO-<b>x",
+                     "lower-1", "cve-2026-1", "CVE-2026-1,GO-x>y", ",".join(f"CVE-2026-{n}" for n in range(201))):
+            self.cve_api(comment=self.cve_comment(body=f"<!-- cve-ping: {line} -->"))
+            with self.assertRaises(ValueError, msg=line):
+                self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_cve_comment_on_other_issue_is_rejected(self):
+        self.cve_api(comment=self.cve_comment(issue_url="https://example.test/api/v1/repos/x/issues/5"))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_cve_comment_without_ping_marker_is_rejected(self):
+        self.cve_api(comment=self.cve_comment(body="routine"))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_cve_comment_not_by_bot_is_rejected(self):
+        self.cve_api(comment=self.cve_comment(user={"id": 99}))
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_issue_not_by_bot_is_rejected(self):
+        self.cve_api(issue={**self.cve_issue(), "user": {"id": 99}})
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_issue_with_other_title_is_rejected(self):
+        self.cve_api(issue={**self.cve_issue(), "title": "Something else"})
+        with self.assertRaises(ValueError):
+            self.c.queue_cve_notification({"kind": "cve", "issue": 77, "comment": 9})
+
+    def test_malformed_cve_payloads_are_rejected(self):
+        self.cve_api()
+        for payload in ({"kind": "cve"}, {"kind": "cve", "issue": "x", "comment": 9},
+                        {"kind": "cve", "issue": 77}, {"kind": "cve", "issue": 77, "comment": None},
+                        {"kind": "cve", "issue": [1], "comment": 9}):
+            with self.assertRaises(ValueError, msg=payload):
+                self.c.queue_cve_notification(payload)
+
+    NOW = datetime(2026, 10, 25, 12, tzinfo=timezone.utc)
+
+    def stale_issue(self, body, created="2026-10-01T00:00:00Z", **kw):
+        return {**self.cve_issue(body), "created_at": created, **kw}
+
+    def stale_api(self, *pages):
+        self.api.repo.side_effect = lambda path, **kw: pages[int(path.rsplit("page=", 1)[1]) - 1]
+
+    def test_fresh_scan_is_not_stale(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-24** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_three_day_old_scan_is_stale_and_pings_once(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-22** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.c.check_cve_staleness(self.NOW)
+        rows = self.notifications()
+        self.assertEqual([r[0] for r in rows], ["cve-stale:2026-10-22"])
+        self.assertIn("has not succeeded since 2026-10-22", rows[0][1])
+        self.assertIn("https://example.test/issues/77", rows[0][1])
+
+    def test_new_outage_pings_again(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-22** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.stale_api([self.stale_issue("Last successful scan: **2026-11-01** · x")])
+        self.c.check_cve_staleness(self.NOW + timedelta(days=10))
+        self.assertEqual(len(self.notifications()), 2)
+
+    def test_never_scanned_uses_created_date(self):
+        self.stale_api([self.stale_issue("Last successful scan: **never** · x", created="2026-10-21T08:00:00Z")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:never"])
+
+    def test_recent_never_scanned_is_not_stale(self):
+        self.stale_api([self.stale_issue("Last successful scan: **never** · x", created="2026-10-24T08:00:00Z")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_closed_issue_still_triggers_staleness(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-10-01** · x", state="closed")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:2026-10-01"])
+        self.assertIn("state=all", self.api.repo.call_args[0][0])
+
+    def test_newest_of_duplicate_reports_is_checked(self):
+        old = self.stale_issue("Last successful scan: **2026-01-01** · x", created="2026-01-01T00:00:00Z", number=5)
+        new = self.stale_issue("Last successful scan: **2026-10-24** · x", created="2026-10-02T00:00:00Z", number=77)
+        self.stale_api([old, new])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+        self.stale_api([new, old])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_other_users_issue_is_ignored(self):
+        self.stale_api([self.stale_issue("Last successful scan: **2026-01-01** · x", user={"id": 99})])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual(self.notifications(), [])
+
+    def test_staleness_check_pages_through_issues(self):
+        filler = [{"number": n, "title": "other", "user": {"id": 2}} for n in range(50)]
+        self.stale_api(filler, [self.stale_issue("Last successful scan: **2026-10-01** · x")])
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:2026-10-01"])
+
+    def test_unparseable_header_is_reported(self):
+        self.stale_api([self.stale_issue("garbage")])
+        self.c.check_cve_staleness(self.NOW)
+        rows = self.notifications()
+        self.assertEqual([r[0] for r in rows], ["cve-stale:unparseable:77"])
+        self.assertIn("unreadable", rows[0][1])
+
     def test_stale_sha_is_not_deployed(self):
         self.api.repo.return_value = {**self.pr, "head": {**self.pr["head"], "sha": "c" * 40}}
         with self.assertRaisesRegex(ValueError, "PR changed"):
@@ -474,7 +639,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.c.deploy.call_count, 2)
 
     def test_unrelated_host_failure_does_not_block(self):
-        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}, "colmena/weathertop": {"state": "failure"}})
+        self.c.trusted_statuses = Mock(return_value={"colmena/lorien": {"state": "success"}, "colmena/khazad-dum": {"state": "failure"}})
         self.c.pull_closure = Mock(return_value=CLOSURE)
         self.c.target = Mock(return_value="/nix/store/previous")
         with patch("controller.subprocess.run") as run:
@@ -706,15 +871,6 @@ class ControllerTests(unittest.TestCase):
     def test_unknown_comment_author_is_ignored(self):
         self.c.accept("issue_comment", {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": {"body": "/deploy @server", "user": {"id": 99}}})
         self.api.repo.assert_not_called()
-
-    def test_ci_excluded_host_cannot_be_deployed_from_pr(self):
-        comment = {"id": 9, "user": {"id": 1}, "body": "/deploy weathertop"}
-        self.api.repo.side_effect = [comment, self.pr]
-        payload = {"repository": {"full_name": REPOSITORY}, "action": "created", "comment": comment, "issue": {"number": 5}}
-        with self.assertRaisesRegex(ValueError, "excluded from CI"):
-            self.c.accept("issue_comment", payload)
-        with self.c.db() as db:
-            self.assertEqual(db.execute("SELECT count(*) FROM jobs").fetchone()[0], 0)
 
     def test_duplicate_comment_is_queued_once(self):
         comment = {"id": 10, "user": {"id": 1}, "body": "/deploy lorien"}

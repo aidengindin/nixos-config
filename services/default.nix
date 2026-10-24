@@ -3,6 +3,7 @@
 {
   imports = [
     ./acsm.nix
+    ./actual.nix
     ./anduin.nix
     ./anduin-postgres.nix
     ./arr.nix
@@ -10,15 +11,11 @@
     ./blocky.nix
     ./bookorbit.nix
     ./caddy.nix
-    ./calibre-news.nix
-    ./calibre-web.nix
     ./chaptarr.nix
     ./dawarich.nix
-    ./firefly-iii.nix
     ./forgejo.nix
     ./frigate.nix
     ./grafana.nix
-    ./headache-sync.nix
     ./hermes.nix
     ./immich.nix
     ./intervals-dawarich-sync.nix
@@ -26,10 +23,8 @@
     ./job-scraper.nix
     ./keepalived.nix
     ./liftosaur-sync.nix
-    ./linkwarden.nix
     ./miniflux.nix
     ./mosquitto.nix
-    ./netalertx.nix
     ./ntp.nix
     ./ollama.nix
     ./openwebui.nix

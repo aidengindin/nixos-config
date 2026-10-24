@@ -30,8 +30,9 @@ khazad-dum's SSH recipients:
 - `forgejo-runner-env.age`: repository runner registration `TOKEN`.
 - `forgejo-controller-env.age`: repository-scoped bot token, numeric owner/bot
   IDs, Forgejo webhook secret, and Hermes webhook secret.
-- `forgejo-hermes-env.age`: the same repository bot token and Hermes webhook
-  secret. It is added to the existing gateway, not a second Hermes instance.
+- `forgejo-hermes-env.age`: only the Hermes webhook secret, for the Matrix
+  notification route on the existing gateway. Hermes holds no Forgejo
+  credential.
 
 Keep the mirror token in `forgejo-mirror-token.age`. Its GitHub fine-grained
 permissions are Contents and Workflows read/write, limited to this repository.
@@ -88,9 +89,9 @@ migration token. Example paths below are private local working files.
 7. Run `provision.py automation --state /tmp/forgejo-bootstrap`. It creates the
    scoped bot credential, required build checks, webhook, Actions secrets, and
    encrypted runtime files. Build/deploy osgiliath again to start the runner,
-   controller, and Hermes route. Preserve the runtime files in Git.
+   controller, and Hermes notification route. Preserve the runtime files in Git.
 8. Push this implementation to a Forgejo branch and open a PR. Verify the build
-   and repair paths below before merging. The scheduled updater exists only on
+   path below before merging. The scheduled updater exists only on
    the default branch, so do not merge it until GitHub Actions is disabled.
 9. Once restoration, import, mirror, and CI checks pass, create the
    `manual-verification-complete` marker in the snapshot directory and run the
@@ -141,7 +142,7 @@ deliberately leaves the token's scope unknown so the following `automation` run
 reissues it. Revoke the `provision-adopt` token afterwards and delete the
 directory.
 
-## CI and repair loop
+## CI and notifications
 
 The VM has 6 vCPUs, 8 GiB RAM, 16 GiB guest swap, a 160 GiB sparse disk, and capacity one. Its host unit applies memory and I/O limits so a fresh build cannot starve Forgejo, PostgreSQL, or journald on osgiliath. Existing disk images grow in place and are never shrunk or recreated. It runs
 Forgejo Runner 13.1 from the stable pin using its supported legacy registration
@@ -149,8 +150,6 @@ flow. Upgrading to a runner that removes registration tokens requires a
 UUID/token configuration migration; do not silently swap its configuration.
 
 PR events build lorien, osgiliath, and khazad-dum at the exact PR head.
-Weathertop remains in the NixOS inventory but is excluded from CI and PR
-deployment.
 Each host has a `colmena/<hostname>` status and a JSON manifest under
 `/var/lib/forgejo-ci/results/<sha>/<host>.json`. Colmena's own hive supplies the
 closure path. Successful results are GC-rooted and reused on duplicate events.
@@ -172,26 +171,87 @@ The controller also reconciles each open PR against Forgejo's terminal action
 runs. If a runner or guest dies before its cleanup step, any missing or pending
 per-host statuses become terminal failures instead of remaining yellow forever.
 
-The weekly updater runs Sunday 00:00 UTC and can be dispatched manually. It uses
-`automation/update`, performs each existing updater, publishes partial edits when
-one fails, and records `Update-Cycle` in the PR body. Ordinary pushes refuse
+The updater runs daily at 00:00 UTC and can be dispatched manually, choosing
+`full` or `channels`. On Monday to Saturday it updates only the NixOS channel
+inputs (`nixpkgs`, `unstable`, `home-manager`, `hm-unstable`), which carry
+security fixes, are gated by upstream Hydra, and are exempt from the cooldown.
+Sundays and manual dispatches by default run the full update: every input, the
+cooldown, tag bumps, package updaters, and image digests. Both modes push to the
+single `automation/update` PR, so the CI disk holds one PR head's closures; a
+second daily PR would not fit the disk budget above. A channel run carries the
+last full run's notes (failures, held-back inputs) forward in the PR body.
+Partial edits are published when an updater fails, and ordinary pushes refuse
 concurrent branch changes.
 
 When a CI job completes, it sends a signed webhook through the tailnet-only
-`/_automation/events` route. The controller waits for builds to settle and verifies the
-repository/bot/status through Forgejo, filters to the update PR, and sends a signed
-local webhook to Hermes. Periodic reconciliation covers lost webhook deliveries.
-The route rechecks the head and failures, deduplicates by SHA, and permits three
-attempts per update cycle. Hermes has a checkout per SHA, commits directly using
-a normal repository-scoped bot token, and pushes to trigger another build.
-No automatic merge or deployment occurs. The 30-minute repair instruction is an
-agent instruction; the persisted attempt counter is the enforced loop bound.
+`/_automation/events` route. The controller waits for builds to settle and
+verifies the repository/bot/status through Forgejo. Periodic reconciliation
+covers lost webhook deliveries. Failed update builds are repaired by hand: an
+earlier Hermes auto-repair loop was removed because it let an LLM that reads
+upstream build output push to this repository.
+
+Only `aidengindin` may merge into `main` (a merge whitelist on the branch
+protection). The bot token can post the required `colmena/*` statuses, so
+without the whitelist a leaked token could self-certify and merge its own PR.
+Required approvals cannot serve instead, since Forgejo forbids approving your
+own PR.
 
 The controller persistently queues and deduplicates notifications, then uses a
 signed loopback Hermes webhook route to deliver them directly to the configured
-Matrix home room without an agent turn. It reports only terminal four-host build
-results, Hermes repair starts and exhaustion, and deployment outcomes. Forgejo
-statuses, logs, and PR comments remain the durable record.
+Matrix home room without an agent turn. It reports only terminal build results
+and deployment outcomes. Forgejo statuses, logs, and PR comments remain the
+durable record.
+
+## Update cooldown and pinning
+
+The weekly updater adopts nothing younger than seven days (supply-chain
+cooldown). Steps in `scripts/forgejo/update.py`, in order: `nix flake update`;
+`cooldown.py`; `tags.py`; `scripts/update-*.sh`; `assets.py`; `images.py`. Add
+`--dry-run` to `cooldown.py`, `tags.py`, `assets.py` or `images.py` to print decisions without writing.
+
+Third-party source code is never fetched with a hard-coded `fetchFromGitHub`
+commit: the DMS plugins and the sources for `packages/` are `flake = false`
+inputs, so the cooldown governs them like any other input. Every run also lists,
+in the PR body, each third-party input whose locked commit differs from `main`,
+with a GitHub compare link (NixOS nixpkgs, Home Manager and the owner's own
+repositories are left out). The cooldown only catches compromises found within
+a week; skim those diffs before deploying.
+
+- **Flake inputs** (`cooldown.py`): every lock node, including transitive ones,
+  whose new `locked.lastModified` is under seven days old is re-pinned to the
+  newest commit on the same ref that is old enough (GitHub commits API, then
+  `nix flake prefetch` for `narHash`). Only `locked` changes. A commit already
+  in the committed lock is kept and never downgraded. The lock is then checked
+  with `nix flake metadata --no-update-lock-file`; if it would need re-locking
+  the uncooled lock is restored and the step fails. Held-back inputs (upstream
+  head age, pinned age) and unsupported young non-GitHub inputs are listed in the PR
+  body. **Exempt**: `nixos/nixpkgs` on `nixos-*`, `nixpkgs-*` or `release-*`
+  branches and the `channels.nixos.org` tarball, `nix-community/home-manager`,
+  owner `aidengindin`, and anything on `git.gindin.xyz`. Nodes pinned to a rev or
+  a version tag are skipped.
+- **Tag-pinned inputs** (`tags.py`): any `name.url = "github:owner/repo/<vtag>"`
+  in `flake.nix` (today `hermes-agent`) moves to the newest non-prerelease GitHub
+  release published at least seven days ago in the same version scheme as the
+  current tag (calver when the first component is 1000 or more), never lower than
+  the current pin, then `nix flake update <name>` and a second cooldown pass for
+  newly pulled transitive inputs. A newer release in another scheme (hermes-agent
+  went from calver to v0.x) is not applied; it is reported in the PR body for a
+  manual migration.
+- **Release assets** (`assets.py`): any `fetchzip`/`fetchurl` in a `.nix` file
+  whose url is `github.com/<owner>/<repo>/releases/download/<tag>/<asset>`
+  (today uBlock Origin and the Chromium Web Store crx in `linux/chromium.nix`).
+  The tag is chosen by the same rules as `tags.py`; the asset name substitutes
+  the version in the old name and must exist in that release, otherwise the pin
+  stays and a problem is listed in the PR body. The hash is the unpacked-tree
+  hash for `fetchzip` and the file hash for `fetchurl`.
+- **Container images** (`images.py`): every OCI image in `services/*.nix` must be
+  written `repo:tag@sha256:digest`; the updater finds them by that pattern and
+  reports unpinned ones. Within the same track (same major, or major.minor while
+  the major is 0; same tag prefix and suffix such as `-pg18`; no rc, beta, dev or
+  nightly tags) it picks the newest tag whose image config `created` is at least
+  seven days old and rewrites tag and digest. To add an image, pin it first:
+  `skopeo` is available in the CI VM; `images.py resolve repo:tag` prints the
+  pinned form.
 
 ## Deploy a PR
 
@@ -220,7 +280,7 @@ enforcement.
 
 Ensure every remote target has received the updated deployment wrapper supporting
 read-only generation queries. All target host keys must be pinned before first
-use; weathertop may need enrollment when it is online. Do not use an unattended
+use. Do not use an unattended
 `ssh-keyscan` result as the trust source.
 
 The SQLite journal in `/var/lib/forgejo-automation/controller` serializes requests
@@ -254,7 +314,6 @@ The CI disk is disposable cache and is not backed up.
 Run `python3 -m unittest discover -s tests/forgejo -v` and build osgiliath with
 Colmena. Live acceptance includes a passing PR, a failing PR, exact-SHA closure
 transfer without rebuilding, unauthorized/duplicate comments, selected-host gates,
-stale heads, offline hosts, partial deployment, controller restart recovery, and
-failure → Hermes commit → fresh CI. Test repair exhaustion and concurrent edits.
+stale heads, offline hosts, partial deployment, and controller restart recovery.
 Check `systemctl --failed` and `journalctl -u forgejo-controller -u forgejo-ci-vm`.
 The existing Alloy/systemd monitoring collects service failures.

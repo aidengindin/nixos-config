@@ -92,19 +92,6 @@ in
     osgiliathHost
   ];
 
-  "linkwarden-client-id.age".publicKeys = [
-    osgiliathHost
-    khazad-dumUser
-  ];
-  "linkwarden-client-secret.age".publicKeys = [
-    osgiliathHost
-    khazad-dumUser
-  ];
-  "linkwarden-nextauth-secret.age".publicKeys = [
-    osgiliathHost
-    khazad-dumUser
-  ];
-
   "osgiliath-caddy-cloudflare-api-key.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
@@ -132,11 +119,6 @@ in
   ];
 
   "liftosaur-sync-env.age".publicKeys = [
-    osgiliathHost
-    khazad-dumUser
-  ];
-
-  "headache-sync-env.age".publicKeys = [
     osgiliathHost
     khazad-dumUser
   ];
@@ -184,18 +166,6 @@ in
     khazad-dumUser
   ];
 
-  # Refresh from the signed-in Firefox profile on khazad-dum when the Economist
-  # session expires. Close Firefox first (otherwise cookies.sqlite may be
-  # locked), enter `nix shell nixpkgs#sqlite`, then run from the repository root:
-  #
-  # sqlite3 -readonly ~/.mozilla/firefox/default/cookies.sqlite \
-  #   "SELECT '# Netscape HTTP Cookie File'; SELECT host || char(9) || CASE WHEN substr(host,1,1)='.' THEN 'TRUE' ELSE 'FALSE' END || char(9) || path || char(9) || CASE WHEN isSecure THEN 'TRUE' ELSE 'FALSE' END || char(9) || expiry || char(9) || name || char(9) || value FROM moz_cookies WHERE host = 'economist.com' OR host LIKE '%.economist.com';" \
-  #   | (cd secrets && agenix -e economist-cookies.age -i ~/.ssh/id_ed25519)
-  "economist-cookies.age".publicKeys = [
-    osgiliathHost
-    khazad-dumUser
-  ];
-
   # osgiliath keeps a recipient slot even though Hermes no longer runs a github
   # MCP server and the secret is not deployed there. Being a recipient only
   # matters to someone who already has root on the host; what kept the PAT
@@ -203,6 +173,7 @@ in
   # A second recipient is what stops a lost laptop from orphaning the secret.
   "github-token.age".publicKeys = [
     khazad-dumUser
+    khazad-dumHost
     osgiliathHost
   ];
 
@@ -219,6 +190,7 @@ in
 
   "homeassistant-token.age".publicKeys = [
     osgiliathHost
+    khazad-dumHost
     khazad-dumUser
   ];
 
@@ -273,19 +245,10 @@ in
     khazad-dumUser
   ];
 
-  # Firefly III's Laravel app key, as a single "base64:..." line. Generate with
-  # echo "base64:$(head -c 32 /dev/urandom | base64)". Rotating this invalidates
-  # every encrypted field already in the database, so don't.
-  "firefly-iii-app-key.age".publicKeys = [
-    osgiliathHost
-    osgiliathUser
-    khazad-dumUser
-  ];
-
-  # Firefly III Personal Access Token for the data importer. Minted from the
-  # Firefly III UI (Options -> Profile -> OAuth), so like the Dawarich OIDC
-  # secret above it can only be filled in after the first login.
-  "firefly-iii-importer-token.age".publicKeys = [
+  # ACTUAL_OPENID_CLIENT_ID= and ACTUAL_OPENID_CLIENT_SECRET= lines for Actual
+  # Budget's Pocket ID client. Like the Dawarich OIDC secret above, the client
+  # can only be created once the service is up, so this starts as a placeholder.
+  "actual-oidc-env.age".publicKeys = [
     osgiliathHost
     osgiliathUser
     khazad-dumUser

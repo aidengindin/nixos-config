@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Authenticated ChatOps receiver and restart-safe, serial deployment worker."""
+from datetime import date, datetime, timezone
 import hashlib
 from contextlib import contextmanager
 import hmac
@@ -14,11 +15,14 @@ import subprocess
 import threading
 import time
 import urllib.request
-from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, UPDATE_BRANCH, selectors
+from common import API, CI_HOSTS, REPOSITORY, SHA, STORE_PATH, selectors
 
 LOG = logging.getLogger("forgejo-controller")
 ACTIVATION_GRACE_SECONDS = 300
 WAIT_REPORT_SECONDS = 30 * 60
+CVE_STALE_DAYS = 3
+CVE_STALE_CHECK_SECONDS = 3600
+CVE_HEADER = re.compile(r"Last successful scan: \*\*(\d{4}-\d{2}-\d{2}|never)\*\*")
 
 
 def built_sha(run):
@@ -49,7 +53,6 @@ class Controller:
         self.db_path = self.state / "queue.sqlite"
         with self.db() as db:
             db.execute("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL, state TEXT NOT NULL)")
-            db.execute("CREATE TABLE IF NOT EXISTS repairs (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, pr INTEGER NOT NULL, body TEXT NOT NULL, sent INTEGER NOT NULL DEFAULT 0)")
         self.owner_id = int(os.environ["FORGEJO_OWNER_ID"])
@@ -108,6 +111,55 @@ class Controller:
                 f"Run and logs: {run_url}")
             self.queue_notification(f"build:{pull['number']}:{sha}", message)
 
+    def queue_cve_notification(self, payload):
+        """Ping Matrix for a CVE scan. Content comes from the API, not the webhook."""
+        def number(name):
+            try:
+                return int(payload[name])
+            except (KeyError, TypeError, ValueError):
+                raise ValueError(f"Missing or invalid {name}") from None
+        issue_number = number("issue")
+        issue = self.api.repo(f"issues/{issue_number}")
+        if issue.get("title") != "CVE report" or issue["user"]["id"] != self.bot_id:
+            raise ValueError("Not the bot's CVE report issue")
+        comment_id = number("comment")
+        comment = self.api.repo(f"issues/comments/{comment_id}")
+        if (not comment.get("issue_url", "").endswith(f"/issues/{issue_number}")
+                or comment["user"]["id"] != self.bot_id):
+            raise ValueError("Comment is not a CVE ping on the CVE report")
+        ping = re.search(r"^<!-- cve-ping: ([^ ]+) -->$", comment["body"], re.MULTILINE)
+        cves = ping[1].split(",") if ping else []
+        if not 0 < len(cves) <= 200 or not all(re.fullmatch(r"[A-Z][A-Z0-9]*-[A-Za-z0-9._:-]+", cve) for cve in cves):
+            raise ValueError("Comment has no valid CVE ping line")
+        listed = ", ".join(cves[:5]) + (f" and {len(cves) - 5} more" if len(cves) > 5 else "")
+        self.queue_notification(f"cve:{comment_id}",
+            f"New critical or known-exploited CVEs ({len(cves)}): {listed}.\n{comment['html_url']}")
+
+    def check_cve_staleness(self, now=None):
+        """Dead-man switch: ping when the bot's CVE report shows no recent successful scan."""
+        today = (now or datetime.now(timezone.utc)).date()
+        issues, page = [], 1
+        while True:
+            items = self.api.repo(f"issues?state=all&type=issues&limit=50&page={page}")
+            issues.extend(items)
+            if len(items) < 50:
+                break
+            page += 1
+        reports = [issue for issue in issues
+                   if issue.get("title") == "CVE report" and issue["user"]["id"] == self.bot_id]
+        # Closed reports still count, so closing the issue cannot silence the alarm.
+        for issue in sorted(reports, key=lambda issue: issue["created_at"])[-1:]:
+            match = CVE_HEADER.match((issue.get("body") or "").split("\n", 1)[0])
+            if not match:
+                self.queue_notification(f"cve-stale:unparseable:{issue['number']}",
+                    f"The CVE report header is unreadable, so scan staleness cannot be checked.\n{issue['html_url']}")
+                continue
+            last = match[1]
+            reference = date.fromisoformat(issue["created_at"][:10] if last == "never" else last)
+            if (today - reference).days >= CVE_STALE_DAYS:
+                self.queue_notification(f"cve-stale:{last}",
+                    f"CVE scan has not succeeded since {last}.\n{issue['html_url']}")
+
     def accept(self, event, payload):
         if payload.get("repository", {}).get("full_name") != REPOSITORY:
             return
@@ -138,7 +190,6 @@ class Controller:
         elif event == "status":
             sha = payload.get("sha", "")
             self.queue_build_notification(sha)
-            self.queue_repair(sha)
 
     def trusted_statuses(self, sha, rejected=None):
         """Return verified statuses by context; record why others were dropped.
@@ -194,37 +245,6 @@ class Controller:
         for host in unresolved:
             self.api.status(sha, f"colmena/{host}", state, description, run_url)
         return True
-
-    def queue_repair(self, sha):
-        if not SHA.fullmatch(sha):
-            return
-        statuses = self.trusted_statuses(sha)
-        if any(statuses.get(f"colmena/{host}", {}).get("state") not in ("success", "failure", "error") for host in CI_HOSTS):
-            return
-        ci_contexts = {f"colmena/{host}" for host in CI_HOSTS}
-        failures = [s for s in statuses.values()
-                    if s["state"] in ("failure", "error") and (s["context"] in ci_contexts or s["context"] == "updates")]
-        for pull in self.api.pulls():
-            if pull["head"]["sha"] != sha or pull["head"]["ref"] != UPDATE_BRANCH or not failures:
-                continue
-            payload = {"event_type": "forgejo_repair", "repository": REPOSITORY,
-                "pr": pull["number"], "sha": sha, "failures": failures}
-            with self.db() as db:
-                db.execute("INSERT OR IGNORE INTO repairs(id,payload) VALUES (?,?)", (sha, json.dumps(payload)))
-
-    def send_repairs(self):
-        with self.db() as db:
-            rows = db.execute("SELECT id,payload FROM repairs WHERE sent=0").fetchall()
-        for key, payload in rows:
-            body = payload.encode()
-            signature = hmac.new(os.environ["HERMES_WEBHOOK_SECRET"].encode(), body, hashlib.sha256).hexdigest()
-            request = urllib.request.Request(os.environ["HERMES_URL"], data=body, headers={
-                "Content-Type": "application/json", "X-Hub-Signature-256": "sha256=" + signature,
-                "X-GitHub-Event": "forgejo_repair", "X-GitHub-Delivery": key})
-            with urllib.request.urlopen(request, timeout=30) as response:
-                response.read()
-            with self.db() as db:
-                db.execute("UPDATE repairs SET sent=1 WHERE id=?", (key,))
 
     def send_notifications(self):
         with self.db() as db:
@@ -461,6 +481,7 @@ class Controller:
         self.queue_notification(f"deploy:{key}:failure", f"Forgejo {summary}")
 
     def work(self):
+        last_stale_check = None
         while True:
             try:
                 self.run_jobs()
@@ -468,13 +489,19 @@ class Controller:
                 for pull in self.api.pulls():
                     self.reconcile_terminal_build(pull["head"]["sha"])
                     self.queue_build_notification(pull["head"]["sha"])
-                    if pull["head"]["ref"] == UPDATE_BRANCH:
-                        self.queue_repair(pull["head"]["sha"])
-                self.send_repairs()
                 self.send_comments()
-                self.send_notifications()
             except Exception:
                 LOG.exception("Controller reconciliation failed; retrying")
+            if last_stale_check is None or time.monotonic() - last_stale_check >= CVE_STALE_CHECK_SECONDS:
+                last_stale_check = time.monotonic()
+                try:
+                    self.check_cve_staleness()
+                except Exception:
+                    LOG.exception("CVE staleness check failed")
+            try:
+                self.send_notifications()
+            except Exception:
+                LOG.exception("Sending notifications failed; retrying")
             time.sleep(15)
 
 
@@ -495,9 +522,10 @@ def main():
                 if self.path == "/ci":
                     if payload.get("repository") != REPOSITORY:
                         raise ValueError("Wrong repository")
-                    sha = payload.get("sha", "")
-                    controller.queue_build_notification(sha)
-                    controller.queue_repair(sha)
+                    if payload.get("kind") == "cve":
+                        controller.queue_cve_notification(payload)
+                    else:
+                        controller.queue_build_notification(payload.get("sha", ""))
                 else:
                     controller.accept(self.headers.get("X-Forgejo-Event", self.headers.get("X-Gitea-Event", "")), payload)
             except ValueError as exc:

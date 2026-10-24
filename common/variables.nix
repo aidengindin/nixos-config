@@ -45,11 +45,7 @@ let
         prometheus = 8321;
       };
 
-      linkwarden = 8340;
-
       tandoor = 8330;
-
-      calibre-web = 8350;
 
       bookorbit = 8351;
 
@@ -67,14 +63,13 @@ let
 
       dawarich = 8420;
 
+      actual = 8440;
+
       hermesDashboard = 9119;
 
       zigbee2mqtt = 8400;
 
       mosquitto = 1883;
-
-      netalertx = 20211;
-      netalertxMetrics = 20212;
     };
 
     ips = {
@@ -100,6 +95,10 @@ let
       lorienUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINkD2Lt8RW1FK3HXQiNG20C9VdI1blj3Z/rdiSxfp63w aiden@aidengindin.com";
       khazad-dumUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBs7J/zItppa7TZ77vTsW2LJcHdkLtJ5534dHifsWnml aiden@aidengindin.com";
       osgiliathUser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmhV70QRjTlv8FWbzTyYZlEgJzA8pxe4pl5HuAKw/Ff aiden@aidengindin.com";
+
+      # YubiKey-backed (FIDO2) key for deploying from the laptop: every
+      # connection needs a physical touch, and the key file alone is useless.
+      khazad-dumDeploy = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIJbfqQTumhi8g+PyLmmx2XVTD3FPeXpDRhJKz5wwD8h9AAAABHNzaDo= nixos-deploy@khazad-dum";
 
       lorienRestic = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICkDpjjWM4ceQL7vsplfuTjGxh/xm/sDSF2HUtpdzgi0 root@lorien";
       lorienCaddy = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDhPFaF9+zV9A/8/Rk1KYT75Y/ROtmAYYYbjYjw4/vP caddy@lorien";

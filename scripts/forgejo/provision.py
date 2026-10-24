@@ -186,8 +186,13 @@ def main():
     else:
         api.repo("hooks", data=hook_data)
     protections = api.repo("branch_protections")
+    # Only the owner may merge. The bot token posts the very statuses that
+    # satisfy the required checks, so without this a leaked token could open,
+    # self-certify, and merge its own PR. Required approvals cannot do this
+    # job: Forgejo does not let an author approve their own PR.
     protection = {"rule_name": "main", "enable_push": False, "enable_status_check": True,
         "status_check_contexts": [f"colmena/{host}" for host in CI_HOSTS], "required_approvals": 0,
+        "enable_merge_whitelist": True, "merge_whitelist_usernames": ["aidengindin"],
         "apply_to_admins": True}
     if any(p.get("rule_name", p.get("branch_name")) == "main" for p in protections):
         api.repo("branch_protections/main", data=protection, method="PATCH")
@@ -203,7 +208,8 @@ def main():
     encrypt_env(root / "secrets/forgejo-controller-env.age", {**common,
         "FORGEJO_OWNER_ID": state["aidengindin_id"], "FORGEJO_WEBHOOK_SECRET": state["webhook_secret"],
         "HERMES_WEBHOOK_SECRET": state["hermes_secret"], "CI_WEBHOOK_SECRET": state["ci_secret"]}, recipients, args.age)
-    encrypt_env(root / "secrets/forgejo-hermes-env.age", {**common, "WEBHOOK_SECRET": state["hermes_secret"]}, recipients, args.age)
+    # Hermes only relays notifications; it never receives a Forgejo token.
+    encrypt_env(root / "secrets/forgejo-hermes-env.age", {"WEBHOOK_SECRET": state["hermes_secret"]}, recipients, args.age)
     encrypt_env(root / "secrets/forgejo-runner-env.age", {"TOKEN": runner_token}, recipients, args.age)
     print("Repository automation configured and agenix files written. Build/deploy osgiliath to start consumers.")
 

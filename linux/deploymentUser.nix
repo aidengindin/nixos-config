@@ -9,7 +9,7 @@ let
   cfg = config.agindin.deployment;
 
   deployKeys = [
-    globalVars.keys.khazad-dumUser
+    globalVars.keys.khazad-dumDeploy
   ]
   # Added once osgiliathNixosDeploy is set in common/variables.nix
   ++ lib.optional (globalVars.keys ? osgiliathNixosDeploy) globalVars.keys.osgiliathNixosDeploy;

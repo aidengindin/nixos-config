@@ -36,27 +36,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    jovian = {
-      url = "github:jovian-experiments/jovian-nixos";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
-    dms = {
-      url = "github:AvengeMedia/DankMaterialShell/stable";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
-    # The DMS greeter moved out of the DankMaterialShell repo into its own.
-    dank-greeter = {
-      url = "github:AvengeMedia/dank-greeter";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
-    zwift = {
-      url = "github:netbrain/zwift";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
     liftosaur-sync = {
       url = "github:aidengindin/liftosaur-sync";
       inputs.nixpkgs.follows = "unstable";
@@ -66,18 +45,57 @@
       url = "github:natsukium/mcp-servers-nix";
     };
 
+    # Third-party sources for packages/. Inputs rather than fetchFromGitHub so
+    # each is locked in flake.lock and moves only through the updater's 7-day
+    # cooldown. Reached as self.inputs.* (see packageSources below).
+    catppuccin-userstyles = {
+      url = "github:catppuccin/userstyles";
+      flake = false;
+    };
+    intervals-mcp-server = {
+      url = "github:mvilanova/intervals-mcp-server";
+      flake = false;
+    };
+
     # Pin Hermes to a tagged release: its upstream Nix support is Tier 2 and
     # main may break between releases.
-    hermes-agent.url = "github:NousResearch/hermes-agent/v2026.8.3";
-
-    auto-headache-tracker = {
-      url = "github:aidengindin/auto-headache-tracker";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    hermes-agent.url = "github:NousResearch/hermes-agent/v2026.9.24";
 
     anduin = {
       url = "github:aidengindin/anduin";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Third-party DankMaterialShell plugins (QML/JS run inside the desktop
+    # shell). Inputs rather than fetchFromGitHub so each is locked in
+    # flake.lock and moves only through the updater's 7-day cooldown.
+    dms-plugins-avenge = {
+      url = "github:AvengeMedia/dms-plugins";
+      flake = false;
+    };
+    dms-plugins-nderscore = {
+      url = "github:nderscore/dms-plugins";
+      flake = false;
+    };
+    dms-plugin-emoji-launcher = {
+      url = "github:devnullvoid/dms-emoji-launcher";
+      flake = false;
+    };
+    dms-plugin-calculator = {
+      url = "github:rochacbruno/DankCalculator";
+      flake = false;
+    };
+    dms-plugin-nix-package-runner = {
+      url = "github:iahccc/NixPackageRunner";
+      flake = false;
+    };
+    dms-plugin-amd-gpu-monitor = {
+      url = "github:JDKamalakar/DMS-AMD_GPU_Monitor_Revive";
+      flake = false;
+    };
+    dms-plugin-ambient-sound = {
+      url = "github:hthienloc/dms-ambient-sound";
+      flake = false;
     };
 
     # Private Forgejo repositories are fetched over HTTPS: the CI guest may only
@@ -101,18 +119,14 @@
       impermanence,
       nixos-hardware,
       agenix,
-      jovian,
-      zwift,
       liftosaur-sync,
       mcp-servers-nix,
       hermes-agent,
-      auto-headache-tracker,
       anduin,
       job-scraper,
-      dms,
-      dank-greeter,
       nixvim,
-    }:
+      ...
+    }@inputs:
     let
       inherit (nixpkgs.lib) mapAttrs;
 
@@ -129,6 +143,12 @@
       stablePkgs = import nixpkgs pkgsConfig;
       unstablePkgs = import unstable pkgsConfig;
 
+      # `flake = false` sources consumed by packages/.
+      packageSources = {
+        catppuccin-userstyles = self.inputs.catppuccin-userstyles;
+        intervals-mcp-server = self.inputs.intervals-mcp-server;
+      };
+
       # Standard modules shared by all NixOS systems,
       # with some conditional logic based on whether it tracks stable or unstable.
       # Note that not all modules are used by all systems,
@@ -138,12 +158,9 @@
           if isUnstable then hm-unstable.nixosModules.home-manager else home-manager.nixosModules.home-manager
         )
         agenix.nixosModules.default
-        zwift.nixosModules.default
         impermanence.nixosModules.impermanence
         disko.nixosModules.disko
-        jovian.nixosModules.default
         liftosaur-sync.nixosModules.default
-        dank-greeter.nixosModules.default
       ];
 
       # special args for all NixOS systems
@@ -154,16 +171,24 @@
           unstablePkgs
           nixvim
           ;
-        dmsFlake = dms;
         hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
+        dmsPluginSources = {
+          avenge = inputs.dms-plugins-avenge;
+          nderscore = inputs.dms-plugins-nderscore;
+          emojiLauncher = inputs.dms-plugin-emoji-launcher;
+          calculator = inputs.dms-plugin-calculator;
+          nixPackageRunner = inputs.dms-plugin-nix-package-runner;
+          amdGpuMonitor = inputs.dms-plugin-amd-gpu-monitor;
+          ambientSound = inputs.dms-plugin-ambient-sound;
+        };
         customPkgs = import ./packages {
           pkgs = stablePkgs;
           inherit
             unstablePkgs
-            auto-headache-tracker
             anduin
             job-scraper
+            packageSources
             ;
         };
       };
@@ -204,16 +229,6 @@
             nixos-hardware.nixosModules.framework-amd-ai-300-series
             ./hosts/khazad-dum
           ];
-        };
-
-        weathertop = {
-          isUnstable = true;
-          tags = [
-            "gaming"
-            "mobile"
-          ];
-          allowLocalDeployment = false;
-          modules = [ ./hosts/weathertop ];
         };
       };
     in
@@ -302,9 +317,9 @@
         pkgs = stablePkgs;
         inherit
           unstablePkgs
-          auto-headache-tracker
           anduin
           job-scraper
+          packageSources
           ;
       });
 

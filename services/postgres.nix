@@ -66,7 +66,7 @@ in
     # root filesystem filled for about a minute; postgres could not write
     # postmaster.pid, burned all five attempts in roughly two seconds, and
     # landed in start-limit-hit. systemd then failed every dependent unit on
-    # the host — Forgejo, Immich, Linkwarden, the *arr stack, Grafana's
+    # the host — Forgejo, Immich, the *arr stack, Grafana's
     # datasource — and left them down for three hours, because nothing retries
     # a unit in that state without `systemctl reset-failed`.
     #

@@ -30,7 +30,6 @@
     ./steam.nix
     ./watchdog.nix
     ./zathura.nix
-    ./zwift.nix
   ];
 
   config = {

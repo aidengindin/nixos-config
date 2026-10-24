@@ -47,8 +47,11 @@
 
   networking.hostName = "khazad-dum";
 
-  # Age identity path for agenix
-  age.identityPaths = [ "/home/agindin/.ssh/id_ed25519" ];
+  # Decrypt with the host key only. The user key used to be listed here (and
+  # in linux/impermanence.nix), which forced it to stay passphraseless so
+  # activation could read it — leaving a root-equivalent key readable by any
+  # process running as agindin. mkForce drops the shared module's user key.
+  age.identityPaths = lib.mkForce [ "/persist/etc/ssh/ssh_host_ed25519_key" ];
 
   age.secrets.khazad-dum-gh-token = {
     file = ../../secrets/github-token.age;
@@ -76,8 +79,6 @@
   hardware.i2c.enable = true;
   users.users.agindin.extraGroups = [ "i2c" ];
   environment.systemPackages = [ pkgs.ddcutil ];
-
-  agindin.zwift.enable = true;
 
   agindin.steam.enable = true;
 
