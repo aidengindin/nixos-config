@@ -30,9 +30,10 @@ COMMANDS = [
 # Daily runs move only the NixOS channel branches and the Home Manager releases
 # that follow them. These carry security fixes, advance only after upstream's
 # Hydra gates pass, and are exempt from the cooldown, so they need no pinning
-# pass. Everything else waits for the weekly full run.
+# pass. Everything else waits for the weekly full run, except the caddy plugin
+# source hash: it is derived from nixpkgs' caddy, so a channel bump can stale it.
 CHANNEL_INPUTS = ["nixpkgs", "unstable", "home-manager", "hm-unstable"]
-DAILY_COMMANDS = [["nix", "flake", "update", *CHANNEL_INPUTS]]
+DAILY_COMMANDS = [["nix", "flake", "update", *CHANNEL_INPUTS], ["bash", "scripts/update-caddy-hash.sh"]]
 # The full run's notes live between these markers, so a daily run can carry
 # them over instead of erasing what the last weekly run held back.
 FULL_START, FULL_END = "<!-- full-update -->", "<!-- /full-update -->"
