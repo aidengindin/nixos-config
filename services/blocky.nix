@@ -36,9 +36,22 @@ let
 
   blacklist = [
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+    # StevenBlack misses most in-app header-bidding and ad-SDK endpoints
+    # (OpenX, Longitude, LiveIntent, Amazon APS, GAM safeframes).
+    "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt"
+    # Malware, phishing and scam domains.
+    "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/tif.txt"
+    # Encrypted DNS resolvers, so clients can't route around blocky. Also
+    # disables iCloud Private Relay network-wide.
+    "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/doh.txt"
     ''
       signal.pod6.avatar.ext.hp.com
       connectivity.pod6.avatar.ext.hp.com
+      # Ad-serving domains seen from the AccuWeather iOS app that HaGeZi Pro
+      # still allows.
+      *.tq-tungsten.com
+      *.tps.dv.tech
+      aax-events-cell02-cf.us-east.3px.axp.amazon-adsystem.com
     ''
   ];
 
