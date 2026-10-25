@@ -83,10 +83,9 @@ tooltip label {
 #custom-memory,
 #temperature,
 #custom-gpu,
-#custom-weather,
+#language,
 #network,
 #bluetooth,
-#language,
 #wireplumber,
 #custom-ddc,
 #backlight,
@@ -94,6 +93,7 @@ tooltip label {
   background: @surface0;
 }
 
+/* The clock stands alone in the centre, one shade lighter. */
 #clock {
   background: @surface1;
   color: @lavender;
@@ -102,10 +102,10 @@ tooltip label {
 
 /* The arrows are glyphs: their text colour is the segment they extend. */
 #custom-arrow-left-end,
-#custom-arrow-center-start,
-#custom-arrow-center-end,
-#custom-arrow-right-start,
-#custom-arrow-right-end,
+#custom-arrow-stats-start,
+#custom-arrow-stats-end,
+#custom-arrow-controls-start,
+#custom-arrow-controls-end,
 #custom-arrow-clock-start,
 #custom-arrow-clock-end {
   font-size: 30px;
@@ -117,7 +117,6 @@ tooltip label {
 #custom-arrow-clock-start,
 #custom-arrow-clock-end {
   color: @surface1;
-  background: @surface0;
 }
 
 /* ---- Left ---- */

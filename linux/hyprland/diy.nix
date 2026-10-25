@@ -116,11 +116,6 @@ let
     ] "package_list=${nixpkgsNames}\n";
   };
 
-  # The desk ultrawide, matched by description so the DP port can change.
-  deskMonitor = "HP Inc. OMEN 34c CNC3321M7R";
-  # Room left at the right end of the desk bar for the webcam on top of it.
-  webcamMargin = 260;
-
   # Powerline separators between bar segments (Nerd Font glyphs):  ends
   # a segment on its right,  starts one on its left.
   arrow = glyph: {
@@ -140,31 +135,31 @@ let
       "hyprland/window"
     ];
     modules-center = [
-      "custom/arrow-center-start"
-      "custom/cpu"
-      "custom/memory"
-      "temperature"
-      "custom/gpu"
       "custom/arrow-clock-start"
       "clock"
       "custom/arrow-clock-end"
-      "custom/weather"
-      "network"
-      "bluetooth"
-      "custom/arrow-center-end"
     ];
     modules-right = [
       "mpris"
       "privacy"
       "custom/pomodoro"
       "custom/ambient"
-      "custom/arrow-right-start"
+      "custom/arrow-stats-start"
+      "custom/cpu"
+      "custom/memory"
+      "temperature"
+      "custom/gpu"
+      "custom/arrow-stats-end"
+      "custom/weather"
+      "custom/arrow-controls-start"
       "hyprland/language"
+      "network"
+      "bluetooth"
       "wireplumber"
       "custom/ddc"
       "backlight"
       "battery"
-      "custom/arrow-right-end"
+      "custom/arrow-controls-end"
       "custom/keep-awake"
       "tray"
       "custom/notifications"
@@ -172,12 +167,12 @@ let
     ];
 
     "custom/arrow-left-end" = arrow "";
-    "custom/arrow-center-start" = arrow "";
     "custom/arrow-clock-start" = arrow "";
     "custom/arrow-clock-end" = arrow "";
-    "custom/arrow-center-end" = arrow "";
-    "custom/arrow-right-start" = arrow "";
-    "custom/arrow-right-end" = arrow "";
+    "custom/arrow-stats-start" = arrow "";
+    "custom/arrow-stats-end" = arrow "";
+    "custom/arrow-controls-start" = arrow "";
+    "custom/arrow-controls-end" = arrow "";
 
     "hyprland/workspaces" = {
       sort-by = "id";
@@ -487,17 +482,7 @@ in
         enable = true;
         systemd.enable = true;
         style = builtins.readFile ./waybar.css;
-        # One bar definition, instantiated per output: the desk ultrawide's
-        # bar stops short of the webcam that hangs over its top-right edge.
-        settings = {
-          laptop = bar // {
-            output = "!${deskMonitor}";
-          };
-          desk = bar // {
-            output = deskMonitor;
-            margin-right = webcamMargin;
-          };
-        };
+        settings.main = bar;
       };
 
       programs.rofi = {
@@ -563,6 +548,15 @@ in
         enable = true;
         stylePath = ./swayosd.css;
       };
+      # Replaces the package's /etc/xdg/swayosd/config.toml, so keep its
+      # min_brightness. top_margin: 0 is the top edge, 1 the bottom edge.
+      xdg.configFile."swayosd/config.toml".text = ''
+        [server]
+        top_margin = 0.94
+        show_percentage = true
+        max_volume = 100
+        min_brightness = 5
+      '';
       services.cliphist.enable = true;
       services.poweralertd.enable = true;
       services.hyprpolkitagent.enable = true;
