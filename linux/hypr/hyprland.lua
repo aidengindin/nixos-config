@@ -43,8 +43,8 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 ---- AUTOSTART ----
 --------------------
 
--- DankMaterialShell (bar, notifications, launcher, clipboard, lock, idle,
--- wallpaper, night mode) is started via its systemd user service.
+-- The desktop shell (bar, notifications, launcher, lock, idle, wallpaper,
+-- night light) runs as systemd user services; see linux/hyprland/.
 hl.on("hyprland.start", function()
   hl.exec_cmd("systemctl --user start hyprpolkitagent")
 end)
@@ -229,34 +229,24 @@ hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Audio controls
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("dms ipc call audio increment 5"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("dms ipc call audio decrement 5"), { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("dms ipc call audio mute"),         { locked = true })
-
--- Brightness controls
-hl.bind("XF86MonBrightnessUp",           hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""),     { repeating = true })
-hl.bind("XF86MonBrightnessDown",         hl.dsp.exec_cmd("dms ipc call brightness decrement 5 \"\""),     { repeating = true })
-
 -- Media controls
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"),       { locked = true })
 
 -- Window management
-hl.bind(mainMod .. " + O",         hl.dsp.exec_cmd("dms ipc call lock lock"))
 hl.bind(mainMod .. " + Q",         hl.dsp.window.close())
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen())
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
 
 -- Utilities
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("dms ipc control-center toggle"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"))
 
 -- Common apps
-hl.bind(mainMod .. " + space",  hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
 hl.bind(mainMod .. " + return", hl.dsp.exec_cmd("kitty --title kitty"))
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd("kitty --detach yazi"))
 
+
+-- Shell-specific binds (volume/brightness OSD, lock, clipboard, launcher, …)
+-- are appended below by Nix from linux/hyprland/{dux,diy}.nix.

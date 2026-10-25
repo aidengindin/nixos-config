@@ -1,0 +1,246 @@
+/* Catppuccin Mocha powerline bar: a transparent strip with surface0
+   segments closed off by Nerd Font arrows ( / ), the clock raised to
+   surface1. Colour otherwise only signals state. */
+
+@define-color red #f38ba8;
+@define-color maroon #eba0ac;
+@define-color peach #fab387;
+@define-color yellow #f9e2af;
+@define-color green #a6e3a1;
+@define-color teal #94e2d5;
+@define-color sky #89dceb;
+@define-color sapphire #74c7ec;
+@define-color blue #89b4fa;
+@define-color lavender #b4befe;
+@define-color mauve #cba6f7;
+@define-color text #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color overlay0 #6c7086;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color base #1e1e2e;
+@define-color crust #11111b;
+
+* {
+  font-family: "Hasklug Nerd Font";
+  font-size: 15px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background: transparent;
+  color: @text;
+}
+
+tooltip {
+  background: @base;
+  border: 1px solid @surface1;
+  border-radius: 8px;
+}
+
+tooltip label {
+  color: @text;
+  font-family: "Hasklug Nerd Font Mono", "Hasklug Nerd Font";
+}
+
+/* Every module sits on the same 6px top/bottom margin, so the segments and
+   the arrows that cap them line up. */
+#workspaces,
+#submap,
+#window,
+#custom-cpu,
+#custom-memory,
+#temperature,
+#custom-gpu,
+#clock,
+#custom-weather,
+#network,
+#bluetooth,
+#mpris,
+#privacy,
+#custom-pomodoro,
+#custom-ambient,
+#language,
+#wireplumber,
+#custom-ddc,
+#backlight,
+#battery,
+#custom-keep-awake,
+#tray,
+#custom-notifications,
+#custom-power {
+  margin: 6px 0;
+  padding: 0 10px;
+  color: @text;
+}
+
+/* ---- Segments ---- */
+
+#workspaces,
+#custom-cpu,
+#custom-memory,
+#temperature,
+#custom-gpu,
+#custom-weather,
+#language,
+#network,
+#bluetooth,
+#wireplumber,
+#custom-ddc,
+#backlight,
+#battery {
+  background: @surface0;
+}
+
+/* The clock stands alone in the centre, one shade lighter. */
+#clock {
+  background: @surface1;
+  color: @lavender;
+  font-weight: bold;
+}
+
+/* The arrows are glyphs: their text colour is the segment they extend. */
+#custom-arrow-left-end,
+#custom-arrow-right-start,
+#custom-arrow-right-end,
+#custom-arrow-clock-start,
+#custom-arrow-clock-end {
+  font-size: 30px;
+  margin: 6px 0;
+  padding: 0;
+  color: @surface0;
+}
+
+#custom-arrow-clock-start,
+#custom-arrow-clock-end {
+  color: @surface1;
+}
+
+/* ---- Left ---- */
+
+#workspaces {
+  margin-left: 10px;
+  padding: 0 4px;
+}
+
+#workspaces button {
+  padding: 0 7px;
+  color: @overlay0;
+  background: transparent;
+}
+
+#workspaces button.visible {
+  color: @subtext0;
+}
+
+#workspaces button.active {
+  color: @sky;
+}
+
+#workspaces button.urgent {
+  color: @red;
+}
+
+#workspaces button:hover {
+  color: @sapphire;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+#submap {
+  margin-left: 8px;
+  color: @crust;
+  background: @maroon;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+#submap.move {
+  background: @teal;
+}
+
+#submap.resize {
+  background: @lavender;
+}
+
+#window {
+  color: @subtext0;
+}
+
+/* ---- State colours ---- */
+
+#temperature.critical,
+#custom-cpu.high,
+#custom-memory.high,
+#custom-gpu.high {
+  color: @red;
+}
+
+#battery.charging,
+#battery.plugged {
+  color: @green;
+}
+
+#battery.warning:not(.charging) {
+  color: @yellow;
+}
+
+#battery.critical:not(.charging) {
+  color: @red;
+}
+
+#network.disconnected,
+#wireplumber.muted,
+#bluetooth.off,
+#bluetooth.disabled {
+  color: @overlay0;
+}
+
+#privacy-item {
+  color: @red;
+}
+
+/* Toggles: dim when off, coloured when on. */
+#custom-keep-awake.off,
+#custom-ambient.off,
+#custom-pomodoro.idle {
+  color: @overlay0;
+}
+
+#custom-keep-awake.on {
+  color: @yellow;
+}
+
+#custom-ambient.on {
+  color: @teal;
+}
+
+#custom-pomodoro.focus {
+  color: @red;
+}
+
+#custom-pomodoro.break,
+#custom-pomodoro.long {
+  color: @green;
+}
+
+#custom-pomodoro.paused {
+  color: @yellow;
+}
+
+#custom-notifications.notification {
+  color: @peach;
+}
+
+#custom-notifications.dnd-none,
+#custom-notifications.dnd-notification {
+  color: @overlay0;
+}
+
+#custom-power {
+  color: @red;
+  margin-right: 10px;
+}
