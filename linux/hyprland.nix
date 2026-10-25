@@ -150,6 +150,14 @@ in
                   catalog[kind] = kind === "slanted" ? catalog.square : catalog.circle;
           }
           EOF
+
+          # The default ("expressive") lock-screen password field swaps its
+          # icon between morphing shapes on every keystroke. Keep the field
+          # style but always take the plain-icon path.
+          chmod -R u+w ../quickshell
+          substituteInPlace ../quickshell/Modules/Lock/Widgets/LockAuthWidget.qml \
+            --replace-fail 'readonly property bool morph: style === "expressive"' \
+                           'readonly property bool morph: false'
         ''
         + old.preBuild;
       });
