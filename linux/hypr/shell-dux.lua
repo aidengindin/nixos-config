@@ -1,0 +1,10 @@
+-- Dux Shell binds (agindin.hyprland.shell = "dux"), appended to hyprland.lua.
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("dms ipc call audio increment 5"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("dms ipc call audio decrement 5"), { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("dms ipc call audio mute"),         { locked = true })
+hl.bind("XF86MonBrightnessUp",           hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""),     { repeating = true })
+hl.bind("XF86MonBrightnessDown",         hl.dsp.exec_cmd("dms ipc call brightness decrement 5 \"\""),     { repeating = true })
+hl.bind(mainMod .. " + O",         hl.dsp.exec_cmd("dms ipc call lock lock"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("dms ipc control-center toggle"))
+hl.bind(mainMod .. " + space",  hl.dsp.exec_cmd("dms ipc call spotlight toggle"))

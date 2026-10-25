@@ -1,0 +1,193 @@
+/* Flat Catppuccin Mocha bar: one solid strip, no pills or arrows.
+   Colour only signals state (focused, urgent, warning, toggled on). */
+
+@define-color red #f38ba8;
+@define-color peach #fab387;
+@define-color yellow #f9e2af;
+@define-color green #a6e3a1;
+@define-color teal #94e2d5;
+@define-color blue #89b4fa;
+@define-color lavender #b4befe;
+@define-color mauve #cba6f7;
+@define-color text #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color overlay0 #6c7086;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color base #1e1e2e;
+@define-color mantle #181825;
+
+* {
+  font-family: "Hasklug Nerd Font";
+  font-size: 13px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background: @mantle;
+  color: @text;
+  border-bottom: 1px solid @surface0;
+}
+
+tooltip {
+  background: @base;
+  border: 1px solid @surface1;
+  border-radius: 6px;
+}
+
+tooltip label {
+  color: @text;
+}
+
+/* Every module gets the same horizontal rhythm. */
+#workspaces,
+#submap,
+#window,
+#clock,
+#mpris,
+#privacy,
+#custom-pomodoro,
+#custom-ambient,
+#custom-gpu,
+#cpu,
+#memory,
+#temperature,
+#custom-weather,
+#network,
+#bluetooth,
+#wireplumber,
+#backlight,
+#battery,
+#custom-keep-awake,
+#custom-notifications,
+#tray,
+#custom-power {
+  padding: 0 8px;
+  color: @text;
+}
+
+/* Workspaces: a plain underline marks the focused one. */
+#workspaces {
+  padding: 0;
+}
+
+#workspaces button {
+  padding: 0 8px;
+  color: @overlay0;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+}
+
+#workspaces button.visible {
+  color: @subtext0;
+}
+
+#workspaces button.active {
+  color: @lavender;
+  border-bottom-color: @lavender;
+}
+
+#workspaces button.urgent {
+  color: @red;
+  border-bottom-color: @red;
+}
+
+#workspaces button:hover {
+  background: @surface0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+#submap {
+  color: @peach;
+}
+
+#window {
+  color: @subtext0;
+}
+
+#clock {
+  color: @lavender;
+  font-weight: bold;
+}
+
+/* Resource monitors stay quiet until they matter. */
+#cpu,
+#memory,
+#temperature,
+#custom-gpu {
+  color: @subtext0;
+}
+
+#temperature.critical,
+#custom-gpu.high {
+  color: @red;
+}
+
+#battery.charging,
+#battery.plugged {
+  color: @green;
+}
+
+#battery.warning:not(.charging) {
+  color: @yellow;
+}
+
+#battery.critical:not(.charging) {
+  color: @red;
+}
+
+#network.disconnected,
+#wireplumber.muted,
+#bluetooth.off,
+#bluetooth.disabled {
+  color: @overlay0;
+}
+
+#privacy-item {
+  color: @red;
+}
+
+/* Toggles: dim when off, coloured when on. */
+#custom-keep-awake.off,
+#custom-ambient.off,
+#custom-pomodoro.idle {
+  color: @overlay0;
+}
+
+#custom-keep-awake.on {
+  color: @yellow;
+}
+
+#custom-ambient.on {
+  color: @teal;
+}
+
+#custom-pomodoro.focus {
+  color: @red;
+}
+
+#custom-pomodoro.break,
+#custom-pomodoro.long {
+  color: @green;
+}
+
+#custom-pomodoro.paused {
+  color: @yellow;
+}
+
+#custom-notifications.notification {
+  color: @peach;
+}
+
+#custom-notifications.dnd-none,
+#custom-notifications.dnd-notification {
+  color: @overlay0;
+}
+
+#custom-power {
+  color: @red;
+  padding-right: 12px;
+}
