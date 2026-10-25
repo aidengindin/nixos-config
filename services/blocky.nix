@@ -164,9 +164,15 @@ in
         };
 
         blocking = {
-          # TIF is ~2.1M entries and needs well over blocky's default 5s
-          # download timeout, or it silently loads only partway.
-          loading.downloads.timeout = "2m";
+          loading = {
+            # TIF is ~2.1M entries and needs well over blocky's default 5s
+            # download timeout, or it silently loads only partway.
+            downloads.timeout = "2m";
+            # The default strategy refuses all queries until every list has
+            # loaded (~30s with TIF), which breaks name resolution on lorien
+            # and osgiliath themselves mid-deploy. Serve unfiltered meanwhile.
+            strategy = "fast";
+          };
           denylists = {
             # Malware lists apply to every client, ad lists only to defaultGroup.
             defaultGroup = blacklist ++ malware;
