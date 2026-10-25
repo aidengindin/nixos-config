@@ -133,7 +133,26 @@ in
     # are written below via home-manager files.
     programs.dux-shell = {
       enable = true;
-      package = unstablePkgs.dux-shell;
+      # Dux Shell 2.0 draws M3 Expressive decorations (cookie/sunny/flower
+      # blobs on the weather cards, scalloped badges, the wind "arrow" blob).
+      # Its only off switch is a zero corner radius, which also squares every
+      # corner. Instead, alias the decorative catalog entries to plain shapes
+      # at build time; everything that draws one goes through this catalog.
+      # The QML is copied into the Go binary during preBuild (make sync-shell).
+      package = unstablePkgs.dux-shell.overrideAttrs (old: {
+        preBuild = ''
+          # quickshell/DCommon is a symlink into this submodule.
+          chmod -R u+w ../dux-qml-common
+          cat >>../dux-qml-common/DCommon/Widgets/MaterialShapes.js <<'EOF'
+
+          for (const kind of Object.keys(catalog)) {
+              if (!["circle", "square", "oval", "pill", "semiCircle", "dankLogo"].includes(kind))
+                  catalog[kind] = kind === "slanted" ? catalog.square : catalog.circle;
+          }
+          EOF
+        ''
+        + old.preBuild;
+      });
       quickshell.package = unstablePkgs.quickshell;
       plugins = dmsPlugins;
     };
