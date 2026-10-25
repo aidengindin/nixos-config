@@ -21,6 +21,14 @@ let
 
   mcpPkgs = mcpServersNix.packages.${pkgs.system};
 
+  # Unstable moved python mcp to 2.x, which fastmcp (the framework ha-mcp and
+  # mcp-nixos use) doesn't support yet — nixpkgs marks fastmcp-slim broken
+  # against it. Build those servers against the mcp_1 package nixpkgs keeps for
+  # this until fastmcp catches up.
+  mcp1Python = unstablePkgs.python3Packages.overrideScope (final: _: { mcp = final.mcp_1; });
+  haMcp = unstablePkgs.ha-mcp.override { python3Packages = mcp1Python; };
+  mcpNixos = unstablePkgs.mcp-nixos.override { python3Packages = mcp1Python; };
+
   # Wrapper that sources an agenix env file before exec'ing a binary, keeping secrets
   # out of world-readable config. Only needed for `serversConfig`, the plain
   # secrets-already-resolved view consumed by Claude Desktop (which reads raw
@@ -101,11 +109,11 @@ let
   # wrapper the way github does. programs.mcp below uses env.<VAR>.file instead.
   haWrapper = pkgs.writeShellApplication {
     name = "ha-mcp-wrapped";
-    runtimeInputs = [ unstablePkgs.ha-mcp ];
+    runtimeInputs = [ haMcp ];
     text = ''
       export HOMEASSISTANT_TOKEN
       HOMEASSISTANT_TOKEN=$(cat "${haCfg.tokenFile}")
-      exec ${getExe unstablePkgs.ha-mcp} "$@"
+      exec ${getExe haMcp} "$@"
     '';
   };
 
@@ -131,7 +139,7 @@ let
       fetch.command = getExe mcpPkgs.mcp-server-fetch;
     }
     // optionalAttrs cfg.servers.nixos.enable {
-      nixos.command = getExe unstablePkgs.mcp-nixos;
+      nixos.command = getExe mcpNixos;
     }
     // optionalAttrs cfg.servers.github.enable {
       github.command = "${githubWrapper}/bin/github-mcp-wrapped";
@@ -319,7 +327,7 @@ in
           fetch.command = getExe mcpPkgs.mcp-server-fetch;
         }
         // optionalAttrs cfg.servers.nixos.enable {
-          nixos.command = getExe unstablePkgs.mcp-nixos;
+          nixos.command = getExe mcpNixos;
         }
         // optionalAttrs cfg.servers.github.enable {
           github = {
@@ -343,7 +351,7 @@ in
         }
         // optionalAttrs haCfg.enable {
           home-assistant = {
-            command = getExe unstablePkgs.ha-mcp;
+            command = getExe haMcp;
             env = haEnv // {
               HOMEASSISTANT_TOKEN.file = haCfg.tokenFile;
             };
