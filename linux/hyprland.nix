@@ -170,7 +170,15 @@ in
     # /var/lib/dms-greeter home) greetd runs the greeter as.
     services.displayManager.dux-greeter = {
       enable = true;
-      package = unstablePkgs.dux-greeter;
+      # Same keystroke icon morphing as the lock screen (see dux-shell above);
+      # the greeter ships its own copy of the auth widget.
+      package = unstablePkgs.dux-greeter.overrideAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace quickshell/Modules/Greetd/GreeterAuthWidget.qml \
+            --replace-fail 'readonly property bool morph: !pickerPhase && style === "expressive"' \
+                           'readonly property bool morph: false'
+        '';
+      });
       compositor.name = "hyprland";
       quickshell.package = unstablePkgs.quickshell;
       configHome = "/home/agindin";
