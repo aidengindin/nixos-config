@@ -18,7 +18,7 @@ let
   src = dmsPluginSources;
 
   # Third-party DMS plugins. Each attr name MUST equal the plugin's manifest
-  # `id` (from its plugin.json): programs.dms-shell installs the source to
+  # `id` (from its plugin.json): programs.dux-shell installs the source to
   # /etc/xdg/quickshell/dms-plugins/<name> (a system plugin dir DMS scans) AND
   # plugin_settings.json below is keyed by <name>, and DMS matches enabled-state
   # by manifest id — a mismatch installs the plugin but never enables it.
@@ -71,14 +71,17 @@ in
   # The stable (26.05) nixpkgs DMS modules target dms-shell 1.4.x, where the
   # greeter was still bundled in the dms-shell package. The unstable package we
   # run (1.6.x) split the greeter into its own `dms-greeter` package, so use
-  # unstable's modules (and packages) instead of stable's.
+  # unstable's modules (and packages) instead of stable's. Unstable has since
+  # renamed DMS to Dux Shell (modules, options and packages are now dux-*), but
+  # the runtime names (dms-greeter user, /var/lib/dms-greeter, dms-plugins dir,
+  # dms user unit, dms-greeter PAM service) are unchanged.
   disabledModules = [
     "programs/wayland/dms-shell.nix"
     "services/display-managers/dms-greeter.nix"
   ];
   imports = [
-    "${unstablePkgs.path}/nixos/modules/programs/wayland/dms-shell.nix"
-    "${unstablePkgs.path}/nixos/modules/services/display-managers/dms-greeter.nix"
+    "${unstablePkgs.path}/nixos/modules/programs/wayland/dux-shell.nix"
+    "${unstablePkgs.path}/nixos/modules/services/display-managers/dux-greeter.nix"
   ];
 
   options.agindin.hyprland = {
@@ -128,9 +131,9 @@ in
     # installs plugins to /etc/xdg/quickshell/dms-plugins. It has no equivalent of
     # the old home-manager module's `settings`/`session`/plugin_settings.json; those
     # are written below via home-manager files.
-    programs.dms-shell = {
+    programs.dux-shell = {
       enable = true;
-      package = unstablePkgs.dms-shell;
+      package = unstablePkgs.dux-shell;
       quickshell.package = unstablePkgs.quickshell;
       plugins = dmsPlugins;
     };
@@ -138,9 +141,9 @@ in
     # greetd is enabled and its session command is set by the nixpkgs DMS greeter
     # module, which also creates the dms-greeter user/group (and the
     # /var/lib/dms-greeter home) greetd runs the greeter as.
-    services.displayManager.dms-greeter = {
+    services.displayManager.dux-greeter = {
       enable = true;
-      package = unstablePkgs.dms-greeter;
+      package = unstablePkgs.dux-greeter;
       compositor.name = "hyprland";
       quickshell.package = unstablePkgs.quickshell;
       configHome = "/home/agindin";

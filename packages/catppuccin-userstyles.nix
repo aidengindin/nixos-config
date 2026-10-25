@@ -17,6 +17,13 @@ pkgs.stdenv.mkDerivation {
 
   nativeBuildInputs = [ pkgs.lessc ];
 
+  # Styles @import the shared library from its hosted URL, which the build
+  # sandbox can't reach. The same file ships in the repo, so import it locally.
+  postPatch = ''
+    find styles -name catppuccin.user.less -exec sed -i \
+      "s|https://userstyles.catppuccin.com/lib/|$PWD/lib/|g" {} +
+  '';
+
   buildPhase = ''
     mkdir -p $out
     for site in ${pkgs.lib.concatStringsSep " " userstyleSites}; do
