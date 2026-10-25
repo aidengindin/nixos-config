@@ -39,8 +39,6 @@ let
     # StevenBlack misses most in-app header-bidding and ad-SDK endpoints
     # (OpenX, Longitude, LiveIntent, Amazon APS, GAM safeframes).
     "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt"
-    # Malware, phishing and scam domains.
-    "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/tif.txt"
     # Encrypted DNS resolvers, so clients can't route around blocky. Also
     # disables iCloud Private Relay network-wide.
     "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/doh.txt"
@@ -52,6 +50,11 @@ let
       *.tq-tungsten.com
       *.tps.dv.tech
       aax-events-cell02-cf.us-east.3px.axp.amazon-adsystem.com
+      # Ad creatives still load from these with every ad server blocked:
+      # Flashtalking's asset CDN, Amazon Ads, and Google's IMA video-ad SDK.
+      *.ftstatic.com
+      *.advertising.amazon
+      imasdk.googleapis.com
     ''
   ];
 
@@ -108,6 +111,8 @@ let
 
   malware = [
     "https://raw.githubusercontent.com/smed79/mdlm/master/hosts.txt"
+    # Phishing, scam and other threat domains.
+    "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/tif.txt"
   ];
 
 in
@@ -159,8 +164,12 @@ in
         };
 
         blocking = {
+          # TIF is ~2.1M entries and needs well over blocky's default 5s
+          # download timeout, or it silently loads only partway.
+          loading.downloads.timeout = "2m";
           denylists = {
-            defaultGroup = blacklist;
+            # Malware lists apply to every client, ad lists only to defaultGroup.
+            defaultGroup = blacklist ++ malware;
             adsAllowed = malware;
           };
           allowlists = {
