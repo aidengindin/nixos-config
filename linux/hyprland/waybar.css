@@ -103,10 +103,8 @@ tooltip label {
 
 /* The arrows are glyphs: their text colour is the segment they extend. */
 #custom-arrow-left-end,
-#custom-arrow-stats-start,
-#custom-arrow-stats-end,
-#custom-arrow-controls-start,
-#custom-arrow-controls-end,
+#custom-arrow-right-start,
+#custom-arrow-right-end,
 #custom-arrow-clock-start,
 #custom-arrow-clock-end {
   font-size: 30px;

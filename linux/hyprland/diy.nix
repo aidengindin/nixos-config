@@ -144,14 +144,12 @@ let
       "privacy"
       "custom/pomodoro"
       "custom/ambient"
-      "custom/arrow-stats-start"
+      "custom/arrow-right-start"
       "custom/weather"
       "custom/cpu"
       "custom/memory"
       "temperature"
       "custom/gpu"
-      "custom/arrow-stats-end"
-      "custom/arrow-controls-start"
       "hyprland/language"
       "network"
       "bluetooth"
@@ -159,7 +157,7 @@ let
       "custom/ddc"
       "backlight"
       "battery"
-      "custom/arrow-controls-end"
+      "custom/arrow-right-end"
       "custom/keep-awake"
       "tray"
       "custom/notifications"
@@ -169,10 +167,8 @@ let
     "custom/arrow-left-end" = arrow "";
     "custom/arrow-clock-start" = arrow "";
     "custom/arrow-clock-end" = arrow "";
-    "custom/arrow-stats-start" = arrow "";
-    "custom/arrow-stats-end" = arrow "";
-    "custom/arrow-controls-start" = arrow "";
-    "custom/arrow-controls-end" = arrow "";
+    "custom/arrow-right-start" = arrow "";
+    "custom/arrow-right-end" = arrow "";
 
     "hyprland/workspaces" = {
       sort-by = "id";
