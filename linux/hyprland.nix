@@ -256,6 +256,11 @@ in
           );
           "DankMaterialShell/plugin_settings.json".source =
             jsonFormat.generate "plugin_settings.json" dmsPluginSettings;
+          # settings.json's customThemeFile. This used to be a GUI-installed
+          # registry theme living only in the persisted dir, and it vanished
+          # when the shell upgraded to 2.0, so install it declaratively.
+          "DankMaterialShell/themes/catppuccin/theme.json".source =
+            "${src.registry}/themes/catppuccin/theme.json";
 
           "hypr/hyprland.lua".source = ./hypr/hyprland.lua;
 

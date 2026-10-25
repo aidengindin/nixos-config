@@ -210,6 +210,22 @@
         "type": "github"
       }
     },
+    "dux-plugin-registry": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792203143,
+        "narHash": "sha256-1VT7rPJuzuJVAKaynATTw35j8gjbFNJkHOe1SIqZhkw=",
+        "owner": "duxlabs-dev",
+        "repo": "dux-plugin-registry",
+        "rev": "0e3198d0be58fc624ec0dc42279d4dd3c99928a3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "duxlabs-dev",
+        "repo": "dux-plugin-registry",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -732,6 +748,7 @@
         "dms-plugin-nix-package-runner": "dms-plugin-nix-package-runner",
         "dms-plugins-avenge": "dms-plugins-avenge",
         "dms-plugins-nderscore": "dms-plugins-nderscore",
+        "dux-plugin-registry": "dux-plugin-registry",
         "hermes-agent": "hermes-agent",
         "hm-unstable": "hm-unstable",
         "home-manager": "home-manager_2",
