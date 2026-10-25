@@ -86,6 +86,21 @@ let
       procps
     ] "";
     gpu = script "gpu-status" [ gawk ] "";
+    sysmon = script "sysmon" [
+      procps
+      gawk
+      jq
+    ] "";
+    brightness = script "brightness" [
+      ddcutil
+      swayosd
+      config.programs.hyprland.package
+      jq
+      gawk
+      util-linux # flock
+      procps
+      libnotify
+    ] "";
     ambient = script "ambient-menu" [
       mpv
       socat
@@ -101,6 +116,291 @@ let
     ] "package_list=${nixpkgsNames}\n";
   };
 
+  # The desk ultrawide, matched by description so the DP port can change.
+  deskMonitor = "HP Inc. OMEN 34c CNC3321M7R";
+  # Room left at the right end of the desk bar for the webcam on top of it.
+  webcamMargin = 260;
+
+  # Powerline separators between bar segments (Nerd Font glyphs):  ends
+  # a segment on its right,  starts one on its left.
+  arrow = glyph: {
+    format = glyph;
+    tooltip = false;
+  };
+
+  bar = {
+    layer = "top";
+    position = "top";
+    spacing = 0;
+
+    modules-left = [
+      "hyprland/workspaces"
+      "custom/arrow-left-end"
+      "hyprland/submap"
+      "hyprland/window"
+    ];
+    modules-center = [
+      "custom/arrow-center-start"
+      "custom/cpu"
+      "custom/memory"
+      "temperature"
+      "custom/gpu"
+      "custom/arrow-clock-start"
+      "clock"
+      "custom/arrow-clock-end"
+      "custom/weather"
+      "network"
+      "bluetooth"
+      "custom/arrow-center-end"
+    ];
+    modules-right = [
+      "mpris"
+      "privacy"
+      "custom/pomodoro"
+      "custom/ambient"
+      "custom/arrow-right-start"
+      "hyprland/language"
+      "wireplumber"
+      "custom/ddc"
+      "backlight"
+      "battery"
+      "custom/arrow-right-end"
+      "custom/keep-awake"
+      "tray"
+      "custom/notifications"
+      "custom/power"
+    ];
+
+    "custom/arrow-left-end" = arrow "";
+    "custom/arrow-center-start" = arrow "";
+    "custom/arrow-clock-start" = arrow "";
+    "custom/arrow-clock-end" = arrow "";
+    "custom/arrow-center-end" = arrow "";
+    "custom/arrow-right-start" = arrow "";
+    "custom/arrow-right-end" = arrow "";
+
+    "hyprland/workspaces" = {
+      sort-by = "id";
+      format = "{id}";
+      on-scroll-up = "${hyprctl} dispatch workspace e+1";
+      on-scroll-down = "${hyprctl} dispatch workspace e-1";
+    };
+    "hyprland/submap" = {
+      format = "󰌌 {}";
+      tooltip = false;
+    };
+    "hyprland/window" = {
+      format = "{}";
+      max-length = 60;
+      separate-outputs = true;
+    };
+
+    clock = {
+      interval = 5;
+      format = "{:%a %d %b  %H:%M}";
+      tooltip-format = "<tt>{calendar}</tt>";
+      calendar = {
+        mode = "month";
+        weeks-pos = "left";
+        format = {
+          today = "<span color='#cba6f7'><b>{}</b></span>";
+          weeks = "<span color='#6c7086'>{}</span>";
+        };
+      };
+      on-click = "${swaync} -t -sw";
+    };
+
+    mpris = {
+      format = "{player_icon} {title}";
+      format-paused = "{status_icon} {title}";
+      player-icons.default = "󰐊";
+      status-icons.paused = "󰏤";
+      max-length = 40;
+      ignored-players = [ "firefox" ];
+    };
+    privacy = {
+      icon-size = 14;
+      modules = [
+        { type = "screenshare"; }
+        { type = "audio-in"; }
+      ];
+    };
+
+    "custom/pomodoro" = {
+      exec = "${getExe scripts.pomodoro} status";
+      return-type = "json";
+      interval = 1;
+      signal = 8;
+      on-click = "${getExe scripts.pomodoro} toggle";
+      on-click-right = "${getExe scripts.pomodoro} reset";
+      on-click-middle = "${getExe scripts.pomodoro} skip";
+    };
+    "custom/ambient" = {
+      exec = "${getExe scripts.ambient} status";
+      return-type = "json";
+      interval = 30;
+      signal = 10;
+      on-click = getExe scripts.ambient;
+    };
+    "custom/gpu" = {
+      exec = getExe scripts.gpu;
+      return-type = "json";
+      interval = 5;
+    };
+    # Custom rather than built-in cpu/memory so the tooltips can list the
+    # heaviest programs.
+    "custom/cpu" = {
+      exec = "${getExe scripts.sysmon} cpu";
+      return-type = "json";
+      interval = 5;
+    };
+    "custom/memory" = {
+      exec = "${getExe scripts.sysmon} memory";
+      return-type = "json";
+      interval = 10;
+    };
+    # k10temp's Tctl; hwmonN numbering isn't stable across boots.
+    temperature = {
+      hwmon-path-abs = "/sys/devices/pci0000:00/0000:00:18.3/hwmon";
+      input-filename = "temp1_input";
+      critical-threshold = 90;
+      format = "󰔏 {temperatureC}°";
+    };
+    "custom/weather" = {
+      exec = "${getExe pkgs.wttrbar} --nerd --fahrenheit --mph";
+      return-type = "json";
+      interval = 1800;
+      format = "{}°";
+    };
+    "hyprland/language" = {
+      format = "{}";
+      format-en = "US";
+      format-he = "HE";
+    };
+
+    network = {
+      format-wifi = "{icon}";
+      format-icons = [
+        "󰤯"
+        "󰤟"
+        "󰤢"
+        "󰤥"
+        "󰤨"
+      ];
+      format-ethernet = "󰈀";
+      format-linked = "󰈀";
+      format-disconnected = "󰤮";
+      tooltip-format-wifi = "{essid} ({signalStrength}%)\n{ipaddr} via {ifname}";
+      tooltip-format-ethernet = "{ipaddr} via {ifname}";
+      tooltip-format-disconnected = "Disconnected";
+      on-click = getExe scripts.wifi;
+    };
+    bluetooth = {
+      format = "󰂯";
+      format-off = "󰂲";
+      format-disabled = "󰂲";
+      format-connected = "󰂱 {num_connections}";
+      tooltip-format-connected = "{device_enumerate}";
+      tooltip-format-enumerate-connected = "{device_alias}";
+      tooltip-format-enumerate-connected-battery = "{device_alias}  {device_battery_percentage}%";
+      on-click = getExe scripts.bluetooth;
+    };
+    wireplumber = {
+      format = "{icon} {volume}%";
+      format-muted = "󰝟";
+      format-icons = [
+        "󰕿"
+        "󰖀"
+        "󰕾"
+      ];
+      max-volume = 100;
+      on-click = getExe scripts.audio;
+      on-click-middle = "${swayosd} --output-volume mute-toggle";
+      on-click-right = getExe pkgs.pwvucontrol;
+      on-scroll-up = "${swayosd} --output-volume raise --max-volume 100";
+      on-scroll-down = "${swayosd} --output-volume lower";
+    };
+    # External monitor brightness over DDC/CI; hidden when none answers.
+    "custom/ddc" = {
+      exec = "${getExe scripts.brightness} status";
+      return-type = "json";
+      interval = 60;
+      signal = 11;
+      on-scroll-up = "${getExe scripts.brightness} up external";
+      on-scroll-down = "${getExe scripts.brightness} down external";
+    };
+    backlight = {
+      format = "{icon}";
+      format-icons = [
+        "󰃞"
+        "󰃟"
+        "󰃠"
+      ];
+      tooltip-format = "Brightness {percent}%";
+      on-scroll-up = "${swayosd} --brightness raise";
+      on-scroll-down = "${swayosd} --brightness lower";
+    };
+    battery = {
+      interval = 60;
+      states = {
+        warning = 30;
+        critical = 15;
+      };
+      format = "{icon} {capacity}%";
+      format-charging = "󰂄 {capacity}%";
+      format-plugged = "󰚥 {capacity}%";
+      format-icons = [
+        "󰂎"
+        "󰁺"
+        "󰁻"
+        "󰁼"
+        "󰁽"
+        "󰁾"
+        "󰁿"
+        "󰂀"
+        "󰂁"
+        "󰂂"
+        "󰁹"
+      ];
+      tooltip-format = "{timeTo}\n{power:0.1f} W · health {health}%";
+    };
+    "custom/keep-awake" = {
+      exec = "${getExe scripts.keepAwake} status";
+      return-type = "json";
+      interval = 60;
+      signal = 9;
+      on-click = getExe scripts.keepAwake;
+    };
+    tray = {
+      icon-size = 16;
+      spacing = 8;
+    };
+    "custom/notifications" = {
+      exec = "${swaync} -swb";
+      return-type = "json";
+      format = "{icon}";
+      format-icons = {
+        notification = "󰂚";
+        none = "󰂜";
+        dnd-notification = "󰂛";
+        dnd-none = "󰂛";
+        inhibited-notification = "󰂚";
+        inhibited-none = "󰂜";
+        dnd-inhibited-notification = "󰂛";
+        dnd-inhibited-none = "󰂛";
+      };
+      tooltip = false;
+      escape = true;
+      on-click = "${swaync} -t -sw";
+      on-click-right = "${swaync} -d -sw";
+    };
+    "custom/power" = {
+      format = "󰐥";
+      tooltip = false;
+      on-click = getExe scripts.power;
+    };
+  };
+
   wallpapers = "/home/agindin/Pictures/wallpapers";
 in
 {
@@ -109,13 +409,14 @@ in
     agindin.hyprland.shellLua = ''
       -- DIY shell binds (agindin.hyprland.shell = "diy"), from linux/hyprland/diy.nix.
 
-      -- Volume / brightness, with an on-screen display
+      -- Volume, with an on-screen display. Brightness keys act on the focused
+      -- monitor: the laptop backlight, or an external monitor over DDC/CI.
       hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("${swayosd} --output-volume raise --max-volume 100"), { locked = true, repeating = true })
       hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("${swayosd} --output-volume lower"), { locked = true, repeating = true })
       hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("${swayosd} --output-volume mute-toggle"), { locked = true })
       hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("${swayosd} --input-volume mute-toggle"), { locked = true })
-      hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("${swayosd} --brightness raise"), { locked = true, repeating = true })
-      hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${swayosd} --brightness lower"), { locked = true, repeating = true })
+      hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("${getExe scripts.brightness} up"), { locked = true, repeating = true })
+      hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${getExe scripts.brightness} down"), { locked = true, repeating = true })
 
       -- Session
       hl.bind(mainMod .. " + O",         hl.dsp.exec_cmd("${loginctl} lock-session"))
@@ -186,246 +487,15 @@ in
         enable = true;
         systemd.enable = true;
         style = builtins.readFile ./waybar.css;
-        settings.main = {
-          layer = "top";
-          position = "top";
-          height = 30;
-          spacing = 0;
-
-          modules-left = [
-            "hyprland/workspaces"
-            "hyprland/submap"
-            "hyprland/window"
-          ];
-          modules-center = [ "clock" ];
-          modules-right = [
-            "mpris"
-            "privacy"
-            "custom/pomodoro"
-            "custom/ambient"
-            "custom/gpu"
-            "cpu"
-            "memory"
-            "temperature"
-            "custom/weather"
-            "hyprland/language"
-            "network"
-            "bluetooth"
-            "wireplumber"
-            "backlight"
-            "battery"
-            "custom/keep-awake"
-            "tray"
-            "custom/notifications"
-            "custom/power"
-          ];
-
-          "hyprland/workspaces" = {
-            sort-by = "id";
-            format = "{id}";
-            on-scroll-up = "${hyprctl} dispatch workspace e+1";
-            on-scroll-down = "${hyprctl} dispatch workspace e-1";
+        # One bar definition, instantiated per output: the desk ultrawide's
+        # bar stops short of the webcam that hangs over its top-right edge.
+        settings = {
+          laptop = bar // {
+            output = "!${deskMonitor}";
           };
-          "hyprland/submap" = {
-            format = "󰌌 {}";
-            tooltip = false;
-          };
-          "hyprland/window" = {
-            format = "{}";
-            max-length = 60;
-            separate-outputs = true;
-          };
-
-          clock = {
-            interval = 5;
-            format = "{:%a %d %b  %H:%M}";
-            tooltip-format = "<tt>{calendar}</tt>";
-            calendar = {
-              mode = "month";
-              weeks-pos = "left";
-              format = {
-                today = "<span color='#cba6f7'><b>{}</b></span>";
-                weeks = "<span color='#6c7086'>{}</span>";
-              };
-            };
-            on-click = "${swaync} -t -sw";
-          };
-
-          mpris = {
-            format = "{player_icon} {title}";
-            format-paused = "{status_icon} {title}";
-            player-icons.default = "󰐊";
-            status-icons.paused = "󰏤";
-            max-length = 40;
-            ignored-players = [ "firefox" ];
-          };
-          privacy = {
-            icon-size = 14;
-            modules = [
-              { type = "screenshare"; }
-              { type = "audio-in"; }
-            ];
-          };
-
-          "custom/pomodoro" = {
-            exec = "${getExe scripts.pomodoro} status";
-            return-type = "json";
-            interval = 1;
-            signal = 8;
-            on-click = "${getExe scripts.pomodoro} toggle";
-            on-click-right = "${getExe scripts.pomodoro} reset";
-            on-click-middle = "${getExe scripts.pomodoro} skip";
-          };
-          "custom/ambient" = {
-            exec = "${getExe scripts.ambient} status";
-            return-type = "json";
-            interval = 30;
-            signal = 10;
-            on-click = getExe scripts.ambient;
-          };
-          "custom/gpu" = {
-            exec = getExe scripts.gpu;
-            return-type = "json";
-            interval = 5;
-          };
-          cpu = {
-            format = "󰍛 {usage}%";
-            interval = 5;
-          };
-          memory = {
-            format = "󰘚 {percentage}%";
-            tooltip-format = "{used:0.1f} / {total:0.1f} GiB RAM\n{swapUsed:0.1f} / {swapTotal:0.1f} GiB swap";
-          };
-          # k10temp's Tctl; hwmonN numbering isn't stable across boots.
-          temperature = {
-            hwmon-path-abs = "/sys/devices/pci0000:00/0000:00:18.3/hwmon";
-            input-filename = "temp1_input";
-            critical-threshold = 90;
-            format = "󰔏 {temperatureC}°";
-          };
-          "custom/weather" = {
-            exec = "${getExe pkgs.wttrbar} --nerd --fahrenheit --mph";
-            return-type = "json";
-            interval = 1800;
-            format = "{}°";
-          };
-          "hyprland/language" = {
-            format = "{}";
-            format-en = "US";
-            format-he = "HE";
-          };
-
-          network = {
-            format-wifi = "{icon}";
-            format-icons = [
-              "󰤯"
-              "󰤟"
-              "󰤢"
-              "󰤥"
-              "󰤨"
-            ];
-            format-ethernet = "󰈀";
-            format-linked = "󰈀";
-            format-disconnected = "󰤮";
-            tooltip-format-wifi = "{essid} ({signalStrength}%)\n{ipaddr} via {ifname}";
-            tooltip-format-ethernet = "{ipaddr} via {ifname}";
-            tooltip-format-disconnected = "Disconnected";
-            on-click = getExe scripts.wifi;
-          };
-          bluetooth = {
-            format = "󰂯";
-            format-off = "󰂲";
-            format-disabled = "󰂲";
-            format-connected = "󰂱 {num_connections}";
-            tooltip-format-connected = "{device_enumerate}";
-            tooltip-format-enumerate-connected = "{device_alias}";
-            tooltip-format-enumerate-connected-battery = "{device_alias}  {device_battery_percentage}%";
-            on-click = getExe scripts.bluetooth;
-          };
-          wireplumber = {
-            format = "{icon} {volume}%";
-            format-muted = "󰝟";
-            format-icons = [
-              "󰕿"
-              "󰖀"
-              "󰕾"
-            ];
-            max-volume = 100;
-            on-click = getExe scripts.audio;
-            on-click-middle = "${swayosd} --output-volume mute-toggle";
-            on-click-right = getExe pkgs.pwvucontrol;
-            on-scroll-up = "${swayosd} --output-volume raise --max-volume 100";
-            on-scroll-down = "${swayosd} --output-volume lower";
-          };
-          backlight = {
-            format = "{icon}";
-            format-icons = [
-              "󰃞"
-              "󰃟"
-              "󰃠"
-            ];
-            tooltip-format = "Brightness {percent}%";
-            on-scroll-up = "${swayosd} --brightness raise";
-            on-scroll-down = "${swayosd} --brightness lower";
-          };
-          battery = {
-            interval = 60;
-            states = {
-              warning = 30;
-              critical = 15;
-            };
-            format = "{icon} {capacity}%";
-            format-charging = "󰂄 {capacity}%";
-            format-plugged = "󰚥 {capacity}%";
-            format-icons = [
-              "󰂎"
-              "󰁺"
-              "󰁻"
-              "󰁼"
-              "󰁽"
-              "󰁾"
-              "󰁿"
-              "󰂀"
-              "󰂁"
-              "󰂂"
-              "󰁹"
-            ];
-            tooltip-format = "{timeTo}\n{power:0.1f} W · health {health}%";
-          };
-          "custom/keep-awake" = {
-            exec = "${getExe scripts.keepAwake} status";
-            return-type = "json";
-            interval = 60;
-            signal = 9;
-            on-click = getExe scripts.keepAwake;
-          };
-          tray = {
-            icon-size = 16;
-            spacing = 8;
-          };
-          "custom/notifications" = {
-            exec = "${swaync} -swb";
-            return-type = "json";
-            format = "{icon}";
-            format-icons = {
-              notification = "󰂚";
-              none = "󰂜";
-              dnd-notification = "󰂛";
-              dnd-none = "󰂛";
-              inhibited-notification = "󰂚";
-              inhibited-none = "󰂜";
-              dnd-inhibited-notification = "󰂛";
-              dnd-inhibited-none = "󰂛";
-            };
-            tooltip = false;
-            escape = true;
-            on-click = "${swaync} -t -sw";
-            on-click-right = "${swaync} -d -sw";
-          };
-          "custom/power" = {
-            format = "󰐥";
-            tooltip = false;
-            on-click = getExe scripts.power;
+          desk = bar // {
+            output = deskMonitor;
+            margin-right = webcamMargin;
           };
         };
       };
@@ -489,7 +559,10 @@ in
         };
       };
 
-      services.swayosd.enable = true;
+      services.swayosd = {
+        enable = true;
+        stylePath = ./swayosd.css;
+      };
       services.cliphist.enable = true;
       services.poweralertd.enable = true;
       services.hyprpolkitagent.enable = true;

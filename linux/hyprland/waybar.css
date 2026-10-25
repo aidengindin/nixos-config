@@ -1,11 +1,15 @@
-/* Flat Catppuccin Mocha bar: one solid strip, no pills or arrows.
-   Colour only signals state (focused, urgent, warning, toggled on). */
+/* Catppuccin Mocha powerline bar: a transparent strip with surface0
+   segments closed off by Nerd Font arrows ( / ), the clock raised to
+   surface1. Colour otherwise only signals state. */
 
 @define-color red #f38ba8;
+@define-color maroon #eba0ac;
 @define-color peach #fab387;
 @define-color yellow #f9e2af;
 @define-color green #a6e3a1;
 @define-color teal #94e2d5;
+@define-color sky #89dceb;
+@define-color sapphire #74c7ec;
 @define-color blue #89b4fa;
 @define-color lavender #b4befe;
 @define-color mauve #cba6f7;
@@ -15,69 +19,118 @@
 @define-color surface0 #313244;
 @define-color surface1 #45475a;
 @define-color base #1e1e2e;
-@define-color mantle #181825;
+@define-color crust #11111b;
 
 * {
   font-family: "Hasklug Nerd Font";
-  font-size: 13px;
+  font-size: 15px;
   min-height: 0;
   border: none;
   border-radius: 0;
 }
 
 window#waybar {
-  background: @mantle;
+  background: transparent;
   color: @text;
-  border-bottom: 1px solid @surface0;
 }
 
 tooltip {
   background: @base;
   border: 1px solid @surface1;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 tooltip label {
   color: @text;
+  font-family: "Hasklug Nerd Font Mono", "Hasklug Nerd Font";
 }
 
-/* Every module gets the same horizontal rhythm. */
+/* Every module sits on the same 6px top/bottom margin, so the segments and
+   the arrows that cap them line up. */
 #workspaces,
 #submap,
 #window,
+#custom-cpu,
+#custom-memory,
+#temperature,
+#custom-gpu,
 #clock,
+#custom-weather,
+#network,
+#bluetooth,
 #mpris,
 #privacy,
 #custom-pomodoro,
 #custom-ambient,
-#custom-gpu,
-#cpu,
-#memory,
-#temperature,
-#custom-weather,
-#network,
-#bluetooth,
+#language,
 #wireplumber,
+#custom-ddc,
 #backlight,
 #battery,
 #custom-keep-awake,
-#custom-notifications,
 #tray,
+#custom-notifications,
 #custom-power {
-  padding: 0 8px;
+  margin: 6px 0;
+  padding: 0 10px;
   color: @text;
 }
 
-/* Workspaces: a plain underline marks the focused one. */
-#workspaces {
+/* ---- Segments ---- */
+
+#workspaces,
+#custom-cpu,
+#custom-memory,
+#temperature,
+#custom-gpu,
+#custom-weather,
+#network,
+#bluetooth,
+#language,
+#wireplumber,
+#custom-ddc,
+#backlight,
+#battery {
+  background: @surface0;
+}
+
+#clock {
+  background: @surface1;
+  color: @lavender;
+  font-weight: bold;
+}
+
+/* The arrows are glyphs: their text colour is the segment they extend. */
+#custom-arrow-left-end,
+#custom-arrow-center-start,
+#custom-arrow-center-end,
+#custom-arrow-right-start,
+#custom-arrow-right-end,
+#custom-arrow-clock-start,
+#custom-arrow-clock-end {
+  font-size: 30px;
+  margin: 6px 0;
   padding: 0;
+  color: @surface0;
+}
+
+#custom-arrow-clock-start,
+#custom-arrow-clock-end {
+  color: @surface1;
+  background: @surface0;
+}
+
+/* ---- Left ---- */
+
+#workspaces {
+  margin-left: 10px;
+  padding: 0 4px;
 }
 
 #workspaces button {
-  padding: 0 8px;
+  padding: 0 7px;
   color: @overlay0;
   background: transparent;
-  border-bottom: 2px solid transparent;
 }
 
 #workspaces button.visible {
@@ -85,43 +138,45 @@ tooltip label {
 }
 
 #workspaces button.active {
-  color: @lavender;
-  border-bottom-color: @lavender;
+  color: @sky;
 }
 
 #workspaces button.urgent {
   color: @red;
-  border-bottom-color: @red;
 }
 
 #workspaces button:hover {
-  background: @surface0;
+  color: @sapphire;
+  background: transparent;
   box-shadow: none;
   text-shadow: none;
 }
 
 #submap {
-  color: @peach;
+  margin-left: 8px;
+  color: @crust;
+  background: @maroon;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+#submap.move {
+  background: @teal;
+}
+
+#submap.resize {
+  background: @lavender;
 }
 
 #window {
   color: @subtext0;
 }
 
-#clock {
-  color: @lavender;
-  font-weight: bold;
-}
-
-/* Resource monitors stay quiet until they matter. */
-#cpu,
-#memory,
-#temperature,
-#custom-gpu {
-  color: @subtext0;
-}
+/* ---- State colours ---- */
 
 #temperature.critical,
+#custom-cpu.high,
+#custom-memory.high,
 #custom-gpu.high {
   color: @red;
 }
@@ -189,5 +244,5 @@ tooltip label {
 
 #custom-power {
   color: @red;
-  padding-right: 12px;
+  margin-right: 10px;
 }
