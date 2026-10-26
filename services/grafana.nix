@@ -155,6 +155,8 @@ in
         # existing DB-encrypted secrets (OAuth tokens, datasource passwords) stay
         # decryptable. Rotate via a 3rd-party tool if/when needed.
         security.secret_key = "SW2YcwTIb9zpOOhoPsMm";
+        # stats.grafana.org is blocked by blocky anyway.
+        analytics.reporting_enabled = false;
         "auth.basic".enabled = false;
         "auth.generic_oauth" = {
           enabled = true;
@@ -1308,6 +1310,7 @@ in
       configuration = {
         server.http_listen_port = globalVars.ports.loki;
         auth_enabled = false;
+        analytics.reporting_enabled = false;
         memberlist.bind_addr = [ "127.0.0.1" ];
 
         common = {

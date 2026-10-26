@@ -30,6 +30,9 @@ in
     # promtail module used so the grafana prometheus scrape config keeps working.
     services.alloy.extraFlags = [
       "--server.http.listen-addr=0.0.0.0:${toString globalVars.ports.alloy}"
+      # The usage reporter retries stats.grafana.org every few seconds once
+      # blocky blocks it, which made up ~85% of all blocked queries.
+      "--disable-reporting"
     ];
 
     environment.etc."alloy/config.alloy".text = ''
