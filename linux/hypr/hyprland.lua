@@ -141,6 +141,13 @@ hl.window_rule({
   idle_inhibit = "fullscreen",
 })
 
+-- Ignore client maximize requests (kitty sends one on open), so new windows tile.
+hl.window_rule({
+  name  = "suppress-maximize-events",
+  match = { class = ".*" },
+  suppress_event = "maximize",
+})
+
 --------------------
 ---- PERMISSIONS ----
 --------------------
