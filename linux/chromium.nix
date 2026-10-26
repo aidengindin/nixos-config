@@ -48,8 +48,8 @@ let
   };
 
   chromiumWebStore = pkgs.fetchurl {
-    url = "https://github.com/NeverDecaf/chromium-web-store/releases/download/v1.5.5.3/Chromium.Web.Store.crx";
-    sha256 = "sha256-MmRDuuw9IEsTWOumqgJc9r2TDAiguY9nhOejI2UoRFs=";
+    url = "https://github.com/NeverDecaf/chromium-web-store/releases/download/v1.5.5.4/Chromium.Web.Store.crx";
+    sha256 = "sha256-Y8B1tKJbEa8sU22tGRlG6NlUf5LVtsJXss5BONKZbzI=";
   };
 
   # uBlock Origin is no longer on the Chrome Web Store (MV2 removal).

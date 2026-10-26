@@ -97,6 +97,11 @@
       url = "github:hthienloc/dms-ambient-sound";
       flake = false;
     };
+    # Theme registry; only the catppuccin theme is used.
+    dux-plugin-registry = {
+      url = "github:duxlabs-dev/dux-plugin-registry";
+      flake = false;
+    };
 
     # Private Forgejo repositories are fetched over HTTPS: the CI guest may only
     # reach Forgejo on 443 and authenticates with the bot token, while personal
@@ -181,6 +186,7 @@
           nixPackageRunner = inputs.dms-plugin-nix-package-runner;
           amdGpuMonitor = inputs.dms-plugin-amd-gpu-monitor;
           ambientSound = inputs.dms-plugin-ambient-sound;
+          registry = inputs.dux-plugin-registry;
         };
         customPkgs = import ./packages {
           pkgs = stablePkgs;

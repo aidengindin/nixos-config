@@ -40,6 +40,11 @@ in
     # Two build cores fit in 8 GiB. Keeping half of osgiliath's RAM outside
     # the guest prevents host-wide reclaim from stalling Forgejo and journald.
     memorySize = 8192;
+    # QEMU never returns guest RAM on its own, so after one build the VM sat at
+    # 6.3 GiB resident while idle and pushed host services into swap. With free
+    # page reporting the guest's virtio_balloon driver hands freed pages back
+    # to the host as they are released, without a fixed balloon target.
+    qemu.options = [ "-device virtio-balloon-pci,free-page-reporting=on" ];
     # Sparse upper bound. The host unit grows an existing image to this size
     # before QEMU starts, and discards one whose virtual size is above it.
     #
