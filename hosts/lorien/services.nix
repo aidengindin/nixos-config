@@ -92,7 +92,10 @@
       priority = 150;
     };
 
-    caddy.enable = true;
+    caddy = {
+      enable = true;
+      lanInterface = "enp1s0";
+    };
 
     postgres.enable = true;
 

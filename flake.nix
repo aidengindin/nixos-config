@@ -178,6 +178,10 @@
           ;
         hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
+        # Every host's evaluated config, for modules that describe the fleet
+        # (blocky serves DNS for the Caddy domains of all hosts). Lazy, so a
+        # host only evaluates the options another host actually reads.
+        hostConfigs = mapAttrs (name: _: self.nixosConfigurations.${name}.config) nodes;
         dmsPluginSources = {
           avenge = inputs.dms-plugins-avenge;
           nderscore = inputs.dms-plugins-nderscore;

@@ -37,6 +37,11 @@
   agindin.fingerprint.enable = true;
   agindin.avahi.enable = true;
 
+  # Reach the servers' LAN addresses (which blocky hands out for their
+  # services) through their Tailscale subnet routes when away from home.
+  # Linux clients ignore advertised routes unless told to accept them.
+  services.tailscale.extraSetFlags = [ "--accept-routes" ];
+
   agindin.kanata = {
     enable = true;
     keyboardDevices = [ "/dev/input/by-path/platform-i8042-serio-0-event-kbd" ];
