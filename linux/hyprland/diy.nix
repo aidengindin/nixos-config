@@ -522,6 +522,15 @@ in
           transition-time = 200;
           hide-on-clear = true;
           hide-on-action = true;
+          # poweralertd sends every UPower state change at normal urgency, and
+          # the Framework battery flaps between discharging and full while on
+          # AC at 100%. Its low/critical/action warnings are critical urgency,
+          # so those still come through.
+          notification-visibility.poweralertd-state = {
+            app-name = "^poweralertd$";
+            urgency = "Normal";
+            state = "ignored";
+          };
           widgets = [
             "title"
             "dnd"
