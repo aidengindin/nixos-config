@@ -37,7 +37,7 @@ cpu() {
   ' <<<"$sample" | sort -rn | head -n "$top_n")
   local class=normal
   ((usage >= 85)) && class=high
-  json "󰍛 ${usage}%" "CPU ${usage}%  (100% = one core)
+  json "󰍛 ${usage}%" "CPU ${usage}%
 ${table:-  idle}" "$class"
 }
 
