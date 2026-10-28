@@ -55,6 +55,12 @@ let
       *.ftstatic.com
       *.advertising.amazon
       imasdk.googleapis.com
+      # iOS Connectivity Assist tunnels ad traffic through Apple's relay, which
+      # resolves names itself, so every blocklist above is bypassed. Blocking
+      # mask.icloud.com (doh.txt) only stops Private Relay, not this.
+      apple-native-relay.apple.com
+      *.mask.apple-dns.net
+      apple-relay.fastly-edge.com
     ''
   ];
 
