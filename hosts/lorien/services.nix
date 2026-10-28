@@ -94,6 +94,13 @@
 
     caddy.enable = true;
 
+    # Shares the Canon LBP6030w over AirPrint/IPP. Lorien sits on the clients'
+    # own subnet, so mDNS reaches them without the router's reflector.
+    print-server = {
+      enable = true;
+      interface = "enp1s0";
+    };
+
     postgres.enable = true;
 
     openwebui.enable = true;
