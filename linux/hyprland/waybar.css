@@ -23,7 +23,7 @@
 
 * {
   font-family: "Hasklug Nerd Font";
-  font-size: 15px;
+  font-size: 12px;
   min-height: 0;
   border: none;
   border-radius: 0;
@@ -107,7 +107,7 @@ tooltip label {
 #custom-arrow-right-end,
 #custom-arrow-clock-start,
 #custom-arrow-clock-end {
-  font-size: 30px;
+  font-size: 25px;
   margin: 6px 0;
   padding: 0;
   color: @surface0;
