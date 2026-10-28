@@ -70,6 +70,10 @@ let
       zigbee2mqtt = 8400;
 
       mosquitto = 1883;
+
+      # Fixed by IPP itself: AirPrint and IPP Everywhere clients find the port
+      # from the mDNS SRV record, but plenty of desktop software assumes 631.
+      cups = 631;
     };
 
     ips = {

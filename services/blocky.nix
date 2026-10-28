@@ -83,6 +83,11 @@ let
       *.ftstatic.com
       *.advertising.amazon
       imasdk.googleapis.com
+      # Apple's relay, which resolves names on its own side. Blocking
+      # mask.icloud.com (doh.txt) only stops Private Relay, not this.
+      apple-native-relay.apple.com
+      *.mask.apple-dns.net
+      apple-relay.fastly-edge.com
     ''
   ];
 
@@ -192,6 +197,12 @@ in
         };
 
         blocking = {
+          # A 0.0.0.0 answer makes the connection fail, which iOS Connectivity
+          # Assist treats as bad Wi-Fi and retries over cellular with the
+          # carrier's DNS, loading the ad anyway. NXDOMAIN is a definitive
+          # answer rather than a network failure, and is what Apple asks
+          # filtering networks to return.
+          blockType = "nxDomain";
           loading = {
             # TIF is ~2.1M entries and needs well over blocky's default 5s
             # download timeout, or it silently loads only partway.
