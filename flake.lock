@@ -40,6 +40,22 @@
         "type": "github"
       }
     },
+    "canon-ufriilt-driver": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793146215,
+        "narHash": "sha256-nOrnyNGbKDyoCvemH6uG4vHCNaPK4aBOqj8NkcsaBnE=",
+        "ref": "refs/heads/main",
+        "rev": "5f88d609ef6967a143521690c8b597a48889e18f",
+        "revCount": 1,
+        "type": "git",
+        "url": "https://git.gindin.xyz/aidengindin/canon-ufriilt-driver.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.gindin.xyz/aidengindin/canon-ufriilt-driver.git"
+      }
+    },
     "catppuccin-userstyles": {
       "flake": false,
       "locked": {
@@ -738,6 +754,7 @@
       "inputs": {
         "agenix": "agenix",
         "anduin": "anduin",
+        "canon-ufriilt-driver": "canon-ufriilt-driver",
         "catppuccin-userstyles": "catppuccin-userstyles",
         "colmena": "colmena",
         "disko": "disko",

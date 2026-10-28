@@ -3,6 +3,7 @@
   lib,
   pkgs,
   globalVars,
+  canonUfriiltDriver,
   ...
 }:
 let
@@ -24,10 +25,12 @@ let
   # buildFHSEnv it renders and connects, then cnrsdrvsfp segfaults
   # (libcanon_pdlwrapper.c line 1018) before a single byte of page data is
   # sent, for reasons never found. The same .deb on Debian printed first time.
-  driverTarball = pkgs.fetchurl {
-    url = "https://gdlp01.c-wss.com/gds/0/0100005950/11/linux-UFRIILT-drv-v510-m17n.tar.gz";
-    hash = "sha256-GZ/w3RLHXV9SHCfCXXKeJg0l+PyqmMGqeuEanZidaXY=";
-  };
+  #
+  # The tarball comes from a private backup of Canon's download
+  # (https://gdlp01.c-wss.com/gds/0/0100005950/11/linux-UFRIILT-drv-v510-m17n.tar.gz),
+  # pinned through flake.lock, so the build no longer depends on Canon keeping
+  # it online.
+  driverTarball = "${canonUfriiltDriver}/linux-UFRIILT-drv-v510-m17n.tar.gz";
 
   containerfile = pkgs.writeText "Containerfile" ''
     # Bookworm because that is where the driver was proven; it ships CUPS 2.4,
