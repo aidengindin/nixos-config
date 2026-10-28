@@ -110,6 +110,13 @@
       url = "git+https://git.gindin.xyz/aidengindin/job-scraper.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Canon's printer driver, kept privately so the print server still builds
+    # if Canon withdraws the download. Its license forbids redistribution, so
+    # it cannot live in this public repository.
+    canon-ufriilt-driver = {
+      url = "git+https://git.gindin.xyz/aidengindin/canon-ufriilt-driver.git";
+      flake = false;
+    };
   };
 
   outputs =
@@ -178,6 +185,7 @@
           ;
         hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
+        canonUfriiltDriver = inputs.canon-ufriilt-driver;
         dmsPluginSources = {
           avenge = inputs.dms-plugins-avenge;
           nderscore = inputs.dms-plugins-nderscore;
