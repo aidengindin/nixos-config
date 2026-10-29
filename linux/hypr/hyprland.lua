@@ -154,6 +154,7 @@ hl.window_rule({
 
 hl.permission("/nix/store/.*/bin/hyprshot", "screencopy", "allow")
 hl.permission("/nix/store/.*/bin/grim",     "screencopy", "allow")
+hl.permission("/nix/store/.*/bin/hyprlock", "screencopy", "allow")
 
 --------------------
 ---- KEYBINDINGS ----
