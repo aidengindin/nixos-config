@@ -103,7 +103,6 @@
 
     postgres.enable = true;
 
-    openwebui.enable = true;
     tandoor.enable = true;
     pocket-id.enable = true;
 
