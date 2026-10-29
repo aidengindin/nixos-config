@@ -92,6 +92,20 @@ in
 
     services.printing.enable = true;
 
+    # nixpkgs#576558 wraps uv with UV_SYSTEM_CERTS=1, and uv builds its HTTP
+    # client eagerly, so anki's offline build dies on the sandbox's missing CA
+    # store. The build never touches the network, so uv's bundled roots are
+    # harmless here. Drop this once nixpkgs fixes anki.
+    nixpkgs.overlays = [
+      (final: prev: {
+        anki = prev.anki.overrideAttrs (old: {
+          env = (old.env or { }) // {
+            UV_SYSTEM_CERTS = "0";
+          };
+        });
+      })
+    ];
+
     # Packages that should be installed on all desktop systems
     environment.systemPackages = with pkgs; [
       anki
