@@ -44,6 +44,26 @@ let
     echo "bookorbit: database not ready after 120s" >&2
     exit 1
   '';
+
+  # Docker snapshots the host's resolv.conf when it creates the container, and
+  # the container keeps that copy for its whole life. At boot the snapshot was
+  # taken after tailscaled had gone active but before it had written MagicDNS
+  # into resolv.conf, so the container came up with no upstream resolver at
+  # all. Nothing failed at startup; Pocket ID sign-in just hung on the issuer
+  # lookup and reported "Failed to generate state".
+  #
+  # Ordering after tailscaled.service cannot fix that, since it was already
+  # active when the snapshot was taken. Wait instead for what the app actually
+  # needs, the issuer resolving on the host, so the snapshot holds a working
+  # resolver, and fail the unit if it never does.
+  waitForIssuerDns = pkgs.writeShellScript "bookorbit-wait-issuer-dns" ''
+    for _ in $(seq 1 60); do
+      ${pkgs.getent}/bin/getent hosts ${lib.escapeShellArg cfg.oidcIssuerHost} > /dev/null && exit 0
+      sleep 2
+    done
+    echo "bookorbit: OIDC issuer ${cfg.oidcIssuerHost} did not resolve after 120s" >&2
+    exit 1
+  '';
 in
 {
   options.agindin.services.bookorbit = {
@@ -99,6 +119,16 @@ in
       # alongside uuid-ossp and pg_trgm.
       default = "pgvector/pgvector:0.8.7-pg18@sha256:2358fcba361ed2233a5ed81b5fe4ca779ccb304120ce531a3bf51c0ed7e2bc11";
       description = "PostgreSQL image for BookOrbit's database.";
+    };
+
+    oidcIssuerHost = mkOption {
+      type = types.nullOr types.str;
+      default = "auth.gindin.xyz";
+      description = ''
+        Hostname of the OIDC issuer configured in BookOrbit's UI. The app does
+        not start until this resolves on the host, so the container is created
+        with a resolver that can reach it. Null skips the check.
+      '';
     };
 
     allowLocalOidcIssuers = mkOption {
@@ -230,7 +260,9 @@ in
         # oci-containers generates to pull the image and clear a stale
         # container. serviceConfig values that are lists concatenate, so this
         # appends rather than replacing them.
-        serviceConfig.ExecStartPre = lib.mkAfter [ waitForDb ];
+        serviceConfig.ExecStartPre = lib.mkAfter (
+          [ waitForDb ] ++ lib.optional (cfg.oidcIssuerHost != null) waitForIssuerDns
+        );
       };
 
       # The DB lives in a container, so it is outside services/postgres.nix's
