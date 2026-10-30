@@ -54,6 +54,26 @@ in
         }
       );
     };
+    wildcardDomain = mkOption {
+      type = types.nullOr types.str;
+      default = "gindin.xyz";
+      description = ''
+        Domain to manage a `*.<domain>` certificate for. Caddy (2.10+) then
+        serves every single-level subdomain site from that one certificate
+        instead of ordering one per site, which keeps service names out of
+        Certificate Transparency logs. Hostnames with no site of their own
+        are refused.
+      '';
+    };
+    lanInterface = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "enp1s0";
+      description = ''
+        LAN interface to accept HTTP(S) on, alongside tailscale0. blocky
+        answers proxied domains with LAN addresses, so LAN clients arrive here.
+      '';
+    };
     extraSites = mkOption {
       description = ''
         Sites that aren't reverse proxies, so `proxyHosts` can't express them.
@@ -105,6 +125,9 @@ in
         email = "aiden+letsencrypt@aidengindin.com";
         globalConfig = ''
           acme_dns cloudflare {env.CLOUDFLARE_API_KEY}
+          # blocky answers for our own subdomains locally, which would hide the
+          # _acme-challenge TXT records from the DNS-01 propagation check.
+          tls_resolvers 1.1.1.1 1.0.0.1
           metrics
         '';
         extraConfig =
@@ -130,6 +153,12 @@ in
               ${tlsSetup}
             }
           '') cfg.extraSites
+          + lib.optionalString (cfg.wildcardDomain != null) ''
+            *.${cfg.wildcardDomain} {
+              abort
+              ${tlsSetup}
+            }
+          ''
           + ''
             :${toString globalVars.ports.caddyMetrics} {
               metrics /metrics
@@ -159,6 +188,18 @@ in
 
       # Also allow on local interface for scraping
       networking.firewall.interfaces.lo.allowedTCPPorts = [ globalVars.ports.caddyMetrics ];
+    })
+    (mkIf cfg.enable {
+      # A separate definition, since the interface name is only known when set.
+      networking.firewall.interfaces = lib.optionalAttrs (cfg.lanInterface != null) {
+        ${cfg.lanInterface} = {
+          allowedTCPPorts = [
+            80
+            443
+          ];
+          allowedUDPPorts = [ 443 ];
+        };
+      };
     })
   ];
 }
