@@ -92,7 +92,10 @@
       priority = 150;
     };
 
-    caddy.enable = true;
+    caddy = {
+      enable = true;
+      lanInterface = "enp1s0";
+    };
 
     # Shares the Canon LBP6030w over AirPrint/IPP. Lorien sits on the clients'
     # own subnet, so mDNS reaches them without the router's reflector.
