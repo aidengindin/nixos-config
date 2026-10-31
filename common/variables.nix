@@ -81,6 +81,13 @@ let
         host = "192.168.200.1";
         local = "192.168.200.2";
       };
+      # Servers' LAN addresses (DHCP reservations on the router). blocky
+      # answers each host's Caddy domains with these, and each host advertises
+      # its own as a Tailscale subnet route so they work off-LAN too.
+      lan = {
+        lorien = "10.88.88.6";
+        osgiliath = "10.88.88.7";
+      };
     };
 
     # Home Assistant runs on a separate HAOS box, not managed by this flake.

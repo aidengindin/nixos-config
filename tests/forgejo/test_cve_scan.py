@@ -371,9 +371,23 @@ class RunTests(unittest.TestCase):
             cve_scan._run(["sleep", "30"], timeout=0.2)
 
     def test_secrets_are_not_passed_to_children(self):
-        with mock.patch.dict(os.environ, {"FORGEJO_TOKEN": "t", "CI_WEBHOOK_SECRET": "s", "KEEP": "1"}):
-            code, out, _ = cve_scan._run(["sh", "-c", "echo ${FORGEJO_TOKEN-u}${CI_WEBHOOK_SECRET-u}${KEEP-u}"], timeout=10)
-        self.assertEqual((code, out.strip()), (0, "uu1"))
+        with mock.patch.dict(os.environ, {"AUTOMATION_TOKEN": "a", "FORGEJO_TOKEN": "t", "CI_WEBHOOK_SECRET": "s", "KEEP": "1"}):
+            code, out, _ = cve_scan._run(["sh", "-c", "echo ${AUTOMATION_TOKEN-u}${FORGEJO_TOKEN-u}${CI_WEBHOOK_SECRET-u}${KEEP-u}"], timeout=10)
+        self.assertEqual((code, out.strip()), (0, "uuu1"))
+
+    def test_scan_authenticates_with_the_bot_token(self):
+        # The runner overwrites FORGEJO_TOKEN with its job token, whose user is
+        # the built-in forgejo-actions, which the issue filter answers with 404.
+        with mock.patch.dict(os.environ, {"AUTOMATION_TOKEN": "bot", "FORGEJO_TOKEN": "job", "FORGEJO_URL": "https://example.test"}), \
+                mock.patch.object(cve_scan, "find_issue", side_effect=lambda api: {"number": 1, "body": ""}) as find_issue, \
+                mock.patch.object(cve_scan.API, "request"):
+            cve_scan.main(["--record-failure"])
+        self.assertEqual(find_issue.call_args.args[0].token, "bot")
+
+    def test_workflow_passes_the_bot_token_under_its_own_name(self):
+        workflow = (Path(__file__).resolve().parents[2] / ".forgejo/workflows/cve-scan.yml").read_text()
+        self.assertIn("AUTOMATION_TOKEN: ${{ secrets.AUTOMATION_TOKEN }}", workflow)
+        self.assertNotIn("FORGEJO_TOKEN:", workflow)
 
 
 class KevTests(unittest.TestCase):
@@ -447,6 +461,11 @@ class UntrustedTests(unittest.TestCase):
 class MainTests(unittest.TestCase):
     STATE_BODY = cve_scan.render_issue({"version": 1, "last_success": "2026-10-01", "findings": {}})
     CRITICAL = cve_scan.merge([{**ROW, "cvss": 9.8}], kev=set())
+
+    def setUp(self):
+        patcher = mock.patch.dict(os.environ, {"AUTOMATION_TOKEN": "bot"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def run_main(self, current, failed, unscanned=None, webhook_error=None, body=None):
         calls = []
