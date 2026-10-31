@@ -40,6 +40,22 @@
         "type": "github"
       }
     },
+    "canon-ufriilt-driver": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793146215,
+        "narHash": "sha256-nOrnyNGbKDyoCvemH6uG4vHCNaPK4aBOqj8NkcsaBnE=",
+        "ref": "refs/heads/main",
+        "rev": "5f88d609ef6967a143521690c8b597a48889e18f",
+        "revCount": 1,
+        "type": "git",
+        "url": "https://git.gindin.xyz/aidengindin/canon-ufriilt-driver.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.gindin.xyz/aidengindin/canon-ufriilt-driver.git"
+      }
+    },
     "catppuccin-userstyles": {
       "flake": false,
       "locked": {
@@ -336,11 +352,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792896866,
-        "narHash": "sha256-/0tELNnhdSnP+bHSdWiEe6KpfSwi6WrTnT9cm/jNkjA=",
+        "lastModified": 1793193205,
+        "narHash": "sha256-X6xa6sGA7RnJQuZGbFMC+K+KToWAlBDCCjJXfTwEPsw=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "c216bf5a1f173b0481bd5c8c489ebe5595ecc68c",
+        "rev": "095fef2f265c3c0da4fe315efba8f8a04495ab34",
         "type": "github"
       },
       "original": {
@@ -626,11 +642,11 @@
     },
     "nixpkgs_6": {
       "locked": {
-        "lastModified": 1792898606,
-        "narHash": "sha256-Mg3rRjsbMqhSMxop5PYMXos8SwAjejrxSgVThTvP9eg=",
+        "lastModified": 1793294725,
+        "narHash": "sha256-loLMnbbS4KhmG2ln9EY6f0YMNCA273Yx02oWYQ9IMeE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "1f607aa79b6356ed45d3cd3c8079c196e79efa2c",
+        "rev": "6f06d204d8f2d8761d9da78778745974a3216381",
         "type": "github"
       },
       "original": {
@@ -738,6 +754,7 @@
       "inputs": {
         "agenix": "agenix",
         "anduin": "anduin",
+        "canon-ufriilt-driver": "canon-ufriilt-driver",
         "catppuccin-userstyles": "catppuccin-userstyles",
         "colmena": "colmena",
         "disko": "disko",
@@ -841,11 +858,11 @@
     },
     "unstable": {
       "locked": {
-        "lastModified": 1792773339,
-        "narHash": "sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw=",
+        "lastModified": 1793341285,
+        "narHash": "sha256-Y1CiZ4SoBUjLQyQM/pY+rS2dXD3CHLPstF0lmOc73D4=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "3ec636362e1816bc2f0888fa0fa2c69f1bc9e504",
+        "rev": "1c89083e451e891152365b799595cf7790a43325",
         "type": "github"
       },
       "original": {

@@ -110,6 +110,13 @@
       url = "git+https://git.gindin.xyz/aidengindin/job-scraper.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Canon's printer driver, kept privately so the print server still builds
+    # if Canon withdraws the download. Its license forbids redistribution, so
+    # it cannot live in this public repository.
+    canon-ufriilt-driver = {
+      url = "git+https://git.gindin.xyz/aidengindin/canon-ufriilt-driver.git";
+      flake = false;
+    };
   };
 
   outputs =
@@ -178,6 +185,11 @@
           ;
         hermesAgent = hermes-agent;
         mcpServersNix = mcp-servers-nix;
+        # Every host's evaluated config, for modules that describe the fleet
+        # (blocky serves DNS for the Caddy domains of all hosts). Lazy, so a
+        # host only evaluates the options another host actually reads.
+        hostConfigs = mapAttrs (name: _: self.nixosConfigurations.${name}.config) nodes;
+        canonUfriiltDriver = inputs.canon-ufriilt-driver;
         dmsPluginSources = {
           avenge = inputs.dms-plugins-avenge;
           nderscore = inputs.dms-plugins-nderscore;

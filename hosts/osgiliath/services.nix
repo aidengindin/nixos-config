@@ -193,6 +193,7 @@
     caddy = {
       enable = true;
       cloudflareApiKeyFile = ../../secrets/osgiliath-caddy-cloudflare-api-key.age;
+      lanInterface = "eno1";
     };
 
     audiobookshelf.enable = true;
@@ -430,8 +431,8 @@
     # calibre-web-automated is retired; BookOrbit owns books.gindin.xyz.
     bookorbit = {
       enable = true;
-      # auth.gindin.xyz resolves to a tailnet address, which BookOrbit's SSRF
-      # guard treats as private (CGNAT) and refuses to fetch discovery from.
+      # auth.gindin.xyz resolves to a LAN address, which BookOrbit's SSRF
+      # guard treats as private and refuses to fetch discovery from.
       allowLocalOidcIssuers = true;
     };
 

@@ -30,6 +30,7 @@
     ./openwebui.nix
     ./pocket-id.nix
     ./postgres.nix
+    ./print-server.nix
     ./prometheusExporter.nix
     ./alloy.nix
     ./restic.nix

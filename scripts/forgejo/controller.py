@@ -147,6 +147,10 @@ class Controller:
             page += 1
         reports = [issue for issue in issues
                    if issue.get("title") == "CVE report" and issue["user"]["id"] == self.bot_id]
+        # A scanner that dies before creating its report leaves nothing to go stale.
+        if not reports:
+            self.queue_notification("cve-stale:missing",
+                "The CVE scan has no report issue, so it has never recorded a result.")
         # Closed reports still count, so closing the issue cannot silence the alarm.
         for issue in sorted(reports, key=lambda issue: issue["created_at"])[-1:]:
             match = CVE_HEADER.match((issue.get("body") or "").split("\n", 1)[0])

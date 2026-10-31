@@ -70,12 +70,23 @@ let
       zigbee2mqtt = 8400;
 
       mosquitto = 1883;
+
+      # Fixed by IPP itself: AirPrint and IPP Everywhere clients find the port
+      # from the mDNS SRV record, but plenty of desktop software assumes 631.
+      cups = 631;
     };
 
     ips = {
       qbittorrent = {
         host = "192.168.200.1";
         local = "192.168.200.2";
+      };
+      # Servers' LAN addresses (DHCP reservations on the router). blocky
+      # answers each host's Caddy domains with these, and each host advertises
+      # its own as a Tailscale subnet route so they work off-LAN too.
+      lan = {
+        lorien = "10.88.88.6";
+        osgiliath = "10.88.88.7";
       };
     };
 
