@@ -508,10 +508,16 @@ class ControllerTests(unittest.TestCase):
         self.c.check_cve_staleness(self.NOW)
         self.assertEqual(self.notifications(), [])
 
-    def test_other_users_issue_is_ignored(self):
+    def test_other_users_issue_does_not_count_as_a_report(self):
         self.stale_api([self.stale_issue("Last successful scan: **2026-01-01** · x", user={"id": 99})])
         self.c.check_cve_staleness(self.NOW)
-        self.assertEqual(self.notifications(), [])
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:missing"])
+
+    def test_missing_report_pings_once(self):
+        self.stale_api([])
+        self.c.check_cve_staleness(self.NOW)
+        self.c.check_cve_staleness(self.NOW)
+        self.assertEqual([r[0] for r in self.notifications()], ["cve-stale:missing"])
 
     def test_staleness_check_pages_through_issues(self):
         filler = [{"number": n, "title": "other", "user": {"id": 2}} for n in range(50)]
