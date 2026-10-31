@@ -40,7 +40,7 @@ PING_PREFIX = "<!-- cve-ping:"
 MAX_RESOLVED = 50
 ROOT = Path(__file__).resolve().parents[2]
 KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
-SECRET_ENV = ("FORGEJO_TOKEN", "CI_WEBHOOK_SECRET")
+SECRET_ENV = ("AUTOMATION_TOKEN", "FORGEJO_TOKEN", "CI_WEBHOOK_SECRET")
 RUN_TIMEOUT = 540 * 60
 BUILD_TIMEOUT = 120 * 60
 VULNXSCAN_TIMEOUT = 60 * 60
@@ -402,7 +402,9 @@ def main(argv=None):
     parser.add_argument("--report-dir", default="cve-report")
     args = parser.parse_args(argv)
     today = datetime.datetime.now(datetime.timezone.utc).date()
-    api = None if args.dry_run else API()
+    # Not FORGEJO_TOKEN: the runner overwrites that with its job token, and the
+    # controller only trusts a report written by the bot.
+    api = None if args.dry_run else API(token=os.environ["AUTOMATION_TOKEN"])
     issue = find_issue(api) if api else {"number": 0, "body": ""}
     previous = state_from_body(issue["body"] or "")
 
