@@ -626,6 +626,11 @@ in
                           datasourceUid = "local-prometheus";
                           model = {
                             expr = "node_systemd_unit_state{job=\"${host}\",state=\"failed\"} == 1";
+                            # Current state only: over a range query, one failed sample
+                            # (a unit that exits non-zero when a deploy stops it) stays
+                            # countable for the whole window and outlasts the `for` hold.
+                            instant = true;
+                            range = false;
                             refId = "A";
                           };
                         }
