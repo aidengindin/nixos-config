@@ -252,6 +252,11 @@ in
               installation_mode = "force_installed";
               install_url = "https://addons.mozilla.org/firefox/downloads/file/4615069/augmented_steam-latest.xpi";
             };
+            # Control Panel for Twitter
+            "{5cce4ab5-3d47-41b9-af5e-8203eea05245}" = {
+              installation_mode = "force_installed";
+              install_url = "https://addons.mozilla.org/firefox/downloads/latest/control-panel-for-twitter/latest.xpi";
+            };
           };
           SearchEngines = {
             Default = "Google";
