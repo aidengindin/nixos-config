@@ -35,6 +35,10 @@ let
         enabled = cfg.liftosaur.enable;
         window_days = cfg.liftosaur.windowDays;
       };
+      garmin = {
+        enabled = cfg.garmin.enable;
+        window_days = cfg.garmin.windowDays;
+      };
       headache = {
         enabled = cfg.headache.enable;
         app_url = cfg.headache.appUrl;
@@ -147,8 +151,8 @@ in
       description = ''
         Agenix-decrypted env file. Must define DATABASE_URL and the secrets for
         each enabled source (GOOGLE_HEALTH_CLIENT_ID/SECRET, WITHINGS_CLIENT_ID/
-        SECRET, INTERVALS_API_KEY, INTERVALS_ATHLETE_ID, LIFTOSAUR_API_KEY, plus
-        NTFY_TOPIC when headache reminders are enabled).
+        SECRET, INTERVALS_API_KEY, INTERVALS_ATHLETE_ID, LIFTOSAUR_API_KEY,
+        GARMIN_API_KEY, plus NTFY_TOPIC when headache reminders are enabled).
       '';
     };
 
@@ -197,6 +201,20 @@ in
       schedule = mkOption {
         type = types.listOf types.str;
         default = [ "*-*-* *:43:00" ]; # hourly
+      };
+      windowDays = mkOption {
+        type = types.ints.positive;
+        default = 7;
+      };
+    };
+    # Garmin Connect Personal API: daily summaries only, used as a whole-day
+    # fallback for days/nights the Fitbit Air has no data for. The API key
+    # (GARMIN_API_KEY) expires after at most a year and must be regenerated.
+    garmin = {
+      enable = mkEnableOption "Garmin Connect extractor";
+      schedule = mkOption {
+        type = types.listOf types.str;
+        default = [ "*-*-* 03,09,15,21:53:00" ]; # every 6h
       };
       windowDays = mkOption {
         type = types.ints.positive;
@@ -306,6 +324,7 @@ in
     systemd.services.anduin-withings = mkIf cfg.withings.enable (mkExtractor "withings");
     systemd.services.anduin-intervals = mkIf cfg.intervals.enable (mkExtractor "intervals");
     systemd.services.anduin-liftosaur = mkIf cfg.liftosaur.enable (mkExtractor "liftosaur");
+    systemd.services.anduin-garmin = mkIf cfg.garmin.enable (mkExtractor "garmin");
 
     systemd.timers.anduin-google-health = mkIf cfg.google-health.enable (
       mkTimer "google-health" cfg.google-health.schedule
@@ -319,6 +338,7 @@ in
     systemd.timers.anduin-liftosaur = mkIf cfg.liftosaur.enable (
       mkTimer "liftosaur" cfg.liftosaur.schedule
     );
+    systemd.timers.anduin-garmin = mkIf cfg.garmin.enable (mkTimer "garmin" cfg.garmin.schedule);
 
     # Check-in prompt over ntfy. Same env file and config as the extractors,
     # but no StateDirectory — there is no OAuth token; it reads the last

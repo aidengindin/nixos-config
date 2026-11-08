@@ -167,6 +167,7 @@
       withings.enable = true;
       intervals.enable = true;
       liftosaur.enable = true;
+      garmin.enable = true;
       headache.enable = true;
       web = {
         enable = true;
