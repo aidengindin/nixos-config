@@ -173,8 +173,8 @@ let
     "hyprland/workspaces" = {
       sort-by = "id";
       format = "{id}";
-      on-scroll-up = "${hyprctl} dispatch workspace e+1";
-      on-scroll-down = "${hyprctl} dispatch workspace e-1";
+      on-scroll-up = "${hyprctl} dispatch 'hl.dsp.focus({ workspace = \"e+1\" })'";
+      on-scroll-down = "${hyprctl} dispatch 'hl.dsp.focus({ workspace = \"e-1\" })'";
     };
     "hyprland/submap" = {
       format = "󰌌 {}";
@@ -623,14 +623,14 @@ in
           general = {
             lock_cmd = "${pkgs.procps}/bin/pidof hyprlock || ${getExe pkgs.hyprlock}";
             before_sleep_cmd = "${loginctl} lock-session";
-            after_sleep_cmd = "${hyprctl} dispatch dpms on";
+            after_sleep_cmd = "${hyprctl} dispatch 'hl.dsp.dpms({ action = \"on\" })'";
           };
           listener =
             let
               brightnessctl = getExe pkgs.brightnessctl;
               lock = "${loginctl} lock-session";
-              screenOff = "${hyprctl} dispatch dpms off";
-              screenOn = "${hyprctl} dispatch dpms on";
+              screenOff = "${hyprctl} dispatch 'hl.dsp.dpms({ action = \"off\" })'";
+              screenOn = "${hyprctl} dispatch 'hl.dsp.dpms({ action = \"on\" })'";
               suspend = "${pkgs.systemd}/bin/systemctl suspend";
             in
             [
