@@ -71,6 +71,15 @@ let
       libnotify
       procps
     ] "";
+    battery = script "battery-status" [
+      systemd # busctl
+      upower
+      gnugrep
+      coreutils
+      jq
+      libnotify
+      procps
+    ] "";
     power = script "power-menu" [
       rofi
       systemd
@@ -156,7 +165,7 @@ let
       "wireplumber"
       "custom/ddc"
       "backlight"
-      "battery"
+      "custom/battery"
       "custom/arrow-right-end"
       "custom/keep-awake"
       "tray"
@@ -331,29 +340,14 @@ let
       on-scroll-up = "${swayosd} --brightness raise";
       on-scroll-down = "${swayosd} --brightness lower";
     };
-    battery = {
-      interval = 60;
-      states = {
-        warning = 30;
-        critical = 15;
-      };
-      format = "{icon} {capacity}%";
-      format-charging = "󰂄 {capacity}%";
-      format-plugged = "󰚥 {capacity}%";
-      format-icons = [
-        "󰂎"
-        "󰁺"
-        "󰁻"
-        "󰁼"
-        "󰁽"
-        "󰁾"
-        "󰁿"
-        "󰂀"
-        "󰂁"
-        "󰂂"
-        "󰁹"
-      ];
-      tooltip-format = "{timeTo}\n{power:0.1f} W · health {health}%";
+    # A script rather than the built-in battery module, which has no field
+    # for the charge limit. Click lifts the limit until the next unplug.
+    "custom/battery" = {
+      exec = "${getExe scripts.battery} status";
+      return-type = "json";
+      interval = 30;
+      signal = 12;
+      on-click = "${getExe scripts.battery} toggle";
     };
     "custom/keep-awake" = {
       exec = "${getExe scripts.keepAwake} status";

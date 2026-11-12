@@ -17,6 +17,10 @@
 
   hardware.graphics.package = pkgs.mesa;
 
+  # Stop charging at 80% to reduce battery wear. Clicking the bar's battery
+  # segment allows one charge to 100%; the limit returns on unplug.
+  agindin.batteryChargeLimit.enable = true;
+
   agindin.impermanence = {
     enable = true;
     fileSystem = "btrfs";

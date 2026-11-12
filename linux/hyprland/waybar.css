@@ -66,7 +66,7 @@ tooltip label {
 #wireplumber,
 #custom-ddc,
 #backlight,
-#battery,
+#custom-battery,
 #custom-keep-awake,
 #tray,
 #custom-notifications,
@@ -90,7 +90,7 @@ tooltip label {
 #wireplumber,
 #custom-ddc,
 #backlight,
-#battery {
+#custom-battery {
   background: @surface0;
 }
 
@@ -179,17 +179,22 @@ tooltip label {
   color: @red;
 }
 
-#battery.charging,
-#battery.plugged {
+#custom-battery.charging,
+#custom-battery.plugged {
   color: @green;
 }
 
-#battery.warning:not(.charging) {
+#custom-battery.warning:not(.charging) {
   color: @yellow;
 }
 
-#battery.critical:not(.charging) {
+#custom-battery.critical:not(.charging) {
   color: @red;
+}
+
+/* Charge limit lifted until the next unplug: stand out so it isn't forgotten. */
+#custom-battery.unlimited {
+  color: @peach;
 }
 
 #network.disconnected,
