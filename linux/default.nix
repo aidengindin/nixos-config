@@ -9,6 +9,7 @@
     ./3dprint.nix
     ./hardening.nix
     ./avahi.nix
+    ./batteryChargeLimit.nix
     ./bluetooth.nix
     ./bolt.nix
     ./containers.nix
