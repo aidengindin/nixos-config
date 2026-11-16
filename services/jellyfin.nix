@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  unstablePkgs,
   globalVars,
   ...
 }:
@@ -100,6 +101,7 @@ in
 
     services.jellyfin = {
       enable = true;
+      package = unstablePkgs.jellyfin;
       # The unit runs with PrivateUsers=true, which maps only the unit's own
       # user and group into the namespace and turns every other group into
       # `nobody`. A supplementary group would therefore not grant access to the
