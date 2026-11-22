@@ -32,7 +32,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "chaptarr/chaptarr:0.9.965@sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6";
+      default = "chaptarr/chaptarr:0.9.999@sha256:4a38f9600281ec0d27aaabf6d90086edc2c67d44168fa41d0426c06a27f53da1";
       description = ''
         Pinned to tag and digest rather than tracking `latest`. Chaptarr is pre-1.0
         and publishes a pre-release every few days, so upgrades are a reviewed
